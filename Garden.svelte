@@ -903,7 +903,7 @@
       >
         {#if _n.length > 0 && !_.includes("water") && Math.random(10) > 0.7}
           {@const _x = _n.pop()}
-          <a href="/read/{_x.noteid}">
+          <a href="./read/{_x.noteid}">
             <img src={_x.icon} alt="note/tree-icon" class="tree-icon" />
             <div class="popover" style:content={_x.title}>
               {#if _x.title == ""}

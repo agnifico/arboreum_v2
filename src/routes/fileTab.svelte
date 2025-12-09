@@ -4,7 +4,7 @@
   let isSelected = $derived(bg.includes(note.id));
 </script>
 
-<a class="file" href="/read/{note.noteid}" class:selected={isSelected}>
+<a class="file" href="./read/{note.noteid}" class:selected={isSelected}>
   <div class="xp">
     <p>
       {note.title.length > 10 ? note.title.slice(0, 6).trim() + ".." : note.title}
