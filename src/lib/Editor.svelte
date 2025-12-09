@@ -27,6 +27,7 @@
     isMapVisible,
   } from "$lib/stores.js";
   import { browser } from "$app/environment";
+  import { base } from "$app/paths";
 
   let emojis = [
     "ʕ•́ᴥ•̀ʔっ",
@@ -302,11 +303,11 @@
 
     if (note) {
       await db.notes.update(note.id, noteData);
-      await goto(`/read/${note.noteid}`);
+      await goto(`${base}/read/${note.noteid}`);
     } else {
       noteData.noteid = uuidv4();
       const newId = await db.notes.add(noteData);
-      await goto(`/read/${noteData.noteid}`);
+      await goto(`${base}/read/${noteData.noteid}`);
     }
   }
 </script>
@@ -318,6 +319,7 @@
       class="ff"
       on:click={() => isFullscreen.set(!$isFullscreen)}
       class:shrink={$isFullscreen}
+      style="--expand-icon: url('{base}/icons/expand.svg'); --shrink-icon: url('{base}/icons/shrink.svg');"
     >
       &nbsp;
     </button>
@@ -367,7 +369,7 @@
                 class:active={isCode}
                 aria-label="Code"
                 ><img
-                  src="/icons/code.svg"
+                  src="{base}/icons/code.svg"
                   alt="Code"
                   class="toolbar-icon"
                 /></button
@@ -377,7 +379,7 @@
                 class:active={isBlockquote}
                 aria-label="Blockquote"
                 ><img
-                  src="/icons/quote.svg"
+                  src="{base}/icons/quote.svg"
                   alt="Blockquote"
                   class="toolbar-icon"
                 /></button
@@ -397,8 +399,8 @@
                   aria-label="List Type"
                 >
                   <img
-                    src={lists.find((a) => a.name === activeListType)?.icon ||
-                      "/icons/u-list.svg"}
+                    src="{base}{lists.find((a) => a.name === activeListType)?.icon ||
+                      '/icons/u-list.svg'}"
                     alt="Current list type"
                     class="toolbar-icon"
                   />
@@ -419,7 +421,7 @@
                         aria-label={list.label}
                       >
                         <img
-                          src={list.icon}
+                          src="{base}{list.icon}"
                           alt={list.label}
                           class="toolbar-icon"
                         />
@@ -430,7 +432,7 @@
               </div>
               <button on:click={addImage} aria-label="Add Image"
                 ><img
-                  src="/icons/image.svg"
+                  src="{base}/icons/image.svg"
                   alt="Add Image"
                   class="toolbar-icon"
                 /></button
@@ -494,7 +496,7 @@
                 class:active={isLink}
                 aria-label="Add Link"
                 ><img
-                  src="/icons/link.svg"
+                  src="{base}/icons/link.svg"
                   alt="Add Link"
                   class="toolbar-icon"
                 /></button
@@ -522,8 +524,8 @@
                   aria-label="Text Alignment"
                 >
                   <img
-                    src={alignments.find((a) => a.name === textAlign)?.icon ||
-                      "/icons/left-align.svg"}
+                    src="{base}{alignments.find((a) => a.name === textAlign)?.icon ||
+                      '/icons/left-align.svg'}"
                     alt="Current alignment"
                     class="toolbar-icon"
                   />
@@ -545,7 +547,7 @@
                         aria-label={alignment.label}
                       >
                         <img
-                          src={alignment.icon}
+                          src="{base}{alignment.icon}"
                           alt={alignment.label}
                           class="toolbar-icon"
                         />
@@ -561,7 +563,7 @@
                   aria-label="Toggle Color Palette"
                 >
                   <img
-                    src="/icons/palette.svg"
+                    src="{base}/icons/palette.svg"
                     alt="Color Palette"
                     class="toolbar-icon"
                   />
@@ -603,7 +605,7 @@
                 isMapVisible.set(true);
               }}
             >
-              <img src="/map.svg" alt="Select map location" />
+              <img src="{base}/map.svg" alt="Select map location" />
             </button>
 
             <div class="tree-selector">
@@ -613,7 +615,7 @@
                   showTreeSelector = !showTreeSelector;
                 }}
               >
-                <img src={treemoji} alt="Selected tree icon" />
+                <img src="{base}{treemoji}" alt="Selected tree icon" />
               </button>
               {#if showTreeSelector}
                 <div class="trees-grid">
@@ -628,7 +630,7 @@
                           showTreeSelector = false;
                         }}
                       />
-                      <img src={tree.filePath} alt={tree.name} />
+                      <img src="{base}{tree.filePath}" alt={tree.name} />
                     </label>
                   {/each}
                 </div>
@@ -682,14 +684,14 @@
     on:click={() => editor.chain().focus().toggleBulletList().run()}
     class:active={editor?.isActive("bulletList")}
   >
-    <img src="/icons/u-list.svg" alt="" class="toolbar-icon" />
+    <img src="{base}/icons/u-list.svg" alt="" class="toolbar-icon" />
   </button>
   <button
     type="button"
     on:click={() => editor.chain().focus().toggleOrderedList().run()}
     class:active={editor?.isActive("orderedList")}
   >
-    <img src="/icons/o-list.svg" alt="" class="toolbar-icon" />
+    <img src="{base}/icons/o-list.svg" alt="" class="toolbar-icon" />
   </button>
   <button
     type="button"
@@ -1046,7 +1048,7 @@
     filter: invert();
     mix-blend-mode: darken;
     border: none;
-    background-image: url("/icons/expand.svg");
+    background-image: var(--expand-icon);
     background-position: center;
     background-size: contain;
     background-repeat: no-repeat;
@@ -1068,7 +1070,7 @@
     /* border-radius: 0; */
   }
   .shrink {
-    background-image: url("/icons/shrink.svg");
+    background-image: var(--shrink-icon);
   }
 
   /* --- BUBBLE & FLOATING MENUS --- */

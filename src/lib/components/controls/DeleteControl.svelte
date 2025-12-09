@@ -1,4 +1,5 @@
 <script>
+  import { base } from '$app/paths';
   let { onToggle = () => {}, onDelete = () => {}, active = false } = $props();
 </script>
 
@@ -7,7 +8,7 @@
     {active ? "Unselect" : "Select"}
   </button>
   <button type="button" class="confirm" on:click={onDelete}>
-    <img src="/delete.svg" alt="Confirm Delete" />
+    <img src="{base}/delete.svg" alt="Confirm Delete" />
   </button>
 </div>
 

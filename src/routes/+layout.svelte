@@ -12,6 +12,7 @@
   import { liveQuery } from "dexie";
   import { writable } from 'svelte/store';
   import Garden from './Garden.svelte';
+  import { base } from '$app/paths';
 
   let sidebar_switch = $state(true);
   let showImportConfirm = $state(false);
@@ -123,13 +124,13 @@
       </div>
       <div class="top-nav">
         <Button variant="ghost" onClick={handleImport} title="Import from file">
-          <img src="/icons/upload.svg" alt="Import" class="btn-icon" />
+          <img src="{base}/icons/upload.svg" alt="Import" class="btn-icon" />
         </Button>
         <Button variant="ghost" onClick={handleExport} title="Export to file">
-          <img src="/icons/download.svg" alt="Export" class="btn-icon" />
+          <img src="{base}/icons/download.svg" alt="Export" class="btn-icon" />
         </Button>
         <Button variant="ghost" href="./about" title="About">
-          <img src="/icons/about.svg" alt="About" class="btn-icon" />
+          <img src="{base}/icons/about.svg" alt="About" class="btn-icon" />
         </Button>
 
         <div class="separator"></div>

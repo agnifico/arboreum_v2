@@ -1,18 +1,19 @@
 <script>
+  import { base } from '$app/paths';
   let {
     btnType = "btn-1",
     text = "xyz",
     fn = null,
     type = "button",
     active = false,
-    link = '/',
+    link = '.',
     target = '_parent'
   } = $props();
 </script>
 
 {#if btnType == "map-btn"}
   <button {type} class={btnType} onclick={fn} class:active>
-    <img src="/map.svg" alt="" />
+    <img src="{base}/map.svg" alt="" />
   </button>
 {:else if btnType == "switcher"}
   <button onclick={fn} type="button" class="switcher" class:active>
@@ -29,7 +30,7 @@
       >{active ? "Delete" : "Select"}</button
     >
     <button type="submit" class="deletePostButton"
-      ><img src="/delete.svg" alt="" /></button
+      ><img src="{base}/delete.svg" alt="" /></button
     >
   </div>
   {:else if btnType == "link"}

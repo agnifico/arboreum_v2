@@ -1,4 +1,5 @@
 <script>
+  import { base } from '$app/paths';
   let {
     onClick = () => {},
     active = false
@@ -6,7 +7,7 @@
 </script>
 
 <button type="button" class="map-btn" on:click={onClick} class:active>
-  <img src="/map.svg" alt="Map" />
+  <img src="{base}/map.svg" alt="Map" />
 </button>
 
 <style>
