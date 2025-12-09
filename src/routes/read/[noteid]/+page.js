@@ -1,3 +1,5 @@
+export const prerender = false;
+
 import { db } from '$lib/db.js';
 import { error } from '@sveltejs/kit';
 import { browser } from '$app/environment';
