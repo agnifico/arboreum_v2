@@ -119,7 +119,7 @@
   {#if !$isFullscreen}
     <div id="topbar">
       <div class="arboreum dynamic-text-shadow">
-        <a href="/">Arboreum</a>
+        <a href=".">Arboreum</a>
       </div>
       <div class="top-nav">
         <Button variant="ghost" onClick={handleImport} title="Import from file">
