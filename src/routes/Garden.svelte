@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { placementMode, selectedCoordinates, editorCoordinates, isMapVisible } from "$lib/stores.js";
+  import { base } from "$app/paths";
 
   let { notes = [] } = $props();
 
@@ -51,7 +52,7 @@
       const img = new Image();
       img.onload = () => resolve(img);
       img.onerror = reject;
-      img.src = src;
+      img.src = base + src;
     });
   }
 
@@ -154,7 +155,7 @@
     } else {
       for (const item of notesOnMap) {
         if (x >= item.x && x <= item.x + item.width && y >= item.y && y <= item.y + item.height) {
-          goto(`/read/${item.note.noteid}`);
+          goto(`${base}/read/${item.note.noteid}`);
           break;
         }
       }
