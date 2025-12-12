@@ -11,7 +11,6 @@
   import Color from "@tiptap/extension-color";
   import TextStyle from "@tiptap/extension-text-style";
   import { invalidateAll } from "$app/navigation";
-  import { base } from '$app/paths';
   // import EmojiTab from "./emojiTab.svelte";
 
   let emojis = [
@@ -207,7 +206,7 @@
                   class:active={editor.isActive("bulletList")}
                 >
                   <img
-                    src="{base}/u-list.svg"
+                    src="/u-list.svg"
                     alt=""
                     srcset=""
                     style:height="16px"
@@ -223,7 +222,7 @@
                   class:active={editor.isActive("orderedList")}
                 >
                   <img
-                    src="{base}/o-list.svg"
+                    src="/o-list.svg"
                     alt=""
                     srcset=""
                     style:height="16px"
@@ -331,7 +330,7 @@
                 value={tree.filePath}
               />
               <img
-                src="{base}{tree.filePath}"
+                src={tree.filePath}
                 alt={tree.name}
                 style="aspect-ratio: 1; height: 50px;"
               />
@@ -409,7 +408,7 @@
       class:active={editor.isActive("bulletList")}
     >
       <img
-        src="{base}/u-list.svg"
+        src="/u-list.svg"
         alt=""
         srcset=""
         style:height="16px"
@@ -424,7 +423,7 @@
       class:active={editor.isActive("orderedList")}
     >
       <img
-        src="{base}/o-list.svg"
+        src="/o-list.svg"
         alt=""
         srcset=""
         style:height="16px"
