@@ -25,6 +25,7 @@
     selectedCoordinates,
     editorCoordinates,
     isMapVisible,
+    editorStore,
   } from "$lib/stores.js";
   import { browser } from "$app/environment";
   import { base } from "$app/paths";
@@ -42,7 +43,6 @@
   let bubbleMenu;
   let floatingMenu;
   let element;
-  let editor;
 
   let { note = null } = $props();
 
