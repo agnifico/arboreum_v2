@@ -284,7 +284,7 @@
   });
 
   onDestroy(() => {
-    // editor?.destroy();
+    editor?.destroy();
     clearInterval(timer);
     if (browser) {
       window.removeEventListener("click", handleClickOutside);
