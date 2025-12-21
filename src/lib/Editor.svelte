@@ -53,6 +53,8 @@
   let mapY = $state(note?.mapY || null);
   let showTreeSelector = $state(false);
 
+  let editor;
+
   // Effect to reset component state when the note prop changes
   $effect(() => {
     _title = note?.title || "";

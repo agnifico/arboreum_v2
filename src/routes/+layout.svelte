@@ -120,7 +120,7 @@
   {#if !$isFullscreen}
     <div id="topbar">
       <div class="arboreum dynamic-text-shadow">
-        <a href=".">Arboreum</a>
+        <a href="/">Arboreum</a>
       </div>
       <div class="top-nav">
         <Button variant="ghost" onClick={handleImport} title="Import from file">
@@ -129,7 +129,7 @@
         <Button variant="ghost" onClick={handleExport} title="Export to file">
           <img src="{base}/icons/download.svg" alt="Export" class="btn-icon" />
         </Button>
-        <Button variant="ghost" href="./about" title="About">
+        <Button variant="ghost" href="/about" title="About">
           <img src="{base}/icons/about.svg" alt="About" class="btn-icon" />
         </Button>
 
@@ -140,13 +140,13 @@
           <span class="mobile-only">☰</span>
         </Button>
         <MapButton active={$isMapVisible} onClick={toggleMap} class="top-bar-btn" />
-        <form action="./newleaf">
+        <form action="/newleaf">
           <Button variant="primary" type="submit" class="top-bar-btn">
             <span class="desktop-only">Create New</span>
             <span class="mobile-only">+</span>
           </Button>
         </form>
-        <form action="./newleaf" target="_blank">
+        <form action="/newleaf" target="_blank">
           <Button variant="primary" type="submit" class="top-bar-btn">⇗</Button>
         </form>
       </div>
