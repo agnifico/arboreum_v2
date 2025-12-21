@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
-  import { placementMode, selectedCoordinates, editorCoordinates, isMapVisible } from "$lib/stores.js";
+  import { placementMode, selectedCoordinates, editorCoordinates, isMapVisible, closeMap } from "$lib/stores.js";
   import { base } from "$app/paths";
 
   let { notes = [] } = $props();
@@ -124,10 +124,7 @@
     }
   }
 
-  function closeMap() {
-    isMapVisible.set(false);
-    placementMode.set(false);
-  }
+  
 
   function handleBackdropClick(event) {
     if (event.target === event.currentTarget) {

@@ -6,7 +6,7 @@
   import Button from "$lib/components/controls/Button.svelte";
   import MapButton from "$lib/components/controls/MapButton.svelte";
   import Modal from "$lib/components/Modal.svelte";
-  import { isFullscreen, isMapVisible, placementMode } from "$lib/stores.js";
+  import { isFullscreen, isMapVisible, placementMode, toggleMap } from "$lib/stores.js";
   import { browser } from '$app/environment';
   import { db } from "$lib/db.js";
   import { liveQuery } from "dexie";
@@ -26,9 +26,7 @@
   function toggleSidebar() {
     sidebar_switch = !sidebar_switch;
   }
-  function toggleMap() {
-    isMapVisible.set(!$isMapVisible);
-  }
+  
 
   async function handleExport() {
     if (!browser) return;

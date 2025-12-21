@@ -21,11 +21,11 @@
   import { v4 as uuidv4 } from "uuid";
   import {
     isFullscreen,
-    placementMode,
     selectedCoordinates,
     editorCoordinates,
-    isMapVisible,
-    editorStore,
+    exitEditor,
+    toggleFullscreen,
+    enterPlacementMode,
   } from "$lib/stores.js";
   import { browser } from "$app/environment";
   import { base } from "$app/paths";
@@ -289,7 +289,7 @@
     if (browser) {
       window.removeEventListener("click", handleClickOutside);
     }
-    editorCoordinates.set(null);
+    exitEditor();
   });
 
   async function saveNote() {
@@ -319,7 +319,7 @@
     <button
       type="button"
       class="ff"
-      on:click={() => isFullscreen.set(!$isFullscreen)}
+      on:click={toggleFullscreen}
       class:shrink={$isFullscreen}
       style="--expand-icon: url('{base}/icons/expand.svg'); --shrink-icon: url('{base}/icons/shrink.svg');"
     >
@@ -602,10 +602,7 @@
           <div class="selector-buttons">
             <button
               class="selector-trigger"
-              on:click={() => {
-                placementMode.set(true);
-                isMapVisible.set(true);
-              }}
+              on:click={enterPlacementMode}
             >
               <img src="{base}/map.svg" alt="Select map location" />
             </button>
