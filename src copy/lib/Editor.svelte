@@ -342,242 +342,257 @@
       </div>
 
       <div class="control-mid">
-        <div class="toolbar-grid">
-          <!-- Group 3: Formatting -->
-          <div class="quadrant-top-left quadrant">
-            <button
-              on:click={() => editor.chain().focus().toggleBold().run()}
-              class:active={isBold}
-              aria-label="Bold"><b>B</b></button
-            >
-            <button
-              on:click={() => editor.chain().focus().toggleItalic().run()}
-              class:active={isItalic}
-              aria-label="Italic"><i>I</i></button
-            >
-            <button
-              on:click={() => editor.chain().focus().toggleStrike().run()}
-              class:active={isStrike}
-              aria-label="Strike"><strike>S</strike></button
-            >
-            <button
-              on:click={() => editor.chain().focus().toggleUnderline().run()}
-              class:active={isUnderline}
-              aria-label="Underline"><u>U</u></button
-            >
-            <button
-              on:click={() => editor.chain().focus().toggleCode().run()}
-              class:active={isCode}
-              aria-label="Code"
-              ><img
-                src="{base}/icons/code.svg"
-                alt="Code"
-                class="toolbar-icon"
-              /></button
-            >
-            <button
-              on:click={() => editor.chain().focus().toggleBlockquote().run()}
-              class:active={isBlockquote}
-              aria-label="Blockquote"
-              ><img
-                src="{base}/icons/quote.svg"
-                alt="Blockquote"
-                class="toolbar-icon"
-              /></button
-            >
-          </div>
-          <!-- Ungrouped Block Items -->
-          <div class="quadrant-top-right quadrant">
-            <button
-              on:click={() => editor.chain().focus().setParagraph().run()}
-              class:active={isParagraph}
-              aria-label="Paragraph">¶</button
-            >
-            <div class="list-dropdown">
+        <div class="fixed-menu">
+          <div class="toolbar-grid">
+            <!-- Group 3: Formatting -->
+            <div class="quadrant-top-left quadrant">
               <button
-                class="dropdown-trigger"
-                on:click={() => (showListDropdown = !showListDropdown)}
-                aria-label="List Type"
+                on:click={() => editor.chain().focus().toggleBold().run()}
+                class:active={isBold}
+                aria-label="Bold"><b>B</b></button
               >
-                <img
-                  src="{base}{lists.find((a) => a.name === activeListType)
-                    ?.icon || '/icons/u-list.svg'}"
-                  alt="Current list type"
+              <button
+                on:click={() => editor.chain().focus().toggleItalic().run()}
+                class:active={isItalic}
+                aria-label="Italic"><i>I</i></button
+              >
+              <button
+                on:click={() => editor.chain().focus().toggleStrike().run()}
+                class:active={isStrike}
+                aria-label="Strike"><strike>S</strike></button
+              >
+              <button
+                on:click={() => editor.chain().focus().toggleUnderline().run()}
+                class:active={isUnderline}
+                aria-label="Underline"><u>U</u></button
+              >
+              <button
+                on:click={() => editor.chain().focus().toggleCode().run()}
+                class:active={isCode}
+                aria-label="Code"
+                ><img
+                  src="{base}/icons/code.svg"
+                  alt="Code"
                   class="toolbar-icon"
-                />
-                <span class="dropdown-arrow">▼</span>
-              </button>
-              {#if showListDropdown}
-                <div class="dropdown-menu">
-                  {#each lists as list (list.name)}
-                    <button
-                      on:click={() => {
-                        list.action();
-                        showListDropdown = false;
-                      }}
-                      class:active={(list.name === "bulletList" &&
-                        isBulletList) ||
-                        (list.name === "orderedList" && isOrderedList) ||
-                        (list.name === "taskList" && isTaskList)}
-                      aria-label={list.label}
-                    >
-                      <img
-                        src="{base}{list.icon}"
-                        alt={list.label}
-                        class="toolbar-icon"
-                      />
-                    </button>
-                  {/each}
-                </div>
-              {/if}
-            </div>
-            <button on:click={addImage} aria-label="Add Image"
-              ><img
-                src="{base}/icons/image.svg"
-                alt="Add Image"
-                class="toolbar-icon"
-              /></button
-            >
-            <button
-              on:click={() => editor.chain().focus().setHardBreak().run()}
-              aria-label="Hard Break">↵</button
-            >
-          </div>
-
-          <!-- Group 1 & 2: Style, Color, Scripts, Alignment -->
-          <div class="quadrant-bottom-left quadrant">
-            <div id="headingSizeSelector">
-              <button
-                class="thin-btn"
-                on:click={() => {
-                  let newSize = size < 6 ? size + 1 : size;
-                  size = newSize;
-                  if (newSize === 4) {
-                    editor.chain().focus().setParagraph().run();
-                  } else {
-                    editor.chain().focus().setHeading({ level: newSize }).run();
-                  }
-                }}>-</button
+                /></button
               >
               <button
-                class:active={activeHeadingLevel > 0}
-                on:click={() => {
-                  if (size !== 4) {
-                    editor.chain().focus().toggleHeading({ level: size }).run();
-                  }
-                }}>{size === 4 ? "¶" : `${36 - size * 4}pt`}</button
-              >
-              <button
-                class="thin-btn"
-                on:click={() => {
-                  let newSize = size > 1 ? size - 1 : size;
-                  size = newSize;
-                  if (newSize === 4) {
-                    editor.chain().focus().setParagraph().run();
-                  } else {
-                    editor.chain().focus().setHeading({ level: newSize }).run();
-                  }
-                }}>+</button
+                on:click={() => editor.chain().focus().toggleBlockquote().run()}
+                class:active={isBlockquote}
+                aria-label="Blockquote"
+                ><img
+                  src="{base}/icons/quote.svg"
+                  alt="Blockquote"
+                  class="toolbar-icon"
+                /></button
               >
             </div>
-            <button
-              on:click={addLink}
-              class:active={isLink}
-              aria-label="Add Link"
-              ><img
-                src="{base}/icons/link.svg"
-                alt="Add Link"
-                class="toolbar-icon"
-              /></button
-            >
-            <button
-              on:click={() => editor.chain().focus().toggleHighlight().run()}
-              class:active={isHighlight}
-              aria-label="Highlight">H</button
-            >
-            <button
-              on:click={() => editor.chain().focus().toggleSubscript().run()}
-              class:active={isSubscript}>x₂</button
-            >
-            <button
-              on:click={() => editor.chain().focus().toggleSuperscript().run()}
-              class:active={isSuperscript}>x²</button
-            >
-          </div>
-          <div class="quadrant-bottom-right quadrant">
-            <div class="align-dropdown">
+            <!-- Ungrouped Block Items -->
+            <div class="quadrant-top-right quadrant">
               <button
-                class="dropdown-trigger"
-                on:click={() => (showAlignDropdown = !showAlignDropdown)}
-                aria-label="Text Alignment"
+                on:click={() => editor.chain().focus().setParagraph().run()}
+                class:active={isParagraph}
+                aria-label="Paragraph">¶</button
               >
-                <img
-                  src="{base}{alignments.find((a) => a.name === textAlign)
-                    ?.icon || '/icons/left-align.svg'}"
-                  alt="Current alignment"
-                  class="toolbar-icon"
-                />
-                <span class="dropdown-arrow">▼</span>
-              </button>
-              {#if showAlignDropdown}
-                <div class="dropdown-menu">
-                  {#each alignments as alignment (alignment.name)}
-                    <button
-                      on:click={() => {
-                        editor
-                          .chain()
-                          .focus()
-                          .setTextAlign(alignment.name)
-                          .run();
-                        showAlignDropdown = false;
-                      }}
-                      class:active={textAlign === alignment.name}
-                      aria-label={alignment.label}
-                    >
-                      <img
-                        src="{base}{alignment.icon}"
-                        alt={alignment.label}
-                        class="toolbar-icon"
-                      />
-                    </button>
-                  {/each}
-                </div>
-              {/if}
-            </div>
-            <div class="color-palette-container">
-              <button
-                class="palette-trigger"
-                on:click={() => (showColorPalette = !showColorPalette)}
-                aria-label="Toggle Color Palette"
-              >
-                <img
-                  src="{base}/icons/palette.svg"
-                  alt="Color Palette"
-                  class="toolbar-icon"
-                />
-              </button>
-              <div class="color-palette" class:expanded={showColorPalette}>
-                {#each textColors as color}
-                  <button
-                    type="button"
-                    class="color-swatch"
-                    style:background-color={color.hex}
-                    on:click={() => {
-                      editor.chain().focus().setColor(color.hex).run();
-                      showColorPalette = false;
-                    }}
-                    class:active={editor?.isActive("textStyle", {
-                      color: color.hex,
-                    })}
-                  />
-                {/each}
+              <div class="list-dropdown">
                 <button
-                  class="color-swatch"
-                  on:click={() => {
-                    editor.chain().focus().unsetColor().run();
-                    showColorPalette = false;
-                  }}>X</button
+                  class="dropdown-trigger"
+                  on:click={() => (showListDropdown = !showListDropdown)}
+                  aria-label="List Type"
                 >
+                  <img
+                    src="{base}{lists.find((a) => a.name === activeListType)?.icon ||
+                      '/icons/u-list.svg'}"
+                    alt="Current list type"
+                    class="toolbar-icon"
+                  />
+                  <span class="dropdown-arrow">▼</span>
+                </button>
+                {#if showListDropdown}
+                  <div class="dropdown-menu">
+                    {#each lists as list (list.name)}
+                      <button
+                        on:click={() => {
+                          list.action();
+                          showListDropdown = false;
+                        }}
+                        class:active={(list.name === "bulletList" &&
+                          isBulletList) ||
+                          (list.name === "orderedList" && isOrderedList) ||
+                          (list.name === "taskList" && isTaskList)}
+                        aria-label={list.label}
+                      >
+                        <img
+                          src="{base}{list.icon}"
+                          alt={list.label}
+                          class="toolbar-icon"
+                        />
+                      </button>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+              <button on:click={addImage} aria-label="Add Image"
+                ><img
+                  src="{base}/icons/image.svg"
+                  alt="Add Image"
+                  class="toolbar-icon"
+                /></button
+              >
+              <button
+                on:click={() => editor.chain().focus().setHardBreak().run()}
+                aria-label="Hard Break">↵</button
+              >
+            </div>
+
+            <!-- Group 1 & 2: Style, Color, Scripts, Alignment -->
+            <div class="quadrant-bottom-left quadrant">
+              <div id="headingSizeSelector">
+                <button
+                  class="thin-btn"
+                  on:click={() => {
+                    let newSize = size < 6 ? size + 1 : size;
+                    size = newSize;
+                    if (newSize === 4) {
+                      editor.chain().focus().setParagraph().run();
+                    } else {
+                      editor
+                        .chain()
+                        .focus()
+                        .setHeading({ level: newSize })
+                        .run();
+                    }
+                  }}>-</button
+                >
+                <button
+                  class:active={activeHeadingLevel > 0}
+                  on:click={() => {
+                    if (size !== 4) {
+                      editor
+                        .chain()
+                        .focus()
+                        .toggleHeading({ level: size })
+                        .run();
+                    }
+                  }}>{size === 4 ? "¶" : `${36 - size * 4}pt`}</button
+                >
+                <button
+                  class="thin-btn"
+                  on:click={() => {
+                    let newSize = size > 1 ? size - 1 : size;
+                    size = newSize;
+                    if (newSize === 4) {
+                      editor.chain().focus().setParagraph().run();
+                    } else {
+                      editor
+                        .chain()
+                        .focus()
+                        .setHeading({ level: newSize })
+                        .run();
+                    }
+                  }}>+</button
+                >
+              </div>
+              <button
+                on:click={addLink}
+                class:active={isLink}
+                aria-label="Add Link"
+                ><img
+                  src="{base}/icons/link.svg"
+                  alt="Add Link"
+                  class="toolbar-icon"
+                /></button
+              >
+              <button
+                on:click={() => editor.chain().focus().toggleHighlight().run()}
+                class:active={isHighlight}
+                aria-label="Highlight">H</button
+              >
+              <button
+                on:click={() => editor.chain().focus().toggleSubscript().run()}
+                class:active={isSubscript}>x₂</button
+              >
+              <button
+                on:click={() =>
+                  editor.chain().focus().toggleSuperscript().run()}
+                class:active={isSuperscript}>x²</button
+              >
+            </div>
+            <div class="quadrant-bottom-right quadrant">
+              <div class="align-dropdown">
+                <button
+                  class="dropdown-trigger"
+                  on:click={() => (showAlignDropdown = !showAlignDropdown)}
+                  aria-label="Text Alignment"
+                >
+                  <img
+                    src="{base}{alignments.find((a) => a.name === textAlign)?.icon ||
+                      '/icons/left-align.svg'}"
+                    alt="Current alignment"
+                    class="toolbar-icon"
+                  />
+                  <span class="dropdown-arrow">▼</span>
+                </button>
+                {#if showAlignDropdown}
+                  <div class="dropdown-menu">
+                    {#each alignments as alignment (alignment.name)}
+                      <button
+                        on:click={() => {
+                          editor
+                            .chain()
+                            .focus()
+                            .setTextAlign(alignment.name)
+                            .run();
+                          showAlignDropdown = false;
+                        }}
+                        class:active={textAlign === alignment.name}
+                        aria-label={alignment.label}
+                      >
+                        <img
+                          src="{base}{alignment.icon}"
+                          alt={alignment.label}
+                          class="toolbar-icon"
+                        />
+                      </button>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+              <div class="color-palette-container">
+                <button
+                  class="palette-trigger"
+                  on:click={() => (showColorPalette = !showColorPalette)}
+                  aria-label="Toggle Color Palette"
+                >
+                  <img
+                    src="{base}/icons/palette.svg"
+                    alt="Color Palette"
+                    class="toolbar-icon"
+                  />
+                </button>
+                <div class="color-palette" class:expanded={showColorPalette}>
+                  {#each textColors as color}
+                    <button
+                      type="button"
+                      class="color-swatch"
+                      style:background-color={color.hex}
+                      on:click={() => {
+                        editor.chain().focus().setColor(color.hex).run();
+                        showColorPalette = false;
+                      }}
+                      class:active={editor?.isActive("textStyle", {
+                        color: color.hex,
+                      })}
+                    />
+                  {/each}
+                  <button
+                    class="color-swatch"
+                    on:click={() => {
+                      editor.chain().focus().unsetColor().run();
+                      showColorPalette = false;
+                    }}>X</button
+                  >
+                </div>
               </div>
             </div>
           </div>
@@ -585,7 +600,10 @@
 
         <div class="side-controls">
           <div class="selector-buttons">
-            <button class="selector-trigger" on:click={enterPlacementMode}>
+            <button
+              class="selector-trigger"
+              on:click={enterPlacementMode}
+            >
               <img src="{base}/map.svg" alt="Select map location" />
             </button>
 
@@ -801,19 +819,21 @@
 
   /* --- MIDDLE CONTROLS (TOOLBAR & SIDE) --- */
   .control-mid {
-    /* width: 100%; */
+    width: 100%;
     display: flex;
-    padding: 0.5rem 1rem;
-    gap: 0rem;
   }
 
   /* --- TOOLBAR --- */
+  .fixed-menu {
+    padding: 1rem;
+    position: relative;
+    height: fit-content;
+    flex-grow: 1;
+  }
   .toolbar-grid {
     display: grid;
     grid-template-columns: max-content max-content;
     gap: 10px 20px;
-    /* width: fit-content; */
-    height: fit-content;
   }
   .quadrant {
     display: flex;
@@ -884,6 +904,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 5px;
+    border: 1px solid white;
   }
   .dropdown-arrow {
     font-size: 0.6rem;
@@ -910,22 +931,22 @@
   /* --- SIDE CONTROLS --- */
   .side-controls {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 0 1rem;
-    /* margin-left: auto; */
-    justify-content: center;
-    height: fit-content;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    margin-left: auto;
   }
   .selector-buttons {
     display: flex;
-    justify-content: space-between;
     gap: 0.5rem;
   }
-
+  .tree-selector {
+    position: relative;
+  }
   .selector-trigger {
-    height: var(--control-button-height);
-    width: var(--control-button-height);
+    height: 40px;
+    width: 90px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -935,13 +956,8 @@
     border: 3px solid var(--hunter-green);
   }
   .selector-trigger img {
-    height: 20px;
+    height: 28px;
     aspect-ratio: 1;
-    top: 0px;
-  }
-  .tree-selector {
-    position: relative;
-    flex: 1;
   }
   .trees-grid {
     position: absolute;
@@ -987,15 +1003,14 @@
       rgba(255, 255, 255, 0.08) 0px 1px 0px inset;
   }
   .treemo {
-    width: calc(2 * var(--control-button-height) + 0.5rem);
-    height: var(--control-button-height);
+    width: 200px;
     font-size: 1rem;
     background-color: #588157;
     border: 3px solid #23251e;
     border-radius: 10px;
     color: var(--highlight-text);
     box-shadow: none;
-    font-size: 0.75rem;
+    height: 40px;
   }
 
   /* --- EDITOR AREA --- */
@@ -1119,7 +1134,7 @@
     transform: scale(1.1);
   }
 
-  @media (max-width: 900px) {
+  @media (max-width: 768px) {
     .app-bg {
       width: 100%;
       height: 100%;
@@ -1129,19 +1144,15 @@
     .control-mid {
       flex-direction: column;
     }
+    .fixed-menu {
+      overflow-x: auto;
+      padding: 0.5rem;
+    }
     .toolbar-grid {
       display: flex;
       flex-wrap: nowrap;
-      width: fit-content;
-      width: 100%;
+      width: max-content;
       gap: 1rem;
-      overflow-x: scroll;
-      padding: 0.5rem;
-      overflow-x: scroll;
-      scrollbar-width: thin;
-      scrollbar-color: var(--charcoal) var(--pine-teal);
-      scrollbar-gutter: stable;
-      scroll-padding: none;
     }
     .quadrant {
       flex-wrap: nowrap;
@@ -1152,16 +1163,15 @@
       margin-left: 0;
       padding: 0.5rem 1rem;
       border-top: 1px solid var(--bg-tertiary);
-      flex-direction: row;
     }
     .selector-buttons {
       gap: 1rem;
-      /* flex-grow: 1; */
+      flex-grow: 0;
     }
     .treemo {
-      /* flex-grow: 1; */
+      flex-grow: 1;
       height: 100%;
-      margin-right: 1rem;
+      margin: 0;
     }
     .xy {
       padding: 1.5rem;

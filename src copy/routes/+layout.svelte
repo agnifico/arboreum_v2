@@ -1,5 +1,4 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
   import "../app.css";
   export const ssr = false;
   let { children } = $props();
@@ -18,25 +17,6 @@
   let sidebar_switch = $state(true);
   let showImportConfirm = $state(false);
   let notesToImport = $state(null);
-  let showMoreMenu = $state(false);
-
-  function handleClickOutside(event) {
-    if (showMoreMenu && !event.target.closest('.mobile-only')) {
-      showMoreMenu = false;
-    }
-  }
-
-  onMount(() => {
-    if (browser) {
-      window.addEventListener('click', handleClickOutside);
-    }
-  });
-
-  onDestroy(() => {
-    if (browser) {
-      window.removeEventListener('click', handleClickOutside);
-    }
-  });
 
   // Guard liveQuery to only run on the client
   const notes = browser
@@ -47,6 +27,7 @@
     sidebar_switch = !sidebar_switch;
   }
   
+
   async function handleExport() {
     if (!browser) return;
 
@@ -98,6 +79,7 @@
     if (!notesToImport) return;
 
     try {
+      // Remove primary keys before importing to let Dexie auto-generate them
       const notesForImport = notesToImport.map(note => {
         const { id, ...rest } = note;
         return rest;
@@ -139,43 +121,15 @@
         <a href="/">Arboreum</a>
       </div>
       <div class="top-nav">
-        <!-- Desktop Buttons -->
-        <div class="desktop-only-flex">
-          <Button variant="ghost" onClick={handleImport} title="Import from file">
-            <img src="{base}/icons/upload.svg" alt="Import" class="btn-icon" />
-          </Button>
-          <Button variant="ghost" onClick={handleExport} title="Export to file">
-            <img src="{base}/icons/download.svg" alt="Export" class="btn-icon" />
-          </Button>
-          <Button variant="ghost" href="/about" title="About">
-            <img src="{base}/icons/about.svg" alt="About" class="btn-icon" />
-          </Button>
-        </div>
-
-        <!-- Mobile Popover -->
-        <div class="mobile-only">
-          <div on:click|stopPropagation={() => showMoreMenu = !showMoreMenu}>
-            <Button variant="ghost">
-              ...
-            </Button>
-          </div>
-          {#if showMoreMenu}
-            <div class="popover">
-              <Button variant="ghost" onClick={handleImport} title="Import from file">
-                <img src="{base}/icons/upload.svg" alt="Import" class="btn-icon" />
-                Import
-              </Button>
-              <Button variant="ghost" onClick={handleExport} title="Export to file">
-                <img src="{base}/icons/download.svg" alt="Export" class="btn-icon" />
-                Export
-              </Button>
-              <Button variant="ghost" href="/about" title="About">
-                <img src="{base}/icons/about.svg" alt="About" class="btn-icon" />
-                About
-              </Button>
-            </div>
-          {/if}
-        </div>
+        <Button variant="ghost" onClick={handleImport} title="Import from file">
+          <img src="{base}/icons/upload.svg" alt="Import" class="btn-icon" />
+        </Button>
+        <Button variant="ghost" onClick={handleExport} title="Export to file">
+          <img src="{base}/icons/download.svg" alt="Export" class="btn-icon" />
+        </Button>
+        <Button variant="ghost" href="/about" title="About">
+          <img src="{base}/icons/about.svg" alt="About" class="btn-icon" />
+        </Button>
 
         <div class="separator"></div>
 
@@ -307,40 +261,14 @@
   .mobile-only {
     display: none;
   }
-  .desktop-only-flex {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .popover {
-    position: absolute;
-    top: 110%;
-    right: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.5rem;
-    background-color: var(--bg-tertiary);
-    border-radius: 8px;
-    box-shadow: var(--shadow-elevation-medium);
-    z-index: 10;
-  }
-  .popover :global(button) {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    justify-content: flex-start;
-  }
-
 
   @media (max-width: 768px) {
-    .desktop-only, .desktop-only-flex {
+    .desktop-only {
       display: none;
     }
     .mobile-only {
-      display: inline-block; /* Use block/inline-block for positioning context */
-      position: relative;
+      display: inline;
     }
   }
 </style>
+

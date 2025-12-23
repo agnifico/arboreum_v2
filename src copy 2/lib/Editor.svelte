@@ -987,7 +987,7 @@
       rgba(255, 255, 255, 0.08) 0px 1px 0px inset;
   }
   .treemo {
-    width: calc(2 * var(--control-button-height) + 0.5rem);
+    width: calc(4 * var(--control-button-height) + 0.5rem);
     height: var(--control-button-height);
     font-size: 1rem;
     background-color: #588157;
