@@ -49,9 +49,9 @@
     margin-left: auto;
   }
   /* Mobile: a thin vertical strip; the grille runs its full height */
-  :global(.mobile) .spk { flex: 1; width: 22px; border-radius: 11px; flex-direction: column; align-items: center; padding: 22px 0 12px; gap: 10px; }
-  :global(.mobile) .spk .screw { display: none; }
-  :global(.mobile) .slots {
+  :global(.portrait) .spk { flex: 1; width: 22px; border-radius: 11px; flex-direction: column; align-items: center; padding: 22px 0 12px; gap: 10px; }
+  :global(.portrait) .spk .screw { display: none; }
+  :global(.portrait) .slots {
     flex: 1;
     width: 10px;
     height: auto;
@@ -59,7 +59,7 @@
     background: repeating-linear-gradient(180deg, #0b0c0b 0 4px, transparent 4px 8px);
     box-shadow: none;
   }
-  :global(.mobile) .slots i { display: none; }
-  :global(.mobile) .spk-foot { flex-direction: column; }
-  :global(.mobile) .spk-foot .etch-dark { display: none; }
+  :global(.portrait) .slots i { display: none; }
+  :global(.portrait) .spk-foot { flex-direction: column; }
+  :global(.portrait) .spk-foot .etch-dark { display: none; }
 </style>

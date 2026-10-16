@@ -130,6 +130,6 @@
 
 :where(.arb) .pip.st { background: #4c5a49; color: var(--phosphor); border-radius: 4px; width: 22px; }
 
-:where(.arb) .mobile .pip { width: 16px; height: 16px; font-size: 9px; }
+:where(.arb) .portrait .pip { width: 16px; height: 16px; font-size: 9px; }
 
-:where(.arb) .mobile .pip.st { width: 19px; }
+:where(.arb) .portrait .pip.st { width: 19px; }

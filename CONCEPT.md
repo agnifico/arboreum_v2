@@ -28,10 +28,10 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 - **Mobile:** a portrait stack: camera and nameplate, then the screen, the bay (optional), the D-pad with the control pad, and the speaker (optional). On mobile the list opens full screen instead of as a module.
 - **Control pad:** Start, B and A in one straight row.
 - **Configure button:** the only thing on the page besides the console (no caption).
-  - It switches desktop/mobile and turns the bay, speaker and enclosure on and off.
-  - Desktop: a small pill at the bottom right.
-  - Mobile: a gear docked in the console's side column, under the speaker strip.
-- **Mobile layout:**
+  - It switches the orientation (landscape/portrait) and turns the bay, speaker and enclosure on and off.
+  - Landscape: a small pill at the bottom right.
+  - Portrait: a gear docked in the console's side column, under the speaker strip.
+- **Portrait arrangement** (formerly "mobile"):
   - The console is shaped to the phone's own screen, and the screen gets every bit of height the other modules don't need.
   - The map viewer has its own row, with Move and Plant on one side. The D-pad and control pad share a row; A sits above B.
   - The speaker is a thin full-height strip down the right.
@@ -71,6 +71,37 @@ On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and Tab 
 - `src/lib/concept/Configurator.svelte`: the page-level Configure panel.
 - `src/lib/concept/sample.js`: sample content, used until step 4 connects real notes.
 
+## Layout system (decided)
+
+The layout splits into three separate things:
+
+1. **Arrangement:** where the modules sit. There are two hand-crafted arrangements, **landscape** and **portrait**, and both follow the placement rules below.
+2. **Fit:** how an arrangement meets the window.
+   - **Fixed:** the arrangement keeps its designed proportions and zooms as a whole, centred on the mat, like a product photo. Portrait is designed at 440 × 953 (a 9 : 19.5 phone).
+   - **Fluid:** always fills the window exactly; the screen is the elastic module.
+3. **Mode:** Fixed or Fluid.
+
+That gives four results (fixed landscape, fluid landscape, fixed portrait, fluid portrait) from only **two designs**.
+
+| | Fixed (default) | Fluid |
+|---|---|---|
+| Orientation | Picked once from the screen's shape on first load (taller than wide → portrait), then kept. Can be changed in Configure. | Follows the shape of the space continuously, with a buffer so it doesn't flicker at the switch point. |
+| Fit | Uniform zoom to fit, never cut off or scrolled. | Fills the window; other modules keep their size within limits, and the screen takes the rest. |
+| Dock choices | The user picks from the allowed placements. | Automatic, from the same rules. |
+
+**Default is Fixed:** brain off by default. Fluid and custom docks are opt-in in Configure.
+
+### Placement rules
+
+1. **Core trio:** camera and nameplate on top, the screen below. This never changes.
+2. **Controls** always sit below the screen.
+3. **Beside the screen** (landscape only), at most one dock per side: the **list on the left**, the **bay (map viewer) on the right**.
+4. **The bottom row is a pair:** either **D-pad + A/B**, or **List + something else**. A/B never appears without the D-pad.
+5. **No controls row:** the screen goes full screen (touch and keyboard only).
+6. **Portrait:** side docks move below the screen, above the controls row. The list becomes a full screen rather than a module. The speaker is filler and takes a thin edge strip.
+
+Drag-and-drop docking is out for now: the rules above cover a small set of modules (up to about 15) without per-device tuning.
+
 ## Fine-tuning backlog (component-by-component pass)
 
 - **Map viewer, mobile:** give the screen a custom shape (a clip-path cut-out) with the Move and Plant buttons set into that cut-out, instead of sitting beside a plain rectangle.
@@ -82,6 +113,7 @@ Each step is small, checked in the browser, and committed on its own.
 
 **A · Foundations**
 1. ✅ **Split into components.** One file per module, plus shared materials and colour tokens, so each module can evolve on its own.
+1b. ✅ **Fixed fit.** One fit rule everywhere (no device special cases), and orientation picked from the screen's shape. Verified with a resize sweep from 1440 to 320px wide, at three heights and in both orientations: no cut-offs, scrolling or jumps.
 2. **Input bus.** A single source for D-pad, A, B and Start.
    - It takes input from the on-screen buttons and from the keyboard (arrows, Enter, Esc, Tab).
    - Each screen declares what A and B do, and the context strip renders that automatically.
@@ -114,14 +146,17 @@ Each step is small, checked in the browser, and committed on its own.
 12. **Format deck.** A module that swaps with the control pad.
 13. **Camera.** Image upload into the note.
 
-**D · Mobile**
+**D · Layout modes and touch**
 
-14. **Portrait behaviour.** Touch input, the list as a full screen, the drawer, thumb reach, and checks on a real phone.
+14. **Fluid fit.** The console fills the window, the screen is elastic, and orientation follows the space with a buffer.
+15. **Fixed dock choices.** Configure lets the user pick from the allowed placements (sides for the list, bay and speaker, and the bottom-row pair).
+16. **Typing posture.** When the on-screen keyboard opens, the lower modules fold into a thin strip; they come back when it closes.
+17. **Portrait behaviour.** Touch input, the list as a full screen, the drawer, thumb reach, and checks on a real phone and an iPad.
 
 **E · The concept page**
 
-15. **The page around the device.** An intro, an exploded blueprint view with callouts, module spec sheets, a swap playground, and what's next.
-16. **Finishing.**
+18. **The page around the device.** An intro, an exploded blueprint view with callouts, module spec sheets, a swap playground, and what's next.
+19. **Finishing.**
     - Motion, plus optional click sounds through the speaker module.
     - Accessibility and performance.
     - A console sweep, and a regression check of the main app.

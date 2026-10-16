@@ -1,11 +1,11 @@
 <script>
   // Page-level panel, outside the device: view and which modules are slotted.
   let {
-    view = $bindable("desktop"),
+    view = $bindable("landscape"),
     showBay = $bindable(true),
     showSpeaker = $bindable(true),
     showChassis = $bindable(false),
-    docked = false, // mobile: a gear docked in the console under the speaker
+    docked = false, // portrait: a gear docked in the console under the speaker
   } = $props();
   let panelOpen = $state(false);
 
@@ -23,10 +23,10 @@
 <div class="config" class:docked>
   {#if panelOpen}
     <div class="config-panel" role="dialog" aria-label="Configure the device">
-      <p class="cfg-h">VIEW</p>
-      <div class="seg" role="group" aria-label="View">
-        <button class:on={view === "desktop"} aria-pressed={view === "desktop"} onclick={() => (view = "desktop")}>DESKTOP</button>
-        <button class:on={view === "mobile"} aria-pressed={view === "mobile"} onclick={() => (view = "mobile")}>MOBILE</button>
+      <p class="cfg-h">ORIENTATION</p>
+      <div class="seg" role="group" aria-label="Orientation">
+        <button class:on={view === "landscape"} aria-pressed={view === "landscape"} onclick={() => (view = "landscape")}>LANDSCAPE</button>
+        <button class:on={view === "portrait"} aria-pressed={view === "portrait"} onclick={() => (view = "portrait")}>PORTRAIT</button>
       </div>
       <p class="cfg-h">MODULES</p>
       <button class="toggle" aria-pressed={showBay} onclick={() => (showBay = !showBay)}>
@@ -39,7 +39,7 @@
         <span class="sw" class:on={showChassis}></span> ENCLOSURE
       </button>
       <p class="cfg-note">
-        {view === "desktop" ? "The list sits beside the screen on desktop." : "On mobile the list opens full screen."}
+        {view === "landscape" ? "The list sits beside the screen in landscape." : "In portrait the list opens full screen."}
       </p>
     </div>
   {/if}

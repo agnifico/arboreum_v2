@@ -68,10 +68,10 @@
     width: 150px;
     background: linear-gradient(115deg, transparent 0 34%, var(--signal) 34% 52%, transparent 52% 60%, #2b2d2c 60% 66%, transparent 66%);
   }
-  :global(.mobile) .plate { padding: 0 22px 0 28px; gap: 0; }
-  :global(.mobile) .brand { font-size: 26px; }
-  :global(.mobile) .model { font-size: 17px; }
-  :global(.mobile) .plate-name { gap: 8px; }
-  :global(.mobile) .plate-print { display: none; }
-  :global(.mobile) .plate-stripe { width: 80px; }
+  :global(.portrait) .plate { padding: 0 22px 0 28px; gap: 0; }
+  :global(.portrait) .brand { font-size: 26px; }
+  :global(.portrait) .model { font-size: 17px; }
+  :global(.portrait) .plate-name { gap: 8px; }
+  :global(.portrait) .plate-print { display: none; }
+  :global(.portrait) .plate-stripe { width: 80px; }
 </style>

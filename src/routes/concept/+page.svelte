@@ -12,9 +12,9 @@
   import Configurator from "$lib/concept/Configurator.svelte";
 
   // Look test 01: free-standing modules that together make the 1610F.
-  // Desktop (landscape) and mobile (portrait) layouts. See CONCEPT.md.
+  // Landscape and portrait arrangements, fitted FIXED. See CONCEPT.md.
 
-  let view = $state("desktop"); // desktop | mobile
+  let view = $state("landscape"); // landscape | portrait (arrangements, not devices)
   let showBay = $state(true); // bay holds the Map viewer
   let showSpeaker = $state(true);
   let showChassis = $state(false); // optional enclosure behind the modules
@@ -25,44 +25,45 @@
   let stageW = $state(1440); // the page's own width, so overflow can't inflate it
   let winH = $state(900);
 
-  // Only the console and the Configure button are on the page. On a phone the
-  // console fills the screen; elsewhere it fits with a small margin.
-  let phone = $derived(stageW <= 700);
-  // On mobile the gear docks inside the console, so no bottom band is needed.
+  // Fit: FIXED (see CONCEPT.md, "Layout system"). Each arrangement keeps its
+  // designed proportions and zooms as a whole to fit the window, centred on
+  // the mat. One rule everywhere: no device special cases, so no jumps.
+  let small = $derived(stageW < 520 || winH < 520);
+  // Landscape floats the Configure pill below the console; portrait docks it inside.
   let pad = $derived(
-    phone ? { x: 8, top: 8, bottom: 8 } : { x: 24, top: 20, bottom: view === "mobile" ? 20 : 64 }
+    small
+      ? { x: 8, top: 8, bottom: view === "landscape" ? 52 : 16 } // 16: room for the enclosure's 12px lip
+      : { x: 24, top: 20, bottom: view === "landscape" ? 64 : 20 }
   );
   let availW = $derived(stageW - pad.x * 2);
   let availH = $derived(winH - pad.top - pad.bottom);
 
-  // Mobile is drawn 440 wide; its height follows the phone (or a 9:19.5
-  // phone when previewed on a desktop), and the screen takes what's left.
-  const MOBILE_W = 440;
-  let mobileH = $derived(Math.round(MOBILE_W * (phone ? availH / availW : 19.5 / 9)));
+  // Portrait is designed at 440 x 953 (a 9 : 19.5 phone); the screen row takes what's left.
+  const PORTRAIT_W = 440;
+  const PORTRAIT_H = 953;
 
-  let scale = $derived(natW && natH ? Math.min(availW / natW, availH / natH, 1.2) : 1);
+  let scale = $derived(natW && natH ? Math.min(availW / natW, availH / natH, 1.25) : 1);
 
+  // Orientation is picked once from the shape of the screen, then stays put.
   onMount(() => {
-    if (matchMedia("(max-width: 700px)").matches) view = "mobile";
+    if (innerWidth < innerHeight) view = "portrait";
   });
 
   // Grid layout per view; the right column only exists if something is in it.
   let grid = $derived.by(() => {
-    if (view === "mobile") {
+    if (view === "portrait") {
       // A slim side column down the right of the lower modules holds the
       // speaker strip with the Configure gear docked under it, so the
       // top-to-bottom space goes to the screen.
       const cols = "110px 90px 168px 30px";
-      // Short phones give the lower modules a little less, so the screen keeps its share.
-      const short = mobileH < 860;
-      const rows = ["80px", "1fr", showBay && (short ? "160px" : "190px"), short ? "150px" : "160px"].filter(Boolean);
+      const rows = ["80px", "1fr", showBay && "190px", "160px"].filter(Boolean);
       const areas = [
         '"cam plate plate plate"',
         '"scr scr scr scr"',
         showBay && '"bay bay bay side"',
         '"dpad dpad ctl side"',
       ].filter(Boolean);
-      return `width: ${MOBILE_W}px; height: ${mobileH}px; grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`;
+      return `width: ${PORTRAIT_W}px; height: ${PORTRAIT_H}px; grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`;
     }
     const right = showBay || showSpeaker;
     const cols = ["150px", "110px", "400px", "420px", right && "300px"].filter(Boolean);
@@ -112,12 +113,12 @@
 
       <Camera />
       <Nameplate />
-      {#if view === "desktop"}<ListModule />{/if}
+      {#if view === "landscape"}<ListModule />{/if}
       <Screen {missing} {drawerLabel} />
       {#if showBay}<MapViewer />{/if}
       <DPad />
       <ControlPad />
-      {#if view === "mobile"}
+      {#if view === "portrait"}
         <div class="side">
           {#if showSpeaker}<Speaker />{/if}
           <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis docked />
@@ -128,7 +129,7 @@
     </div>
   </div>
 
-  {#if view === "desktop"}
+  {#if view === "landscape"}
     <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis />
   {/if}
 </main>

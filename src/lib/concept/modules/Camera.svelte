@@ -61,7 +61,7 @@
     writing-mode: vertical-rl;
     font-size: 8px;
   }
-  :global(.mobile) .lens { width: 56px; height: 56px; }
-  :global(.mobile) .lens-glass { width: 26px; height: 26px; }
-  :global(.mobile) .cam-label { display: none; }
+  :global(.portrait) .lens { width: 56px; height: 56px; }
+  :global(.portrait) .lens-glass { width: 26px; height: 26px; }
+  :global(.portrait) .cam-label { display: none; }
 </style>

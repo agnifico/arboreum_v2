@@ -103,11 +103,11 @@
     bottom: 12px;
     text-align: center;
   }
-  :global(.mobile) .ctl-row { gap: 14px; margin-top: -10px; }
-  :global(.mobile) .start-well { padding: 7px 8px 10px; }
-  :global(.mobile) .start { width: 48px; height: 20px; font-size: 7.5px; letter-spacing: 0.1em; }
+  :global(.portrait) .ctl-row { gap: 14px; margin-top: -10px; }
+  :global(.portrait) .start-well { padding: 7px 8px 10px; }
+  :global(.portrait) .start { width: 48px; height: 20px; font-size: 7.5px; letter-spacing: 0.1em; }
   /* Wells: bottom padding = top + the key's drop (round 5px, Start 3px) */
-  :global(.mobile) .ab-pad { flex-direction: column-reverse; gap: 10px; padding: 8px 8px 13px; border-radius: 34px; }
-  :global(.mobile) .round { width: 44px; height: 44px; font-size: 15px; }
-  :global(.mobile) .ctl-label { font-size: 8.5px; letter-spacing: 0.12em; }
+  :global(.portrait) .ab-pad { flex-direction: column-reverse; gap: 10px; padding: 8px 8px 13px; border-radius: 34px; }
+  :global(.portrait) .round { width: 44px; height: 44px; font-size: 15px; }
+  :global(.portrait) .ctl-label { font-size: 8.5px; letter-spacing: 0.12em; }
 </style>

@@ -123,14 +123,14 @@
     font-size: 9px;
   }
   /* Mobile: both buttons on one side, so the screen gets the width */
-  :global(.mobile) .bay { flex-direction: row; align-items: stretch; padding: 16px 16px 16px 18px; gap: 16px; }
-  :global(.mobile) .map-glass { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-  :global(.mobile) .map-grid { height: calc(100% - 22px); width: auto; aspect-ratio: 12 / 9; align-self: center; }
-  :global(.mobile) .map-read { text-align: center; }
-  :global(.mobile) .map-btns { flex-direction: column; justify-content: center; gap: 8px; }
-  :global(.mobile) .mb-wrap { gap: 6px; }
-  :global(.mobile) .map-btn { width: 40px; height: 40px; border-radius: 10px; font-size: 16px; }
-  :global(.mobile) .bay-label { display: none; }
+  :global(.portrait) .bay { flex-direction: row; align-items: stretch; padding: 16px 16px 16px 18px; gap: 16px; }
+  :global(.portrait) .map-glass { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  :global(.portrait) .map-grid { height: calc(100% - 22px); width: auto; aspect-ratio: 12 / 9; align-self: center; }
+  :global(.portrait) .map-read { text-align: center; }
+  :global(.portrait) .map-btns { flex-direction: column; justify-content: center; gap: 8px; }
+  :global(.portrait) .mb-wrap { gap: 6px; }
+  :global(.portrait) .map-btn { width: 40px; height: 40px; border-radius: 10px; font-size: 16px; }
+  :global(.portrait) .bay-label { display: none; }
   @keyframes blink {
     50% { opacity: 0; }
   }

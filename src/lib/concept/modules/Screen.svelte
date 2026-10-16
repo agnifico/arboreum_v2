@@ -259,19 +259,19 @@
   .pages i.on {
     background: var(--phosphor);
   }
-  :global(.mobile) .screen { padding: 22px 18px 26px; }
-  :global(.mobile) .status { padding: 9px 12px; font-size: 11px; }
-  :global(.mobile) .wide-only { display: none; }
-  :global(.mobile) .code { padding: 10px 14px 10px 0; font-size: 13px; line-height: 22px; }
-  :global(.mobile) .gutter { width: 34px; padding-right: 10px; }
-  :global(.mobile) .cursor { height: 15px; width: 8px; }
-  :global(.mobile) .alert { top: 44px; right: 10px; padding: 4px 8px 4px 4px; font-size: 10px; }
-  :global(.mobile) .bang { width: 16px; height: 16px; font-size: 11px; }
-  :global(.mobile) .ab { right: 10px; bottom: 50px; gap: 10px; padding: 6px 9px; font-size: 10px; }
-  :global(.mobile) .strip { padding: 0 10px; gap: 6px; font-size: 10px; }
-  :global(.mobile) .strip-label { width: 50px; }
-  :global(.mobile) .keys { margin-left: 4px; gap: 4px; }
-  :global(.mobile) .key { min-width: 20px; padding: 2px 4px; }
+  :global(.portrait) .screen { padding: 22px 18px 26px; }
+  :global(.portrait) .status { padding: 9px 12px; font-size: 11px; }
+  :global(.portrait) .wide-only { display: none; }
+  :global(.portrait) .code { padding: 10px 14px 10px 0; font-size: 13px; line-height: 22px; }
+  :global(.portrait) .gutter { width: 34px; padding-right: 10px; }
+  :global(.portrait) .cursor { height: 15px; width: 8px; }
+  :global(.portrait) .alert { top: 44px; right: 10px; padding: 4px 8px 4px 4px; font-size: 10px; }
+  :global(.portrait) .bang { width: 16px; height: 16px; font-size: 11px; }
+  :global(.portrait) .ab { right: 10px; bottom: 50px; gap: 10px; padding: 6px 9px; font-size: 10px; }
+  :global(.portrait) .strip { padding: 0 10px; gap: 6px; font-size: 10px; }
+  :global(.portrait) .strip-label { width: 50px; }
+  :global(.portrait) .keys { margin-left: 4px; gap: 4px; }
+  :global(.portrait) .key { min-width: 20px; padding: 2px 4px; }
   @keyframes blink {
     50% { opacity: 0; }
   }

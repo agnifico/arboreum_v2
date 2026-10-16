@@ -77,5 +77,5 @@
     color: rgba(20, 28, 16, 0.55);
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
   }
-  :global(.mobile) .dpad { transform: scale(0.84) translateY(-8px); }
+  :global(.portrait) .dpad { transform: scale(0.84) translateY(-8px); }
 </style>
