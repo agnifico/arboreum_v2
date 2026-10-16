@@ -1279,6 +1279,20 @@
     transform: scale(1.1);
   }
 
+  /* Touch screens: thumb-sized toolbar targets */
+  @media (pointer: coarse) {
+    .app {
+      --control-button-height: 36px;
+    }
+    #headingSizeSelector .thin-btn {
+      width: 28px;
+    }
+    .color-swatch {
+      width: 22px;
+      height: 28px;
+    }
+  }
+
   @media (max-width: 900px) {
     .app-bg {
       width: 100%;
