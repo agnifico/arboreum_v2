@@ -34,6 +34,7 @@
   let showBay = $state(true); // bay holds the Map viewer
   let showSpeaker = $state(true);
   let showChassis = $state(false); // optional enclosure behind the modules
+  let showGlare = $state(false); // reflections on the screens
 
   // The device is drawn at its natural size, then scaled to fit the window.
   let natW = $state(0);
@@ -121,6 +122,7 @@
     <div
       class="device {view}"
       class:chassis={showChassis}
+      class:no-glare={!showGlare}
       style="{grid} transform: scale({scale});"
       bind:offsetWidth={natW}
       bind:offsetHeight={natH}
@@ -140,7 +142,7 @@
       {#if view === "portrait"}
         <div class="side">
           {#if showSpeaker}<Speaker />{/if}
-          <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis docked />
+          <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis bind:showGlare docked />
         </div>
       {:else if showSpeaker}
         <Speaker />
@@ -149,7 +151,7 @@
   </div>
 
   {#if view === "landscape"}
-    <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis />
+    <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis bind:showGlare />
   {/if}
 </main>
 

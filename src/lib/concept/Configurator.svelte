@@ -5,6 +5,7 @@
     showBay = $bindable(true),
     showSpeaker = $bindable(true),
     showChassis = $bindable(false),
+    showGlare = $bindable(false),
     docked = false, // portrait: a gear docked in the console under the speaker
   } = $props();
   let panelOpen = $state(false);
@@ -37,6 +38,9 @@
       </button>
       <button class="toggle" aria-pressed={showChassis} onclick={() => (showChassis = !showChassis)}>
         <span class="sw" class:on={showChassis}></span> ENCLOSURE
+      </button>
+      <button class="toggle" aria-pressed={showGlare} onclick={() => (showGlare = !showGlare)}>
+        <span class="sw" class:on={showGlare}></span> SCREEN GLARE
       </button>
       <p class="cfg-note">
         {view === "landscape" ? "The list sits beside the screen in landscape." : "In portrait the list opens full screen."}

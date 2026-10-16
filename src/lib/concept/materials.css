@@ -147,3 +147,8 @@
   background: var(--signal);
   box-shadow: 0 0 8px var(--signal);
 }
+
+/* Configure → Screen glare (off by default) */
+:where(.arb) .no-glare .glare {
+  display: none;
+}
