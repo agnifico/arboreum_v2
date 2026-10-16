@@ -53,8 +53,14 @@
   }
 
   $effect(() => {
-    const key = device.focus === "editor" && device.isNew ? "new" : (device.note?.noteid ?? "none");
-    const html = device.focus === "editor" && device.isNew ? "" : (device.note?.text ?? "");
+    const editing = device.focus === "editor";
+    const key = editing ? device.editingId : (device.note?.noteid ?? "none");
+    // Saving a new note turns "new" into its real id: same content, no reload.
+    if (editing && loadedKey === "new" && key !== "new") {
+      loadedKey = key;
+      return;
+    }
+    const html = editing ? (key === "new" ? "" : untrack(() => device.raw.find((n) => n.noteid === key)?.text ?? "")) : (device.note?.text ?? "");
     untrack(() => load(key, html));
   });
 

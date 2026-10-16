@@ -129,7 +129,7 @@ Each step is small, checked in the browser, and committed on its own.
    - gutter line numbers and a highlighted current line;
    - an orange block cursor;
    - markdown-style shortcuts.
-7. **Saving and the Start menu.**
+7. ✅ **Saving and the Start menu.**
    - Save, unsaved state and the status line.
    - Start menu: new, save, delete (with confirm), backup.
 8. **Secondary strip.** Two pages, switched with ◀ ▶:

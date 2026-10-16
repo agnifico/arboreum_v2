@@ -93,7 +93,13 @@
   let drawerLabel = $derived(showBay ? "TREE" : "TREE · PLOT");
 </script>
 
-<svelte:window bind:innerHeight={winH} onkeydown={handleKeydown} />
+<svelte:window
+  bind:innerHeight={winH}
+  onkeydown={handleKeydown}
+  onbeforeunload={(e) => {
+    if (device.dirty) e.preventDefault();
+  }}
+/>
 
 <svelte:head>
   <title>Arboreum 1610F · look test</title>

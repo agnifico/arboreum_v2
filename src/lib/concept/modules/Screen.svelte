@@ -83,7 +83,11 @@
       <div class="overlay confirm" role="alertdialog" aria-label={device.overlay.title}>
         <div class="ov-title">{device.overlay.title}</div>
         <p class="ov-text">{device.overlay.text}</p>
-        <div class="ov-keys"><span><i class="pip a">A</i>{device.overlay.yes}</span><span><i class="pip b">B</i>{device.overlay.no}</span></div>
+        <div class="ov-keys">
+          <span><i class="pip a">A</i>{device.overlay.yes}</span>
+          <span><i class="pip b">B</i>{device.overlay.no}</span>
+          {#if device.overlay.alt}<span><i class="pip st">≡</i>{device.overlay.alt.label}</span>{/if}
+        </div>
       </div>
     {/if}
     <div class="glare" aria-hidden="true"></div>

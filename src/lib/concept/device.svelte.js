@@ -3,6 +3,8 @@
 import { getContext, setContext } from "svelte";
 import { liveQuery } from "dexie";
 import { db } from "$lib/db.js";
+import { v4 as uuidv4 } from "uuid";
+import { normalizeBackup } from "$lib/backup.js";
 
 const KEY = "arb-device";
 export const provideDevice = (device) => setContext(KEY, device);
@@ -72,6 +74,9 @@ export class Device {
   editorApi = null;
   /** Editing a note that hasn't been saved yet. */
   isNew = $state(false);
+  /** The note open in the editor ("new" before its first save). Separate
+      from the list selection, so live list updates never swap it out. */
+  editingId = $state(null);
   draftTitle = $state("");
   /** The editor's current HTML and what it was when loaded or last saved. */
   html = $state("");
@@ -109,7 +114,8 @@ export class Device {
 
   /** The note as stored (raw title, not the display "untitled"). */
   get stored() {
-    return this.raw.find((n) => n.noteid === this.selectedId);
+    const id = this.focus === "editor" ? this.editingId : this.selectedId;
+    return this.raw.find((n) => n.noteid === id);
   }
 
   get dirty() {
@@ -152,7 +158,7 @@ export class Device {
   get labels() {
     const o = this.overlay;
     if (o?.kind === "menu") return { a: "SELECT", b: "CLOSE", start: "CLOSE" };
-    if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: "—" };
+    if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—" };
     if (this.focus === "editor") return { a: "SAVE", b: "LIST", start: "MENU" };
     return { a: "OPEN", b: "SORT", start: "MENU" };
   }
@@ -190,49 +196,164 @@ export class Device {
           ]
         : [
             { label: "NEW NOTE", run: () => this.newNote() },
-            { label: "SAVE BACKUP", run: () => this.say("BACKUP · STEP 7") },
-            { label: "LOAD BACKUP", run: () => this.say("BACKUP · STEP 7") },
+            { label: "SAVE BACKUP", run: () => this.saveBackup() },
+            { label: "LOAD BACKUP", run: () => this.loadBackup() },
           ];
     this.overlay = { kind: "menu", title: "MENU", items, index: 0 };
   }
 
-  confirm({ title, text, yes, no, onYes = () => {}, onNo = () => {} }) {
-    this.overlay = { kind: "confirm", title, text, yes, no, onYes, onNo };
+  /** A yes/no box; `alt` adds a third choice on Start ({ label, run }). */
+  confirm({ title, text, yes, no, onYes = () => {}, onNo = () => {}, alt = null }) {
+    this.overlay = { kind: "confirm", title, text, yes, no, onYes, onNo, alt };
   }
 
-  // Placeholders until real notes (step 4) and saving (step 7).
-  save() {
-    this.say("SAVED ✓");
+  /** Save the open note (creates it on first save). Returns true on success. */
+  async save() {
+    if (this.focus !== "editor") return false;
+    const html = this.editorApi?.getHTML() ?? this.html;
+    const title = this.draftTitle.trim();
+    const data = { title, text: html, updatedAt: new Date() };
+    try {
+      if (this.isNew) {
+        const note = { noteid: uuidv4(), icon: "/Tree2.png", createdAt: new Date(), mapX: null, mapY: null, ...data };
+        note.id = await db.notes.add(note);
+        // Show it straight away, unless the live query got there first.
+        if (!this.raw.some((n) => n.noteid === note.noteid)) this.raw = [...this.raw, note];
+        this.isNew = false;
+        this.editingId = note.noteid;
+        this.selectedId = note.noteid;
+      } else {
+        const stored = this.stored;
+        await db.notes.update(stored.id, data);
+        this.raw = this.raw.map((n) => (n.noteid === stored.noteid ? { ...n, ...data } : n));
+      }
+      this.draftTitle = title;
+      this.baseline = { title, html };
+      this.say("SAVED ✓");
+      return true;
+    } catch (error) {
+      console.error("Couldn't save the note:", error);
+      this.say("COULDN'T SAVE · TRY AGAIN", 3000);
+      return false;
+    }
+  }
+
+  async deleteNote() {
+    const stored = this.stored;
+    if (!stored) return;
+    const i = this.index;
+    try {
+      await db.notes.delete(stored.id);
+    } catch (error) {
+      console.error("Couldn't delete the note:", error);
+      return this.say("COULDN'T DELETE", 3000);
+    }
+    this.raw = this.raw.filter((n) => n.noteid !== stored.noteid);
+    this.isNew = false;
+    this.editingId = null;
+    this.focus = "list";
+    this.index = Math.min(i, this.notes.length - 1);
+    this.editorApi?.reload();
+    this.say("DELETED");
+  }
+
+  /** Download every note as a JSON backup (same format as the classic app). */
+  async saveBackup() {
+    const all = await db.notes.toArray();
+    const blob = new Blob([JSON.stringify(all, null, 2)], { type: "application/json" });
+    const a = Object.assign(document.createElement("a"), {
+      href: URL.createObjectURL(blob),
+      download: `arboreum-backup-${new Date().toISOString().slice(0, 10)}.json`,
+    });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+    this.say(`BACKUP SAVED · ${all.length}`);
+  }
+
+  /** Pick a backup file, confirm, then replace the notes in one transaction. */
+  loadBackup() {
+    const input = Object.assign(document.createElement("input"), { type: "file", accept: ".json,application/json" });
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      let parsed;
+      try {
+        parsed = normalizeBackup(JSON.parse(await file.text())).notes;
+      } catch {
+        parsed = [];
+      }
+      if (!parsed.length) return this.say("NOT AN ARBOREUM BACKUP", 3000);
+      this.confirm({
+        title: "LOAD BACKUP?",
+        text: `Replace the notes in this browser with ${parsed.length} from the backup?`,
+        yes: "REPLACE",
+        no: "CANCEL",
+        onYes: async () => {
+          try {
+            await db.transaction("rw", db.notes, async () => {
+              await db.notes.clear();
+              await db.notes.bulkAdd(parsed);
+            });
+            this.selectedId = null;
+            this.say(`LOADED · ${parsed.length}`);
+          } catch (error) {
+            console.error("Couldn't load the backup:", error);
+            this.say("COULDN'T LOAD · NOTHING CHANGED", 3000);
+          }
+        },
+      });
+    };
+    input.click();
   }
   /** Open the selected note for editing. */
   open() {
     if (!this.note) return;
     this.isNew = false;
-    this.draftTitle = this.stored?.title ?? "";
+    this.editingId = this.note.noteid;
+    this.draftTitle = this.raw.find((n) => n.noteid === this.editingId)?.title ?? "";
     this.baseline = { title: this.draftTitle, html: this.html };
     this.focus = "editor";
   }
 
   newNote() {
-    this.isNew = true;
-    this.draftTitle = "";
-    this.focus = "editor";
+    const go = () => {
+      this.isNew = true;
+      this.editingId = "new";
+      this.draftTitle = "";
+      this.focus = "editor";
+    };
+    if (this.dirty) return this.#askBeforeLeaving(go);
+    go();
   }
 
   /** Back to the list; asks first if there are unsaved changes. */
   leave() {
     if (!this.dirty) return this.#toList();
+    this.#askBeforeLeaving(() => this.#toList());
+  }
+
+  #askBeforeLeaving(then) {
     this.confirm({
       title: "UNSAVED CHANGES",
       text: this.isNew ? "This note hasn't been saved yet." : "You've changed this note since it was saved.",
-      yes: "KEEP EDITING",
+      yes: "SAVE",
       no: "DISCARD",
-      onNo: () => this.#toList(),
+      alt: { label: "KEEP EDITING", run: () => {} },
+      onYes: async () => {
+        if (await this.save()) then();
+      },
+      onNo: () => {
+        this.baseline = { title: this.draftTitle, html: this.html };
+        then();
+      },
     });
   }
 
   #toList() {
     this.isNew = false;
+    this.editingId = null;
     this.focus = "list";
     this.editorApi?.reload();
   }
@@ -243,10 +364,7 @@ export class Device {
       text: `“${title}” and its tree will be gone. This can't be undone.`,
       yes: "DELETE",
       no: "KEEP",
-      onYes: () => {
-        this.focus = "list";
-        this.say("DELETED");
-      },
+      onYes: () => this.deleteNote(),
     });
   }
 
@@ -267,6 +385,10 @@ export class Device {
 
   #confirmInput = (button) => {
     const c = this.overlay;
+    if (button === "start" && c.alt) {
+      this.overlay = null;
+      c.alt.run();
+    }
     if (button === "a") {
       this.overlay = null;
       c.onYes();
