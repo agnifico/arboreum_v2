@@ -187,6 +187,25 @@
     height: 1.2rem; /* Reserve space */
   }
 
+  @media (max-width: 768px) {
+    /* Drawer over the page (see .scrim in +layout.svelte) */
+    #sidebar {
+      position: absolute;
+      top: 0.5rem;
+      bottom: 0.5rem;
+      left: 0.5rem;
+      z-index: 20;
+      width: min(320px, calc(100% - 2rem));
+      min-width: 0;
+      height: auto;
+      margin: 0;
+      box-sizing: border-box;
+      /* Same tint as desktop, but opaque so the page doesn't show through */
+      background-color: var(--evergreen);
+      background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35));
+    }
+  }
+
   .notes {
     position: relative;
     display: flex;

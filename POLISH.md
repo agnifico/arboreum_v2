@@ -45,7 +45,7 @@ If that changes, a migration and a test against v2 data come with it.
 ## 5. Mobile (375px)
 
 - [x] **M1** Header is 472px wide: Create New is pushed off-screen.
-- [ ] **M2** Sidebar is a fixed 280px column, open by default, so the editor and reading view are pushed off-screen and the page scrolls sideways.
+- [x] **M2** Sidebar is a fixed 280px column, open by default, so the editor and reading view are pushed off-screen and the page scrolls sideways.
 - [ ] **M3** Editor toolbar and side controls need re-checking once M2 is fixed (touch targets, scrolling).
 
 ## 6. Accessibility

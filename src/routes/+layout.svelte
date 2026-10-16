@@ -15,6 +15,7 @@
   import Garden from './Garden.svelte';
   import { base } from '$app/paths';
   import { normalizeBackup } from '$lib/backup.js';
+  import { afterNavigate } from '$app/navigation';
 
   let sidebar_switch = $state(true);
   let showImportConfirm = $state(false);
@@ -27,15 +28,29 @@
     }
   }
 
+  // On phones the sidebar is a drawer over the page: closed by default and
+  // after each navigation, so the note or editor gets the whole screen.
+  const mobileQuery = browser ? window.matchMedia('(max-width: 768px)') : null;
+  let isMobile = $state(false);
+  const updateIsMobile = () => (isMobile = mobileQuery.matches);
+
+  afterNavigate(() => {
+    if (isMobile) sidebar_switch = false;
+  });
+
   onMount(() => {
     if (browser) {
       window.addEventListener('click', handleClickOutside);
+      updateIsMobile();
+      if (isMobile) sidebar_switch = false;
+      mobileQuery.addEventListener('change', updateIsMobile);
     }
   });
 
   onDestroy(() => {
     if (browser) {
       window.removeEventListener('click', handleClickOutside);
+      mobileQuery.removeEventListener('change', updateIsMobile);
     }
   });
 
@@ -201,6 +216,7 @@
   {/if}
   <div id="page-container" class:sidebar-closed={!sidebar_switch}>
     {#if sidebar_switch && !$isFullscreen}
+      <button class="scrim" on:click={toggleSidebar} aria-label="Close notes list"></button>
       <Sidebar notes={$notes} />
     {:else if !$isFullscreen}
       <button class="greenline" on:click={toggleSidebar}></button>
@@ -309,6 +325,10 @@
     width: 24px;
   }
 
+  .scrim {
+    display: none;
+  }
+
   .toast-region {
     position: fixed;
     left: 50%;
@@ -380,6 +400,21 @@
     }
     .top-nav form.desktop-only-form {
       display: none;
+    }
+    /* ☰ in the header opens the drawer; the edge strip would cover content */
+    .greenline {
+      display: none;
+    }
+    .scrim {
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 15;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      background-color: rgba(10, 28, 33, 0.6);
     }
     .mobile-only {
       display: inline-block; /* Use block/inline-block for positioning context */
