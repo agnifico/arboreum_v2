@@ -45,6 +45,11 @@
   $effect(() => () => clearTimeout(reactTimer));
 
   let asleep = $derived(!device.editing);
+  // A tall screen has room for the trees under the buddy: tap one to pick it
+  // (the screen shows more, as the Map viewer shows more garden).
+  let stageW = $state(0);
+  let stageH = $state(0);
+  let roomy = $derived(!treeMode && stageH > stageW * 1.4);
   let say = $derived(reaction || (asleep ? "(－_－) zzZ" : !device.draftIcon ? "pick me a tree?" : line));
 </script>
 
@@ -53,7 +58,7 @@
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="map-glass trm-glass">
-    <div class="stage">
+    <div class="stage" class:roomy bind:clientWidth={stageW} bind:clientHeight={stageH}>
       {#if treeMode}
         <div class="grid-wrap"><TreeGrid fill={!tall} /></div>
       {:else}
@@ -65,6 +70,7 @@
           </span>
           <span class="ground" aria-hidden="true"></span>
         </button>
+        {#if roomy}<div class="shelf"><TreeGrid cursor={false} live={!asleep} /></div>{/if}
       {/if}
     </div>
     <div class="trm-read">{readout}</div>
@@ -93,15 +99,34 @@
     padding: 28px 24px 30px;
     gap: 18px;
   }
+  /* The screen takes the bay's spare height; the keys sit under it */
   .trm-glass {
     width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     padding: 10px;
   }
   .stage {
     position: relative;
-    aspect-ratio: 12 / 9;
+    flex: 1;
+    min-height: 174px; /* the design's 12 × 9 screen */
     border-radius: 3px;
     overflow: hidden;
+  }
+  .stage.roomy {
+    display: flex;
+    flex-direction: column;
+  }
+  .roomy .buddy {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
+  .shelf {
+    padding: 10px;
+    border-top: 1px solid rgba(213, 228, 198, 0.1);
   }
   .grid-wrap {
     height: 100%;
@@ -115,7 +140,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center; /* the buddy stays together on a tall screen */
     gap: 6px;
     padding: 10px 10px 12px;
     background: radial-gradient(70% 55% at 50% 78%, rgba(213, 228, 198, 0.08), transparent 70%);
@@ -125,7 +150,7 @@
   .bubble {
     position: relative;
     max-width: 92%;
-    margin-bottom: auto;
+    margin-bottom: 14px;
     padding: 6px 10px;
     font-size: 13px;
     line-height: 1.3;
@@ -269,31 +294,30 @@
     text-align: center;
     font-size: 9px;
   }
-  /* Tall bay: a portrait-shaped screen with a bigger buddy */
+  /* Tall bay: a bigger buddy */
   .tall {
-    justify-content: center;
     padding-inline: 16px;
-  }
-  .tall .stage {
-    aspect-ratio: 9 / 12;
-  }
-  .tall .bubble {
-    margin-top: 18%;
   }
   .tall .sprite {
     width: 58%;
   }
   /* Portrait: a short, wide screen; the keys stack on the right */
   :global(.portrait) .trm { flex-direction: row; align-items: stretch; padding: 16px 16px 16px 18px; gap: 16px; }
-  :global(.portrait) .trm-glass { flex: 1; display: flex; flex-direction: column; }
-  :global(.portrait) .stage { flex: 1; aspect-ratio: auto; }
+  :global(.portrait) .trm-glass {
+    display: grid;
+    grid-template: "stage stage" minmax(0, 1fr) "read ab" 20px / 1fr auto; /* one fixed line, as the Map viewer */
+    gap: 4px 12px;
+    align-items: center;
+  }
+  :global(.portrait) .stage { grid-area: stage; align-self: stretch; min-height: 0; }
   :global(.portrait) .buddy { flex-direction: row; align-items: flex-end; justify-content: center; gap: 12px; padding: 8px 14px; }
   :global(.portrait) .bubble { margin: 0; align-self: center; }
   :global(.portrait) .bubble::after { left: auto; right: -5px; bottom: 50%; transform: rotate(-45deg); }
   :global(.portrait) .sprite { width: auto; height: 78%; }
   :global(.portrait) .ground { display: none; }
-  :global(.portrait) .trm-read { margin-top: 4px; text-align: center; }
-  :global(.portrait) .trm-ab { justify-content: center; margin-top: 4px; padding-top: 4px; }
+  :global(.portrait) .trm-read { grid-area: read; margin-top: 0; }
+  :global(.portrait) .trm-glass:has(.trm-ab.off) .trm-read { grid-column: 1 / -1; text-align: center; }
+  :global(.portrait) .trm-ab { grid-area: ab; margin-top: 0; padding-top: 0; border-top: none; }
   :global(.portrait) .trm-ab.off { display: none; }
   /* TREE on top, the flip keys side by side under it */
   :global(.portrait) .trm-btns { display: grid; grid-template-columns: auto auto; align-content: center; justify-items: center; gap: 8px 6px; }

@@ -5,7 +5,9 @@
   import { TREES } from "./trees.js";
   // fill: rows share the height they're given (a module's screen);
   // otherwise each tile is square and the grid takes the height it needs.
-  let { fill = false } = $props();
+  // cursor: show the D-pad's cursor (off where the grid is only for tapping);
+  // live: taps pick (off while no note is open).
+  let { fill = false, cursor = true, live = true } = $props();
   const device = useDevice();
   // Tapping a tree keeps typing focus where it was (as hardware keys do).
   const keepFocus = (e) => e.preventDefault();
@@ -15,12 +17,13 @@
   {#each TREES as t, i}
     <button
       class="tree"
-      class:cur={i === device.treeIndex}
+      class:cur={cursor && i === device.treeIndex}
       class:chosen={t.src === device.draftIcon}
       role="radio"
       aria-checked={t.src === device.draftIcon}
       aria-label={t.name}
       onmousedown={keepFocus}
+      disabled={!live}
       onclick={() => device.pickTree(i)}
     ><img src={t.src} alt="" /></button>
   {/each}
@@ -52,6 +55,9 @@
     height: 100%;
     object-fit: contain;
     image-rendering: pixelated;
+  }
+  .tree:disabled {
+    opacity: 0.45;
   }
   .tree.chosen {
     background: rgba(213, 228, 198, 0.14);

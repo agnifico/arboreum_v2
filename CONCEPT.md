@@ -98,7 +98,7 @@ Simplified from an earlier Fixed/Fluid plan and a "v2" proposal (a switch thresh
 
 1. **Two arrangements, picked by the window's shape.** Taller than wide gives **portrait**, otherwise **landscape**. It follows the window live (rotating a phone or tablet switches it), with a small buffer at the line so it doesn't flicker while resizing. The orientation switch in Configure stays as an override (Auto / Landscape / Portrait).
 2. **One fit rule.** If the window is smaller than the design, the console zooms down as a whole. If it's bigger, the **screen** takes the extra space, in width and height. Every other module is hardware and keeps its size; keys never grow.
-3. **Neighbours ride along.** Modules that share the screen's row or column get a longer body because the grid stretches them, with their keys centred at normal size. Nothing is redesigned per size.
+3. **Neighbours ride along.** Modules that share the screen's row or column get a longer body because the grid stretches them, with their keys centred at normal size. Nothing is redesigned per size. A module's own screen is the exception that grows with it, and it shows more rather than bigger: the Map viewer shows more of the garden (the base 12 × 9 view sets the tile size, then as many whole tiles as fit, up to the whole 25 × 15), and Treemoji's screen, when it's tall, puts the tree grid on a shelf under the buddy, ready to tap.
 
 4. **Each arrangement keeps its own bay.** Portrait starts without the bay, so the screen gets the room (the drawer handles tree and plot); turned back on, it holds the List. Landscape keeps whatever was set there, so rotating back and forth gives each its own.
 
@@ -153,7 +153,7 @@ How that plays out, with the Map viewer as the worked example:
 
 The project blends real-world hardware, UI/UX and modern web layout, and it uses that blend on purpose. Modules that exist only for the look can give way to ones that do something:
 - **Without the Map viewer, the speaker lets the screen grow:** with the bay pulled, the main screen widens into the space.
-- **Without the speaker, the bay grows:** with the speaker pulled and the Map viewer slotted, the Map viewer takes the whole right column and its map zooms in (9 × 12 bigger tiles in place of 12 × 9). A larger map asset can come later.
+- **Without the speaker, the bay grows:** with the speaker pulled and the Map viewer slotted, the Map viewer takes the whole right column and its map zooms in (9 tiles across instead of 12, as many rows as fit).
 
 The physical metaphor decides the rules (one dock per side, controls below the screen); the web decides how the space flows.
 
