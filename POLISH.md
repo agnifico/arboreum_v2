@@ -37,6 +37,15 @@ If that changes, a migration and a test against v2 data come with it.
 - [x] **D4** A long unbroken title or word pushes the reading view to 3000px+ wide.
 - [x] **D5** A whitespace-only title is saved as-is and shows as a blank row.
 - Verified OK: create → save → reload → edit keeps title, body and tree; emoji, accents, quotes and HTML-looking text round-trip and are shown escaped.
+- [x] **Tested against data saved by the current version.** Ran `main` @ 628e80a and created notes through its UI: formatting, a list, a long note, unicode, one planted at tile (0,0), one edited. Then opened the same browser profile with this branch on the same origin:
+  - DB shape unchanged (Dexie v2 / IDB v20, same indexes) and nothing rewritten on open.
+  - Every note reads in full.
+  - Editing the (0,0) note keeps its id, `createdAt` and coordinates.
+  - Other notes stay byte-identical.
+  - Export → import of that real data is exact.
+  - Delete confirms by name.
+
+  No migration needed: the IndexedDB shape is untouched.
 
 ## 4. First run
 
