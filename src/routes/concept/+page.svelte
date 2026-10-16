@@ -46,7 +46,9 @@
   // Look test 01: free-standing modules that together make the 1610F.
   // Landscape and portrait arrangements, fitted FIXED. See CONCEPT.md.
 
-  let view = $state("landscape"); // landscape | portrait (arrangements, not devices)
+  let orient = $state("auto"); // Configure: auto | landscape | portrait
+  let shape = $state(null); // the window's shape, for auto
+  let view = $derived(orient === "auto" ? (shape ?? "landscape") : orient); // landscape | portrait (arrangements, not devices)
   let showBay = $state(true);
   let bayModule = $state("map"); // what's in the bay: map | treemoji | list
   let showSpeaker = $state(true);
@@ -81,9 +83,15 @@
   // Padding around the grid: the enclosure's, or room for the bottom modules' thickness.
   let frame = $derived(showChassis ? { w: 44, h: 52 } : { w: 0, h: 14 });
 
-  // Orientation is picked once from the shape of the screen, then stays put.
-  onMount(() => {
-    if (innerWidth < innerHeight) view = "portrait";
+  // Auto orientation follows the window's shape: taller than wide is portrait.
+  // After the first pick it only switches 10% past square, so resizing near
+  // the line doesn't flicker.
+  $effect(() => {
+    stageW, winH; // follow resizes and rotation
+    const w = innerWidth, h = innerHeight;
+    if (!shape) shape = h > w ? "portrait" : "landscape";
+    else if (h > w * 1.1) shape = "portrait";
+    else if (w > h * 1.1) shape = "landscape";
   });
 
   // With no speaker under it (or no bottom row), the bay has the whole right
@@ -229,7 +237,7 @@
              the speaker) at the nameplate's left end -->
         <div class={showSpeaker ? "side" : "plate-dock"}>
           {#if showSpeaker}<Speaker />{/if}
-          <Configurator bind:view bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl docked drop={!showSpeaker} />
+          <Configurator {view} bind:orient bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl docked drop={!showSpeaker} />
         </div>
       {:else if showSpeaker && (showDpad || showCtl || !showBay)}
         <!-- (with no controls row the right column has room for one module) -->
@@ -239,7 +247,7 @@
   </div>
 
   {#if view === "landscape"}
-    <Configurator bind:view bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
+    <Configurator {view} bind:orient bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
   {/if}
 </main>
 

@@ -2,7 +2,8 @@
   // Page-level panel, outside the device: view and which modules are slotted.
   import { useDevice } from "./device.svelte.js";
   let {
-    view = $bindable("landscape"),
+    view = "landscape", // the arrangement showing now
+    orient = $bindable("auto"), // auto (follows the window) | landscape | portrait
     showBay = $bindable(true),
     bayModule = $bindable("map"),
     showSpeaker = $bindable(true),
@@ -62,9 +63,10 @@
   {#if panelOpen}
     <div class="config-panel" role="dialog" aria-label="Configure the device">
       <p class="cfg-h">ORIENTATION</p>
-      <div class="seg" role="group" aria-label="Orientation">
-        <button class:on={view === "landscape"} aria-pressed={view === "landscape"} onclick={() => (view = "landscape")}>LANDSCAPE</button>
-        <button class:on={view === "portrait"} aria-pressed={view === "portrait"} onclick={() => (view = "portrait")}>PORTRAIT</button>
+      <div class="seg orient" role="group" aria-label="Orientation">
+        {#each [["auto", "AUTO"], ["landscape", "LANDSCAPE"], ["portrait", "PORTRAIT"]] as [key, label]}
+          <button class:on={orient === key} aria-pressed={orient === key} onclick={() => (orient = key)}>{label}</button>
+        {/each}
       </div>
       <p class="cfg-h">MODULES</p>
       <button class="toggle" aria-pressed={listLeft} disabled={view !== "landscape"} onclick={toggleList}>
@@ -225,6 +227,11 @@
     color: #fff3ea;
     background: var(--graphite);
     box-shadow: 0 2px 0 var(--graphite-side);
+  }
+  /* Three labels of different lengths: each takes its own width */
+  .orient button {
+    flex: auto;
+    padding: 7px 10px;
   }
   /* What a slot holds, under its switch */
   .sub-seg {
