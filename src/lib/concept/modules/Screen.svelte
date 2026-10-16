@@ -21,10 +21,12 @@
   let date = $derived(`${pad2(now.getDate())}·${pad2(now.getMonth() + 1)}`);
   const fmtDate = (d) => (d ? `${pad2(d.getDate())}·${pad2(d.getMonth() + 1)}·${String(d.getFullYear()).slice(2)}` : "—");
 
-  const PAGES = ["format", "details"];
+  // With the Format deck slotted, the strip's format page steps aside.
+  let pages = $derived(device.stripPages);
+  let stripPage = $derived(pages.includes(device.stripPage) ? device.stripPage : pages[0]);
   function page(step) {
-    const i = PAGES.indexOf(device.stripPage);
-    device.stripPage = PAGES[(i + step + PAGES.length) % PAGES.length];
+    const i = pages.indexOf(stripPage);
+    device.stripPage = pages[(i + step + pages.length) % pages.length];
   }
 
   // Enter in the title moves on to the text.
@@ -136,10 +138,10 @@
 
     <!-- Secondary strip: paged with ◀ ▶ (format · details) -->
     <div class="strip">
-      <button class="pg" aria-label="Previous strip page" onclick={() => page(-1)}>◀</button>
-      <span class="strip-label">{device.stripPage === "format" ? "FORMAT" : "DETAILS"}</span>
-      <button class="pg" aria-label="Next strip page" onclick={() => page(1)}>▶</button>
-      {#if device.stripPage === "format"}
+      <button class="pg" class:gone={pages.length < 2} aria-label="Previous strip page" onclick={() => page(-1)}>◀</button>
+      <span class="strip-label">{stripPage === "format" ? "FORMAT" : "DETAILS"}</span>
+      <button class="pg" class:gone={pages.length < 2} aria-label="Next strip page" onclick={() => page(1)}>▶</button>
+      {#if stripPage === "format"}
         <span class="keys" class:off={!device.canFormat}>
           {#each Device.FORMATS as f}
             <button
@@ -163,7 +165,7 @@
           <span class:warn={!d.plot}><i>PLOT</i>{d.plot ? d.plot.map(pad2).join(",") : "NONE"}</span>
         </span>
       {/if}
-      <span class="pages"><i class:on={device.stripPage === "format"}></i><i class:on={device.stripPage === "details"}></i></span>
+      <span class="pages">{#each pages as p}<i class:on={stripPage === p}></i>{/each}</span>
     </div>
     {#if device.overlay?.kind === "menu"}
       <div class="overlay" role="menu" aria-label={device.overlay.title}>
@@ -584,6 +586,9 @@
     background: none;
     font-size: 11px;
     padding: 4px 2px;
+  }
+  .pg.gone {
+    visibility: hidden; /* keeps the label where it was */
   }
   .strip-label {
     width: 64px;

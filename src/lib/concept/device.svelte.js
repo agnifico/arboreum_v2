@@ -112,6 +112,21 @@ export class Device {
   showMarkup = $state(false);
   /** Bottom strip page: "format" or "details". */
   stripPage = $state("format");
+  /** What sits in the control slot: the control pad ("pad") or the Format
+      deck ("deck"). Its latch, or Configure, swaps them. */
+  controls = $state("pad");
+  /** Whether the control slot is filled at all (set by the page from Configure). */
+  ctlSlotted = $state(true);
+  get hasDeck() {
+    return this.ctlSlotted && this.controls === "deck";
+  }
+  /** The strip's pages: with the Format deck slotted, its format keys step aside. */
+  get stripPages() {
+    return this.hasDeck ? ["details"] : ["format", "details"];
+  }
+  swapControls() {
+    this.controls = this.controls === "pad" ? "deck" : "pad";
+  }
 
   #timers = {};
   #msgTimer;

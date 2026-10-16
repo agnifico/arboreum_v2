@@ -10,6 +10,7 @@
   import Treemoji from "$lib/concept/modules/Treemoji.svelte";
   import DPad from "$lib/concept/modules/DPad.svelte";
   import ControlPad from "$lib/concept/modules/ControlPad.svelte";
+  import FormatDeck from "$lib/concept/modules/FormatDeck.svelte";
   import Speaker from "$lib/concept/modules/Speaker.svelte";
   import Configurator from "$lib/concept/Configurator.svelte";
   import { Device, provideDevice } from "$lib/concept/device.svelte.js";
@@ -19,6 +20,7 @@
     const bay = showBay ? bayModule : null;
     device.hasListModule = (view === "landscape" && leftList) || bay === "list";
     untrack(() => device.slot(bay));
+    device.ctlSlotted = showCtl;
   });
   onMount(() => {
     const stop = device.start();
@@ -35,9 +37,11 @@
     if (device.handleKey(event)) event.preventDefault();
   }
 
-  // Bay swap motion: the module slides out sideways, then the next slides in.
-  const eject = () => ({ duration: 200, easing: cubicIn, css: (t, u) => `transform: translateX(${u * 56}px); opacity: ${t};` });
-  const insert = () => ({ delay: 170, duration: 340, easing: backOut, css: (t, u) => `transform: translateX(${u * 56}px); opacity: ${Math.min(1, t * 2)};` });
+  // Swap motion: the module slides out, then the next slides in. The bay
+  // slides sideways; the control slot (pad ⇄ deck) slides down and up.
+  const shift = (u, y) => `transform: translate${y ? "Y" : "X"}(${u * (y ? 40 : 56)}px);`;
+  const eject = (_, { y = false } = {}) => ({ duration: 200, easing: cubicIn, css: (t, u) => `${shift(u, y)} opacity: ${t};` });
+  const insert = (_, { y = false } = {}) => ({ delay: 170, duration: 340, easing: backOut, css: (t, u) => `${shift(u, y)} opacity: ${Math.min(1, t * 2)};` });
 
   // Look test 01: free-standing modules that together make the 1610F.
   // Landscape and portrait arrangements, fitted FIXED. See CONCEPT.md.
@@ -177,7 +181,7 @@
       {#if showBay}
         <!-- Swapping the bay: the old module ejects, the new one slides in -->
         {#key bayModule}
-          <div class="bay-slot" in:insert out:eject>
+          <div class="slot bay-slot" in:insert out:eject>
             {#if bayModule === "map"}<MapViewer tall={tallBay} />
             {:else if bayModule === "treemoji"}<Treemoji tall={tallBay} />
             {:else}<ListModule />{/if}
@@ -185,7 +189,13 @@
         {/key}
       {/if}
       {#if showDpad}<DPad />{/if}
-      {#if showCtl}<ControlPad />{/if}
+      {#if showCtl}
+        {#key device.controls}
+          <div class="slot ctl-slot" in:insert={{ y: true }} out:eject={{ y: true }}>
+            {#if device.controls === "deck"}<FormatDeck />{:else}<ControlPad />{/if}
+          </div>
+        {/key}
+      {/if}
       {#if view === "portrait"}
         <div class="side">
           {#if showSpeaker}<Speaker />{/if}
@@ -270,14 +280,15 @@
       0 12px 0 1px rgba(0, 0, 0, 0.4),
       0 40px 60px -18px rgba(30, 28, 20, 0.55);
   }
-  /* Both bay modules share the cell while one ejects and the next slides in */
-  .bay-slot {
-    grid-area: bay;
+  /* Swappable slots: both modules share the cell while one ejects and the next slides in */
+  .slot {
     display: flex;
     min-width: 0;
     min-height: 0;
   }
-  .bay-slot > :global(.mod) {
+  .bay-slot { grid-area: bay; }
+  .ctl-slot { grid-area: ctl; }
+  .slot > :global(.mod) {
     flex: 1;
     min-width: 0;
   }

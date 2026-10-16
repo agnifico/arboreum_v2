@@ -73,12 +73,17 @@
         <span class="sw" class:on={showDpad}></span> D-PAD
       </button>
       <button class="toggle" aria-pressed={showCtl} onclick={() => (showCtl = !showCtl)}>
-        <span class="sw" class:on={showCtl}></span> CONTROL PAD
+        <span class="sw" class:on={showCtl}></span> CONTROLS
       </button>
+      <div class="seg sub-seg" role="group" aria-label="What the control slot holds">
+        {#each [["pad", "CONTROL PAD"], ["deck", "FORMAT DECK"]] as [key, label]}
+          <button class:on={showCtl && device.controls === key} aria-pressed={showCtl && device.controls === key} disabled={!showCtl} onclick={() => (device.controls = key)}>{label}</button>
+        {/each}
+      </div>
       <button class="toggle" aria-pressed={showBay} onclick={() => (showBay = !showBay)}>
         <span class="sw" class:on={showBay}></span> BAY
       </button>
-      <div class="seg bay-seg" role="group" aria-label="What the bay holds">
+      <div class="seg sub-seg" role="group" aria-label="What the bay holds">
         {#each BAY as [key, label]}
           <button class:on={showBay && bayModule === key} aria-pressed={showBay && bayModule === key} disabled={!showBay} onclick={() => fillBay(key)}>{label}</button>
         {/each}
@@ -214,16 +219,17 @@
     background: var(--graphite);
     box-shadow: 0 2px 0 var(--graphite-side);
   }
-  .bay-seg {
-    margin: 2px 0 6px 44px; /* under the BAY switch */
+  /* What a slot holds, under its switch */
+  .sub-seg {
+    margin: 2px 0 6px 44px;
   }
-  .bay-seg button {
+  .sub-seg button {
     flex: auto;
     padding: 6px 6px;
     font-size: 10px;
     letter-spacing: 0.08em;
   }
-  .bay-seg button:disabled {
+  .sub-seg button:disabled {
     cursor: default;
     opacity: 0.5;
   }

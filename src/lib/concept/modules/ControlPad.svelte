@@ -24,7 +24,9 @@
       </div>
     </div>
   </div>
-  <span class="etch ctl-label">CTL-01 · ⇄ FORMAT DECK</span>
+  <span class="etch ctl-label">
+    CTL-01 · <button class="latch" aria-label="Swap for the Format deck" onmousedown={keepFocus} onclick={() => device.swapControls()}><i>⇄</i>FORMAT DECK</button>
+  </span>
 </section>
 
 <style>

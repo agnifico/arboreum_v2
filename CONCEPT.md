@@ -16,7 +16,7 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 | **Screen** | Where writing happens. The notes list is a full screen here too, not a drawer. | |
 | **Bay** | Swappable slot: **Map viewer**, **Treemoji** or **List**. | Picked in Configure; the old module ejects and the new one slides in. Whatever is slotted does its job; the drawer covers the rest. |
 | **D-pad** | Moves through the list and the text. | |
-| **Control pad** | **A**, **B**, **Start**. | Swaps with the **Format deck**: physical keys for bold, italic, headings, lists and so on. |
+| **Control pad** | **A**, **B**, **Start**. | Swaps with the **Format deck** (FMT-01): physical keys for bold, italic, headings, lists and so on. The orange ⇄ latch in either module's label swaps them; so does Configure. |
 
 ## Structure (decided after look test 00)
 
@@ -83,7 +83,7 @@ Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the pa
 ## Code structure
 
 - `src/routes/concept/+page.svelte`: the stage, the device grid (desktop and mobile layouts) and the module toggles.
-- `src/lib/concept/modules/*.svelte`: one component per module (Camera, Nameplate, ListModule, Screen, MapViewer, Treemoji, DPad, ControlPad, Speaker). Mobile tweaks sit beside each module's own styles.
+- `src/lib/concept/modules/*.svelte`: one component per module (Camera, Nameplate, ListModule, Screen, MapViewer, Treemoji, DPad, ControlPad, FormatDeck, Speaker). Mobile tweaks sit beside each module's own styles.
 - `src/lib/concept/materials.css`: shared materials (module bodies, screws, etched labels, glass, pips). It's scoped to the `.arb` root with `:where()`, so module styles win and nothing leaks into the main app.
 - `src/lib/concept/Configurator.svelte`: the page-level Configure panel.
 - `src/lib/concept/device.svelte.js`: the shared device state (input, screens, notes, saving, map).
@@ -235,7 +235,10 @@ Each step is small, checked in the browser, and committed on its own.
 11. ✅ **Treemoji and bay swapping.**
     - Treemoji: the tree buddy, which takes over the tree grid when it's slotted (its "software" comes with the hardware); the drawer stands in only for the plot.
     - The bay swaps between Map, Treemoji and List, with slide-in/eject motion.
-12. **Format deck.** A module that swaps with the control pad.
+12. ✅ **Format deck.** A module that swaps with the control pad.
+    - Bone keycaps on a dark deck: marks on top (B, I, U, S, HL, code), line kinds below (H1–H3, bullets, numbers, tasks, quote). A key stays down with its LED lit while that format is under the caret.
+    - Swapped by the orange ⇄ latch in either module's label, or in Configure (CONTROLS, then CONTROL PAD · FORMAT DECK). The control slot slides down and up.
+    - With the deck slotted, the screen strip's FORMAT page steps aside (the strip was the deck's virtual stand-in) and only DETAILS shows. A, B and Start stay on the keyboard.
 13. **Camera.** Image upload into the note.
 
 **D · Layout modes and touch**
