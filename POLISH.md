@@ -22,7 +22,7 @@ If that changes, a migration and a test against v2 data come with it.
 - [x] **L1** Titles are cut to 6 characters ("Test n..") whatever the space.
 - [x] **L2** In Select mode, clicking a note also opens it; Enter on a focused note opens it instead of selecting it.
 - [ ] **L3** Delete confirmation is empty: it doesn't say what or how many, there's no "can't be undone", and Delete looks like a normal green action.
-- [ ] **L4** After closing any dialog with Esc, × or a backdrop click, it won't open again (`Modal` mutates a non-bindable `show`), so the second delete attempt silently does nothing.
+- [x] **L4** After closing any dialog with Esc, × or a backdrop click, it won't open again (`Modal` mutates a non-bindable `show`), so the second delete attempt silently does nothing.
 - [ ] **L5** Deleting the note you're viewing leaves its stale page up; reloading, or opening any unknown `/read/<id>`, shows SvelteKit's raw "404 Not found".
 - [ ] **L6** Sort compares raw values: imported notes carry string dates, and mixed with new notes' `Date`s, "Last saved" and "Created" order breaks.
 - [ ] **L7** With zero notes the list is a blank panel.
