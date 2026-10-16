@@ -260,7 +260,8 @@ Each step is small, checked in the browser, and committed on its own.
     - **The keyboard on demand (found in phone testing):** focusing the editor shouldn't raise the phone's keyboard. The editor gets `inputmode="none"` (caret and selection still work, no keyboard), and a keyboard key (⌨) raises it by switching to `inputmode="text"`, then lowers it again. Where Chrome's VirtualKeyboard API exists (Android), use `virtualkeyboardpolicy="manual"` with `navigator.virtualKeyboard.show()` / `hide()`; iOS may need a blur and refocus for the switch to take. Tapping the text moves the caret without raising the keyboard.
 17. **Portrait behaviour.** Touch input, the list as a full screen, the drawer, thumb reach, and checks on a real phone and an iPad.
     - Fixed: the gutter's line numbers drifted from the text at any zoom other than 100% (screen rects are zoomed, the gutter isn't).
-    - Known: the Map viewer's A/B strip squeezes the small map when it shows. Treemoji's tree grid has small tiles in the short bay row. The screen already keeps a fixed height and scrolls inside.
+    - Fixed: on touch the map couldn't plant. In portrait the A/B strip shrank the map when it showed, so the second tap landed on another tile; it now shares the line under the map with the readout. The map also takes taps from pointer events with `touch-action: manipulation`, so tap-tap isn't a double-tap zoom on iOS (not yet checked on a real iPhone).
+    - Known: Treemoji's tree grid has small tiles in the short bay row. The screen already keeps a fixed height and scrolls inside.
 
 **E · The concept page**
 

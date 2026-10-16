@@ -181,7 +181,16 @@
   }
   /* Mobile: both buttons on one side, so the screen gets the width */
   :global(.portrait) .bay { flex-direction: row; align-items: stretch; padding: 16px 16px 16px 18px; gap: 16px; }
-  :global(.portrait) .map-glass { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  /* The readout and the A/B context share the line under the map, so the map
+     never changes size when the A/B context shows (a second tap must land on
+     the same tile to plant). */
+  :global(.portrait) .map-glass {
+    flex: 1;
+    display: grid;
+    grid-template: "map map" minmax(0, 1fr) "read ab" 20px / 1fr auto; /* a fixed line: the pips are taller than the text */
+    gap: 4px 12px;
+    align-items: center;
+  }
   /* Tall bay: a zoomed-in, portrait-shaped map window, centred in the column */
   .tall {
     justify-content: center;
@@ -190,13 +199,14 @@
   .tall .map-grid {
     aspect-ratio: 9 / 12;
   }
-  :global(.portrait) .map-grid { height: calc(100% - 22px); width: auto; aspect-ratio: 12 / 9; align-self: center; }
-  :global(.portrait) .map-read { text-align: center; }
+  :global(.portrait) .map-grid { grid-area: map; align-self: stretch; height: 100%; width: auto; aspect-ratio: 12 / 9; justify-self: center; }
+  :global(.portrait) .map-read { grid-area: read; margin-top: 0; }
+  :global(.portrait) .map-glass:has(.map-ab.off) .map-read { grid-column: 1 / -1; text-align: center; }
   :global(.portrait) .map-btns { flex-direction: column; justify-content: center; gap: 8px; }
   :global(.portrait) .mb-wrap { gap: 6px; }
   :global(.portrait) .map-btn { width: 40px; height: 40px; border-radius: 10px; font-size: 16px; }
   :global(.portrait) .tree-btn { padding: 7px; }
-  :global(.portrait) .map-ab { justify-content: center; margin-top: 4px; padding-top: 4px; }
-  :global(.portrait) .map-ab.off { display: none; } /* the map needs the room more (mobile pass) */
+  :global(.portrait) .map-ab { grid-area: ab; margin-top: 0; padding-top: 0; border-top: none; }
+  :global(.portrait) .map-ab.off { display: none; } /* the readout takes the whole line */
   :global(.portrait) .bay-label { display: none; }
 </style>
