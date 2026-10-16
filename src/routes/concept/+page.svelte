@@ -1,12 +1,13 @@
 <script>
   import { onMount } from "svelte";
 
-  // Look test 01: free-standing modules that together make the F16O.
+  // Look test 01: free-standing modules that together make the 1610F.
   // Desktop (landscape) and mobile (portrait) layouts. See CONCEPT.md.
 
   let view = $state("desktop"); // desktop | mobile
   let showBay = $state(true); // bay holds the Map viewer
   let showSpeaker = $state(true);
+  let showChassis = $state(false); // optional enclosure behind the modules
   let panelOpen = $state(false);
 
   // The device is drawn at its natural size, then scaled to fit the window.
@@ -109,7 +110,7 @@
 />
 
 <svelte:head>
-  <title>Arboreum F16O · look test</title>
+  <title>Arboreum 1610F · look test</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap"
@@ -119,17 +120,23 @@
 
 <main class="stage" bind:clientWidth={stageW}>
   <header class="caption">
-    <span class="cap-title">ARBOREUM <span class="code-id">F16O</span></span>
+    <span class="cap-title">ARBOREUM <span class="code-id">1610F</span></span>
     <span class="cap-sub">Look test 01 · {view === "desktop" ? "desktop / landscape" : "mobile / portrait"} · static</span>
   </header>
 
   <div class="fit" style="width:{natW * scale}px; height:{natH * scale}px;">
     <div
       class="device {view}"
+      class:chassis={showChassis}
       style="{grid} transform: scale({scale});"
       bind:offsetWidth={natW}
       bind:offsetHeight={natH}
     >
+      {#if showChassis}
+        <span class="screw c-tl"></span><span class="screw c-tr"></span>
+        <span class="screw c-bl"></span><span class="screw c-br"></span>
+      {/if}
+
       <!-- CAMERA: doubles as the media button -->
       <section class="mod alu cam" aria-label="Camera module">
         <span class="screw s-tl"></span><span class="screw s-br"></span>
@@ -145,11 +152,11 @@
         <span class="screw s-tl"></span><span class="screw s-bl"></span>
         <div class="plate-name">
           <span class="brand">ARBOREUM</span>
-          <span class="model">F16O</span>
+          <span class="model">1610F</span>
         </div>
         <div class="plate-print">
           <span>MODULAR NOTE SYSTEM</span>
-          <span>REV 16.10 · FRI</span>
+          <span>MODEL 0x1610F</span>
           <span class="marks"><i>◇</i><i>⌂</i><i>◎</i></span>
         </div>
         <div class="plate-stripe" aria-hidden="true"></div>
@@ -333,6 +340,9 @@
         <button class="toggle" aria-pressed={showSpeaker} onclick={() => (showSpeaker = !showSpeaker)}>
           <span class="sw" class:on={showSpeaker}></span> SPEAKER
         </button>
+        <button class="toggle" aria-pressed={showChassis} onclick={() => (showChassis = !showChassis)}>
+          <span class="sw" class:on={showChassis}></span> ENCLOSURE
+        </button>
         <p class="cfg-note">
           {view === "desktop" ? "The list sits beside the screen on desktop." : "On mobile the list opens full screen."}
         </p>
@@ -431,6 +441,23 @@
     padding-bottom: 14px; /* room for the bottom modules' thickness */
     transform-origin: top left;
   }
+
+  /* Optional enclosure: a dark frame the modules sit in */
+  .device.chassis {
+    padding: 22px 22px 30px;
+    border-radius: 28px;
+    background: linear-gradient(170deg, #2e322f, #222523 45%, #1b1d1c);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 0 0 2px rgba(0, 0, 0, 0.35),
+      0 12px 0 #0f1110,
+      0 12px 0 1px rgba(0, 0, 0, 0.4),
+      0 40px 60px -18px rgba(30, 28, 20, 0.55);
+  }
+  .c-tl { top: 9px; left: 9px; }
+  .c-tr { top: 9px; right: 9px; }
+  .c-bl { bottom: 9px; left: 9px; }
+  .c-br { bottom: 9px; right: 9px; }
 
   /* Module body: face gradient, lit top edge, hard side, soft shadow. */
   .mod {
@@ -599,7 +626,7 @@
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 -1px 0 rgba(0, 0, 0, 0.12);
   }
   .model {
-    font-family: var(--mono); /* mono keeps the O of F16O distinct from a zero */
+    font-family: var(--mono); /* model numbers are hex, set in mono */
     font-weight: 700;
     font-size: 26px;
     letter-spacing: 0.04em;
