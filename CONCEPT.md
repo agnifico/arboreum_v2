@@ -254,7 +254,7 @@ Each step is small, checked in the browser, and committed on its own.
 
 **D · Layout modes and touch**
 
-14. **The screen stretches.** Above the design size the screen takes the extra width and height (landscape and portrait); below it the console zooms down as now. Then a look at each module in a stretched cell.
+14. ✅ **The screen stretches.** The console zooms to the tighter direction (up to 125%) and the screen takes what's left in the other. Columns under the screen share extra width in proportion, so the D-pad and control bodies widen with their keys centred and the deck keeps its two thirds; the side docks get taller. Checked from 375 to 2560px wide, both arrangements, with the enclosure, the deck, and without controls, speaker or bay: the console fills the window, nothing scrolls, phones unchanged.
 15. **Orientation follows the window.** Taller than wide gives portrait, with a buffer at the line; Configure's switch becomes Auto / Landscape / Portrait.
 16. **Typing posture.** When the on-screen keyboard opens, the lower modules fold into a thin strip; they come back when it closes.
     - **The keyboard on demand (found in phone testing):** focusing the editor shouldn't raise the phone's keyboard. The editor gets `inputmode="none"` (caret and selection still work, no keyboard), and a keyboard key (⌨) raises it by switching to `inputmode="text"`, then lowers it again. Where Chrome's VirtualKeyboard API exists (Android), use `virtualkeyboardpolicy="manual"` with `navigator.virtualKeyboard.show()` / `hide()`; iOS may need a blur and refocus for the switch to take. Tapping the text moves the caret without raising the keyboard.

@@ -58,15 +58,13 @@
   let showDpad = $state(true);
   let showCtl = $state(true);
 
-  // The device is drawn at its natural size, then scaled to fit the window.
-  let natW = $state(0);
-  let natH = $state(0);
   let stageW = $state(1440); // the page's own width, so overflow can't inflate it
   let winH = $state(900);
 
-  // Fit: FIXED (see CONCEPT.md, "Layout system"). Each arrangement keeps its
-  // designed proportions and zooms as a whole to fit the window, centred on
-  // the mat. One rule everywhere: no device special cases, so no jumps.
+  // Fit (see CONCEPT.md, "Layout system"): the console zooms as a whole to
+  // the tighter direction (up to 125%), and the screen takes whatever is left
+  // in the other. Only the screen stretches; every other module keeps its
+  // size. One rule everywhere: no device special cases, so no jumps.
   let small = $derived(stageW < 520 || winH < 520);
   // Landscape floats the Configure pill below the console; portrait docks it inside.
   let pad = $derived(
@@ -77,19 +75,11 @@
   let availW = $derived(stageW - pad.x * 2);
   let availH = $derived(winH - pad.top - pad.bottom);
 
-  // Portrait is designed 440 wide and spans the window's width; the screen
-  // row takes whatever height is left, down to a usable minimum (below that
-  // the console zooms to fit the height instead).
+  const MAX_ZOOM = 1.25;
   const PORTRAIT_W = 440;
-  const PORTRAIT_MIN_H = 720;
-  let portraitH = $derived.by(() => {
-    const padH = showChassis ? 44 : 0; // the enclosure's own padding
-    const k = Math.min(availW / (PORTRAIT_W + padH), 1.25);
-    const padV = showChassis ? 52 : 14;
-    return Math.max(PORTRAIT_MIN_H, availH / k) - padV;
-  });
-
-  let scale = $derived(natW && natH ? Math.min(availW / natW, availH / natH, 1.25) : 1);
+  const PORTRAIT_MIN_H = 720; // portrait's design height, enclosure included
+  // Padding around the grid: the enclosure's, or room for the bottom modules' thickness.
+  let frame = $derived(showChassis ? { w: 44, h: 52 } : { w: 0, h: 14 });
 
   // Orientation is picked once from the shape of the screen, then stays put.
   onMount(() => {
@@ -102,7 +92,10 @@
 
   // Grid layout per view, from the placement rules (CONCEPT.md): controls
   // sit below the screen; a side holds at most one dock; with no controls
-  // the screen takes the height.
+  // the screen takes the height. Gives the grid's css and its design size.
+  // Tracks under the screen are fr, weighted by their design widths, so
+  // extra width is shared in proportion and the deck keeps its share.
+  const fr = (w) => `minmax(0, ${w}fr)`;
   let grid = $derived.by(() => {
     const bottom = showDpad || showCtl;
     const pair = (n) => (showDpad && showCtl ? `${"dpad ".repeat(n - 1)}ctl` : (showDpad ? "dpad " : "ctl ").repeat(n).trim());
@@ -116,7 +109,7 @@
       const side = showSpeaker;
       const main = PORTRAIT_W - (side ? 44 : 0); // 30px column + gap
       const ctlW = Math.round((main - 14) * (deckShare ?? 1 / 2));
-      const cols = ["110px", `${main - 28 - 110 - ctlW}px`, `${ctlW}px`, side && "30px"].filter(Boolean).join(" ");
+      const cols = ["110px", fr(main - 28 - 110 - ctlW), fr(ctlW), side && "30px"].filter(Boolean).join(" ");
       // The screen takes what's left and scrolls inside; it never grows with the note.
       // Controls sit right under the screen (as in landscape); the bay goes below them.
       const rows = ["80px", "minmax(0, 1fr)", bottom && "160px", showBay && "190px"].filter(Boolean);
@@ -127,7 +120,11 @@
         bottom && `"${showDpad && showCtl ? "dpad dpad ctl" : pair(3)}${sc}"`,
         showBay && `"bay bay bay${sc}"`,
       ].filter(Boolean);
-      return `width: ${PORTRAIT_W}px; height: ${portraitH}px; grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`;
+      return {
+        css: `grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`,
+        w: PORTRAIT_W,
+        h: PORTRAIT_MIN_H - frame.h,
+      };
     }
     const list = leftList;
     const right = showBay || showSpeaker;
@@ -139,7 +136,8 @@
       cells[cells.length - 2] += cells[cells.length - 1] - deckW;
       cells[cells.length - 1] = deckW;
     }
-    const cols = [list && "150px", list && "110px", ...cells.map((w) => `${w}px`), right && "300px"].filter(Boolean);
+    const fixed = [list && 150, list && 110, right && 300].filter(Boolean);
+    const cols = [list && "150px", list && "110px", ...cells.map(fr), right && "300px"].filter(Boolean);
     const n = cols.length - (right ? 1 : 0); // columns left of the right column
     // Right column: with a bottom row, bay over speaker; without one, just one of them.
     const r2 = right ? (showBay ? " bay" : bottom ? " scr" : " spk") : "";
@@ -154,9 +152,19 @@
       `"${row2}${r2}"`,
       bottom && `"${row3}${r3}"`,
     ].filter(Boolean);
-    const rows = bottom ? "112px 440px 182px" : "112px 636px";
-    return `grid-template-columns: ${cols.join(" ")}; grid-template-rows: ${rows}; grid-template-areas: ${areas.join(" ")};`;
+    const rows = bottom ? "112px minmax(0, 1fr) 182px" : "112px minmax(0, 1fr)";
+    return {
+      css: `grid-template-columns: ${cols.join(" ")}; grid-template-rows: ${rows}; grid-template-areas: ${areas.join(" ")};`,
+      w: [...fixed, ...cells].reduce((x, y) => x + y) + 14 * (cols.length - 1),
+      h: 112 + 636 + 14, // screen row 440 + bottom row 182 + gap, or the screen alone
+    };
   });
+
+  // Zoom so the design fits; the grid is then drawn at the window's size at
+  // that zoom, so it's never smaller than the design and the screen's tracks
+  // take the difference.
+  let scale = $derived(Math.min(availW / (grid.w + frame.w), availH / (grid.h + frame.h), MAX_ZOOM));
+  let size = $derived(`width: ${availW / scale - frame.w}px; height: ${availH / scale - frame.h}px;`);
 
 </script>
 
@@ -182,14 +190,12 @@
   bind:clientWidth={stageW}
   style="padding: {pad.top}px {pad.x}px {pad.bottom}px;"
 >
-  <div class="fit" style="width:{natW * scale}px; height:{natH * scale}px;">
+  <div class="fit" style="width:{availW}px; height:{availH}px;">
     <div
       class="device {view}"
       class:chassis={showChassis}
       class:no-glare={!showGlare}
-      style="{grid} transform: scale({scale});"
-      bind:offsetWidth={natW}
-      bind:offsetHeight={natH}
+      style="{grid.css} {size} transform: scale({scale});"
     >
       {#if showChassis}
         <span class="screw c-tl"></span><span class="screw c-tr"></span>
