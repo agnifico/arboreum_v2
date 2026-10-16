@@ -98,14 +98,12 @@
   <div class="notes">
     {#if sortedNotes()}
       {#each sortedNotes() as i (i.id)}
-        <div on:click={() => handleSelectNote(i)}>
-          <FileIcon
-            note={i}
-            disabled={!select_switch}
-            bg={to_del.map((n) => n.id)}
-            sidebar_name={sidebar}
-          />
-        </div>
+        <FileIcon
+          note={i}
+          selectMode={select_switch}
+          selected={to_del.some((n) => n.id === i.id)}
+          onSelect={() => handleSelectNote(i)}
+        />
       {/each}
     {/if}
   </div>

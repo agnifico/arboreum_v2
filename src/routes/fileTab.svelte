@@ -1,21 +1,44 @@
 <script>
-  let { note, disabled = true, bg } = $props();
+  let { note, selectMode = false, selected = false, onSelect = () => {} } = $props();
 
-  let isSelected = $derived(bg.includes(note.id));
   let title = $derived(note.title?.trim() || "Untitled");
 </script>
 
-<a class="file" href="/read/{note.noteid}" class:selected={isSelected} title={title}>
-  <div class="xp">
-    <p>{title}</p>
-    <div class="right-box">
-      <img src={note.icon} alt="Saved File" class="icon" />
+{#if selectMode}
+  <button
+    type="button"
+    class="file"
+    class:selected
+    aria-pressed={selected}
+    title={title}
+    onclick={onSelect}
+  >
+    <div class="xp">
+      <p>{title}</p>
+      <div class="right-box">
+        <img src={note.icon} alt="" class="icon" />
+      </div>
     </div>
-  </div>
-</a>
+  </button>
+{:else}
+  <a class="file" href="/read/{note.noteid}" title={title}>
+    <div class="xp">
+      <p>{title}</p>
+      <div class="right-box">
+        <img src={note.icon} alt="" class="icon" />
+      </div>
+    </div>
+  </a>
+{/if}
 
 <style>
-  a {
+  .file {
+    font: inherit;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    text-align: left;
     color: inherit;
     text-decoration: none;
     width: 100%;
@@ -85,6 +108,11 @@
     }
   }
   
+  /* Select mode: no "open" arrow, since clicking only toggles selection */
+  button.file:hover p::after {
+    content: " ";
+  }
+
   .selected {
     /* background-color: var(--orange); */
     border-left: 4px solid var(--orange);
