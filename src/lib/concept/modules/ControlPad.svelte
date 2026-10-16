@@ -6,7 +6,7 @@
   const keepFocus = (e) => e.preventDefault();
 </script>
 
-<!-- CONTROL PAD: Start, B, A in one straight row (portrait: B A, Start under) -->
+<!-- CONTROL PAD: Start, B, A in one straight row (narrow portrait: B A, Start under) -->
 <section class="mod bone ctl" aria-label="Control pad">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
@@ -32,6 +32,7 @@
 <style>
   .ctl { grid-area: ctl; }
   .ctl {
+    container-type: inline-size; /* its own width decides the portrait layout */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -126,4 +127,9 @@
   :global(.portrait) .round { width: 44px; height: 44px; font-size: 15px; }
   :global(.portrait) .ctl-label { font-size: 8.5px; letter-spacing: 0.12em; bottom: 10px; }
   :global(.portrait) .model { display: none; } /* the label keeps only the latch */
+  /* Portrait with room (an upright tablet, or no D-pad beside it): Start, B, A
+     back in one row, as in landscape, with the portrait-sized keys */
+  @container (min-width: 300px) {
+    :global(.portrait) .ctl-row { flex-direction: row; gap: 22px; margin-top: -10px; }
+  }
 </style>

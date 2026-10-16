@@ -120,7 +120,8 @@
       const cols = ["110px", fr(main - 28 - 110 - ctlW), fr(ctlW), side && "30px"].filter(Boolean).join(" ");
       // The screen takes what's left and scrolls inside; it never grows with the note.
       // Controls sit right under the screen (as in landscape); the bay goes below them.
-      const rows = ["80px", "minmax(0, 1fr)", bottom && "160px", showBay && "190px"].filter(Boolean);
+      // The controls row is slim; the deck's three rows beside the D-pad need 160.
+      const rows = ["80px", "minmax(0, 1fr)", bottom && (deckShare ? "160px" : "144px"), showBay && "190px"].filter(Boolean);
       const sc = side ? " side" : "";
       const areas = [
         `"cam plate plate${side ? " plate" : ""}"`,

@@ -112,6 +112,7 @@ What that gives: desktop gets a big screen; a portrait phone gets an edge-to-edg
 2. **Controls** always sit below the screen.
 3. **Beside the screen** (landscape only), at most one dock per side: the **list on the left**, the **bay (map viewer) on the right**.
 4. **The bottom row is a pair:** either **D-pad + A/B**, or **List + something else**. A/B never appears without the D-pad.
+   - **Portrait sizes:** the controls row is 144px with a slightly smaller D-pad (160px when the Format deck's three rows sit beside it). The control pad stacks B A over Start only when its cell is narrow; with room (an upright tablet, or no D-pad) Start, B and A are one row again. It decides from its own width (a container query).
    - **Split:** D-pad + control pad share the row half and half. D-pad + Format deck: the deck takes two thirds (it matters more there). In portrait the deck beside the D-pad has three rows of wide keys; without the D-pad it spans the row in two rows of thumb-sized keys.
 5. **No controls row:** the screen goes full screen (touch and keyboard only).
 6. **Portrait:** side docks move below the controls row. The list becomes a full screen rather than a module. The speaker is filler and takes a thin edge strip.
