@@ -11,7 +11,7 @@
     aria-pressed={active}
     title={active ? "Stop selecting" : "Select notes to delete"}
   >
-    {active ? "Unselect" : "Select"}
+    {active ? "Exit" : "Select"}
   </button>
   <button
     type="button"
