@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy, untrack } from "svelte";
+  import { onMount, onDestroy, untrack, tick } from "svelte";
   import { Editor } from "@tiptap/core";
   import { StarterKit } from "@tiptap/starter-kit";
   import BubbleMenu from "@tiptap/extension-bubble-menu";
@@ -74,9 +74,38 @@
     treePopoverStyle = `left:${left}px; top:${top}px; width:${width}px;`;
   }
 
-  function toggleTreeSelector() {
+  let treesGrid = $state();
+
+  async function toggleTreeSelector() {
     if (!showTreeSelector) placeTreePopover();
     showTreeSelector = !showTreeSelector;
+    if (showTreeSelector) {
+      await tick();
+      // Keyboard users land on the current tree; arrows move, Enter/Space pick.
+      (treesGrid?.querySelector("input:checked") ?? treesGrid?.querySelector("input"))?.focus();
+    }
+  }
+
+  // Mouse/touch picks close the picker. Keyboard: arrows browse (browsers
+  // fire detail-0 clicks for those, ignored here), Enter or Space picks.
+  // Set the tree here: closing removes the radios before "change" fires.
+  function pickTree(event, tree) {
+    if (event.detail === 0) return;
+    treemoji = tree.filePath;
+    closeTreeSelector();
+  }
+
+  function treeKeydown(event, tree) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      treemoji = tree.filePath;
+      closeTreeSelector({ refocus: true });
+    }
+  }
+
+  function closeTreeSelector({ refocus = false } = {}) {
+    showTreeSelector = false;
+    if (refocus) treeTrigger?.focus();
   }
 
   function closeTreeSelectorOnScroll(event) {
@@ -209,20 +238,17 @@
   );
 
   let trees = [
-    { name: "/Snow_tree2.png", filePath: "/Snow_tree2.png" },
-    { name: "/t-yellow.png", filePath: "/t-yellow.png" },
-    { name: "/t-green.png", filePath: "/t-green.png" },
-    { name: "/Flower_tree2.png", filePath: "/Flower_tree2.png" },
-    { name: "/Palm_tree2_2.png", filePath: "/Palm_tree2_2.png" },
-    { name: "/Moss_tree2.png", filePath: "/Moss_tree2.png" },
-    { name: "/t-red.png", filePath: "/t-red.png" },
-    {
-      name: "/Snow_christmass_tree2.png",
-      filePath: "/Snow_christmass_tree2.png",
-    },
-    { name: "/Tree2.png", filePath: "/Tree2.png" },
-    { name: "/t-blue.png", filePath: "/t-blue.png" },
-    { name: "/Palm_tree1_2.png", filePath: "/Palm_tree1_2.png" },
+    { name: "Snowy tree", filePath: "/Snow_tree2.png" },
+    { name: "Golden tree", filePath: "/t-yellow.png" },
+    { name: "Green tree", filePath: "/t-green.png" },
+    { name: "Blossom tree", filePath: "/Flower_tree2.png" },
+    { name: "Palm tree", filePath: "/Palm_tree2_2.png" },
+    { name: "Mossy tree", filePath: "/Moss_tree2.png" },
+    { name: "Red tree", filePath: "/t-red.png" },
+    { name: "Frosty pine", filePath: "/Snow_christmass_tree2.png" },
+    { name: "Classic tree", filePath: "/Tree2.png" },
+    { name: "Blue tree", filePath: "/t-blue.png" },
+    { name: "Little palm", filePath: "/Palm_tree1_2.png" },
   ];
 
   let emojiTabName = "treemoji";
@@ -807,17 +833,23 @@
                 <img src="{base}{treemoji}" alt="" />
               </button>
               {#if showTreeSelector}
-                <div class="trees-grid" style={treePopoverStyle}>
+                <div
+                  class="trees-grid"
+                  style={treePopoverStyle}
+                  role="radiogroup"
+                  aria-label="Trees"
+                  bind:this={treesGrid}
+                >
                   {#each trees as tree (tree.filePath)}
-                    <label>
+                    <label title={tree.name}>
+                      <!-- click = mouse, touch or Space; arrow keys only browse -->
                       <input
                         type="radio"
                         name={emojiTabName}
                         bind:group={treemoji}
                         value={tree.filePath}
-                        on:change={() => {
-                          showTreeSelector = false;
-                        }}
+                        on:click={(e) => pickTree(e, tree)}
+                        on:keydown={(e) => treeKeydown(e, tree)}
                       />
                       <img src="{base}{tree.filePath}" alt={tree.name} />
                     </label>
@@ -1188,8 +1220,21 @@
     overflow-y: scroll;
     scrollbar-width: none;
   }
+  /* Visually hidden but focusable, so the picker works from the keyboard */
   .trees-grid input {
-    display: none;
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    pointer-events: none;
+  }
+  .trees-grid label {
+    position: relative;
+  }
+  .trees-grid label:has(input:focus-visible) {
+    outline: 3px solid var(--neon-green);
+    outline-offset: 1px;
   }
   .trees-grid label {
     padding: 5px;

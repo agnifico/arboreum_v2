@@ -55,7 +55,7 @@ If that changes, a migration and a test against v2 data come with it.
   - header: "…", ☰, +, ⇗, the green "open sidebar" strip
   - list: sort direction ▼
   - editor: sub, sup, heading −/size/+, map, tree, colour swatches, fullscreen, bubble and floating menus
-- [ ] **A3** Tree picker options are `display: none` radios, so they can't be reached by keyboard.
+- [x] **A3** Tree picker options are `display: none` radios, so they can't be reached by keyboard.
 - [ ] **A4** Dialogs don't move focus in, don't trap Tab, and aren't `aria-modal`.
 - [ ] **A5** Focus visibility is inconsistent: the title input has `outline: none`, and default rings vanish on dark controls.
 - [ ] **A6** Popovers (sort, list, align, tree, colour, mobile "…") don't close with Escape.
