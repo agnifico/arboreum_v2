@@ -126,7 +126,7 @@
             {@const at = device.atCursor}
             <div class="dr-module">
               <div class="dr-head"><span>MAP-01</span><span class="dr-virtual">VIRTUAL</span></div>
-              <GardenMap cursor={device.cursor} plots={device.plots} rows={7} onpick={(t) => (device.cursor = t)} />
+              <GardenMap cursor={device.cursor} plots={device.plots} rows={7} onpick={(t) => (device.cursor = t)} onaccept={() => device.plant()} acceptable={!at || at.mine} />
               <div class="dr-caption" class:taken={at && !at.mine}>
                 PLOT {pad2s(device.cursor.x)},{pad2s(device.cursor.y)} · {!at ? "FREE" : at.mine ? "YOURS" : "TAKEN"}
               </div>

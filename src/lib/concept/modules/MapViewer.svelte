@@ -2,6 +2,9 @@
   import { useDevice } from "../device.svelte.js";
   import GardenMap from "../GardenMap.svelte";
   import { TREES } from "../trees.js";
+  // tall: the bay has the whole right column (no speaker under it), so the
+  // map zooms in to fill it.
+  let { tall = false } = $props();
   const device = useDevice();
   // Hardware keys don't take keyboard focus on click, so typing carries on
   // in the editor (keyboard users can still Tab to them).
@@ -27,7 +30,7 @@
 </script>
 
 <!-- BAY: Map viewer -->
-<section class="mod alu bay" class:focused aria-label="Map viewer module">
+<section class="mod alu bay" class:focused class:tall aria-label="Map viewer module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="map-glass">
@@ -52,19 +55,22 @@
         <GardenMap
           cursor={view}
           plots={device.plots}
+          cols={tall ? 9 : 12}
+          rows={tall ? 12 : 9}
           blink={focused}
-          onpick={device.editing ? (t) => { device.cursor = t; device.enterMap("plot"); } : null}
+          onpick={device.editing ? (t) => device.enterMap("plot", t) : null}
+          onaccept={focused && !treeMode ? () => device.plant() : null}
+          acceptable={!readout.endsWith("TAKEN")}
         />
       {/if}
     </div>
     <div class="map-read" class:taken={readout.endsWith("TAKEN")}>{readout}</div>
     <!-- The A/B context lives here while the Map viewer has the D-pad -->
-    {#if focused}
-      <div class="map-ab">
-        <span><i class="pip a">A</i>{device.labels.a}</span>
-        <span><i class="pip b">B</i>{device.labels.b}</span>
-      </div>
-    {/if}
+    <!-- (its room is kept when hidden, so nothing below it jumps) -->
+    <div class="map-ab" class:off={!focused} aria-hidden={!focused}>
+      <span><i class="pip a">A</i>{focused ? device.labels.a : ""}</span>
+      <span><i class="pip b">B</i>{focused ? device.labels.b : ""}</span>
+    </div>
   </div>
   <div class="map-btns">
     <div class="mb-wrap mb-move">
@@ -155,6 +161,9 @@
     letter-spacing: 0.08em;
     color: var(--phosphor);
   }
+  .map-ab.off {
+    visibility: hidden;
+  }
   .map-ab span {
     display: flex;
     align-items: center;
@@ -202,6 +211,21 @@
   /* Mobile: both buttons on one side, so the screen gets the width */
   :global(.portrait) .bay { flex-direction: row; align-items: stretch; padding: 16px 16px 16px 18px; gap: 16px; }
   :global(.portrait) .map-glass { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  /* Tall bay: a zoomed-in, portrait-shaped map window, centred in the column */
+  .tall {
+    justify-content: center;
+    padding-inline: 16px;
+  }
+  .tall .map-grid {
+    aspect-ratio: 9 / 12;
+  }
+  .tall .trees {
+    grid-auto-rows: auto;
+    align-content: center;
+  }
+  .tall .tree {
+    aspect-ratio: 1;
+  }
   :global(.portrait) .map-grid { height: calc(100% - 22px); width: auto; aspect-ratio: 12 / 9; align-self: center; }
   :global(.portrait) .map-read { text-align: center; }
   :global(.portrait) .map-btns { flex-direction: column; justify-content: center; gap: 8px; }
