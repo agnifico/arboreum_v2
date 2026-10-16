@@ -154,6 +154,13 @@ button {
 }
 
 
+/* --- KEYBOARD FOCUS --- */
+/* One visible ring for keyboard users, in the garden's neon green. */
+:focus-visible {
+  outline: 3px solid var(--neon-green);
+  outline-offset: 2px;
+}
+
 /* --- GLOBAL TIP TAP EDITOR STYLES --- */
 .ProseMirror:focus {
   outline: none;

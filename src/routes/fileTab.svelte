@@ -108,6 +108,11 @@
     }
   }
   
+  /* Inside the scrolling list, so draw the ring inside the row */
+  .file:focus-visible {
+    outline-offset: -3px;
+  }
+
   /* Select mode: no "open" arrow, since clicking only toggles selection */
   button.file:hover p::after {
     content: " ";

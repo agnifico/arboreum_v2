@@ -1028,6 +1028,9 @@
   .title:focus {
     outline: none;
   }
+  .title:focus-visible {
+    box-shadow: inset 0 -3px 0 var(--neon-green);
+  }
   .dashboard {
     width: fit-content;
     display: flex;
