@@ -193,7 +193,7 @@
             <span class="mobile-only">+</span>
           </Button>
         </form>
-        <form action="/newleaf" target="_blank">
+        <form action="/newleaf" target="_blank" class="desktop-only-form">
           <Button variant="primary" type="submit" class="top-bar-btn">⇗</Button>
         </form>
       </div>
@@ -364,6 +364,21 @@
 
   @media (max-width: 768px) {
     .desktop-only, .desktop-only-flex {
+      display: none;
+    }
+    /* Keep the header within a 375px screen; Create New stays visible. */
+    .arboreum {
+      font-size: 1.1rem;
+      padding-left: 0.75rem;
+    }
+    .top-nav {
+      padding: 0.5rem 0.5rem;
+      gap: 0.35rem;
+    }
+    .top-nav :global(.btn) {
+      padding: 6px 10px;
+    }
+    .top-nav form.desktop-only-form {
       display: none;
     }
     .mobile-only {
