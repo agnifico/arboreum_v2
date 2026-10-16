@@ -224,6 +224,7 @@
     border-bottom: 1px solid rgba(213, 228, 198, 0.08);
   }
   .status b {
+    font-size: 14px;
     color: var(--phosphor);
     font-weight: 500;
   }
@@ -326,7 +327,8 @@
     border: none;
     background: none;
     font: inherit;
-    font-weight: 500;
+    font-size: 14px; /* a step up from the 12px status line */
+    font-weight: 600;
     color: var(--phosphor);
     caret-color: var(--signal);
     outline: none;

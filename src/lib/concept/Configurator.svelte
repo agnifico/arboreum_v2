@@ -1,5 +1,6 @@
 <script>
   // Page-level panel, outside the device: view and which modules are slotted.
+  import { useDevice } from "./device.svelte.js";
   let {
     view = $bindable("landscape"),
     showBay = $bindable(true),
@@ -8,7 +9,20 @@
     showGlare = $bindable(false),
     docked = false, // portrait: a gear docked in the console under the speaker
   } = $props();
+  const device = useDevice();
   let panelOpen = $state(false);
+
+  // When the panel closes, hand focus back: to the editor if a note is open,
+  // otherwise to the device (so the arrow keys drive the D-pad again).
+  let wasOpen = false;
+  $effect(() => {
+    const open = panelOpen;
+    if (wasOpen && !open) {
+      if (device?.focus === "editor") device.editorApi?.focus();
+      else document.activeElement?.blur?.();
+    }
+    wasOpen = open;
+  });
 
   function handleKeydown(event) {
     if (event.key === "Escape") panelOpen = false;

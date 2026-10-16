@@ -9,6 +9,7 @@
   let list = $state();
   $effect(() => {
     device.index;
+    device.isNew;
     list?.querySelector("li.sel")?.scrollIntoView({ block: "nearest" });
   });
 
@@ -23,17 +24,26 @@
 </script>
 
 <ol class="list-rows" class:big bind:this={list}>
+  {#if device.isNew}
+    <!-- The note being written, before its first save -->
+    <li class="sel draft">
+      <span class="li-num">··</span>
+      {#if device.draftIcon}<img class="li-tree" src={device.draftIcon} alt="" />{:else}<span class="li-tree li-none">?</span>{/if}
+      <span class="li-title">{device.draftTitle.trim() || "untitled"}</span>
+      <span class="li-when">new</span>
+    </li>
+  {/if}
   {#each device.notes as n, i (n.noteid)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
     <!-- Keyboard users drive the list with the D-pad keys (arrows, Enter) -->
-    <li class:sel={i === device.index} onclick={() => tap(i)}>
+    <li class:sel={!device.isNew && i === device.index} onclick={() => tap(i)}>
       <span class="li-num">{String(i + 1).padStart(2, "0")}</span>
       <img class="li-tree" src={n.tree} alt="" />
       <span class="li-title">{n.title}</span>
       <span class="li-when">{n.when}</span>
     </li>
   {:else}
-    <li class="empty">NO NOTES YET · ≡ START → NEW NOTE</li>
+    {#if !device.isNew}<li class="empty">NO NOTES YET · B FOR A NEW NOTE</li>{/if}
   {/each}
 </ol>
 
@@ -93,6 +103,16 @@
   .list-rows.big .li-tree {
     width: 22px;
     height: 22px;
+  }
+  .draft {
+    cursor: default;
+    font-style: italic;
+  }
+  .li-none {
+    display: inline-grid;
+    place-items: center;
+    font-style: normal;
+    color: var(--phosphor-dim);
   }
   .empty {
     color: var(--phosphor-dim);
