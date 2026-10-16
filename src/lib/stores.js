@@ -8,6 +8,9 @@ export const editorCoordinates = writable(null);
 export const isMapVisible = writable(false);
 export const editorStore = writable(null);
 export const toast = writable(null);
+// Set while navigating away from a note that was just deleted, so the
+// editor doesn't ask to save it.
+export const skipUnsavedGuard = writable(false);
 
 let toastTimer;
 /**

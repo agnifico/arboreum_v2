@@ -57,7 +57,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 3000; /* above the fullscreen editor (1000) and toasts (2000) */
   }
 
   .modal {

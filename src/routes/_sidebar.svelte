@@ -7,6 +7,7 @@
   import Button from "$lib/components/controls/Button.svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
+  import { skipUnsavedGuard } from "$lib/stores.js";
 
   let { notes = [] } = $props();
   let to_del = $state([]);
@@ -76,7 +77,11 @@
     const idsToDelete = to_del.map((n) => n.id);
     const leaveCurrent = isShowingAny(to_del.map((n) => n.noteid));
     await db.notes.bulkDelete(idsToDelete);
-    if (leaveCurrent) await goto("/", { replaceState: true });
+    if (leaveCurrent) {
+      skipUnsavedGuard.set(true);
+      await goto("/", { replaceState: true });
+      skipUnsavedGuard.set(false);
+    }
     to_del = [];
     select_switch = false;
     showDeleteConfirm = false;

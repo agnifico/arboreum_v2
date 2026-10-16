@@ -16,7 +16,9 @@
   import TextAlign from "@tiptap/extension-text-align";
   import Image from "@tiptap/extension-image";
 
-  import { goto, replaceState } from "$app/navigation";
+  import { goto, replaceState, beforeNavigate } from "$app/navigation";
+  import Modal from "$lib/components/Modal.svelte";
+  import Button from "$lib/components/controls/Button.svelte";
   import { db } from "$lib/db.js";
   import { v4 as uuidv4 } from "uuid";
   import {
@@ -27,6 +29,7 @@
     toggleFullscreen,
     enterPlacementMode,
     showToast,
+    skipUnsavedGuard,
   } from "$lib/stores.js";
   import { browser } from "$app/environment";
   import { base } from "$app/paths";
@@ -363,6 +366,40 @@
     return true;
   }
 
+  // --- Unsaved changes guard ---
+  let showLeaveConfirm = $state(false);
+  let pendingNav = null;
+  let leaving = false;
+
+  beforeNavigate((nav) => {
+    if (leaving || !dirty || $skipUnsavedGuard) return;
+    // Reload, closing the tab, external links: the browser asks for us.
+    if (nav.willUnload) {
+      nav.cancel();
+      return;
+    }
+    if (!nav.to) return;
+    nav.cancel();
+    pendingNav = { url: nav.to.url, delta: nav.type === "popstate" ? nav.delta : 0 };
+    showLeaveConfirm = true;
+  });
+
+  async function continueNavigation() {
+    const nav = pendingNav;
+    showLeaveConfirm = false;
+    pendingNav = null;
+    if (!nav) return;
+    leaving = true;
+    if (nav.delta) history.go(nav.delta);
+    else await goto(nav.url);
+    leaving = false;
+  }
+
+  async function saveAndLeave() {
+    if (await saveNote({ stay: true })) await continueNavigation();
+    else showLeaveConfirm = false;
+  }
+
   function handleKeydown(event) {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
       event.preventDefault();
@@ -372,6 +409,20 @@
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
+
+<Modal
+  bind:show={showLeaveConfirm}
+  title="Unsaved changes"
+  message={savedNote
+    ? "You've changed this note since it was last saved. Save before you go?"
+    : "This note hasn't been saved yet. Save it before you go?"}
+>
+  <svelte:fragment slot="footer">
+    <Button variant="ghost" onClick={() => (showLeaveConfirm = false)}>Keep editing</Button>
+    <Button variant="danger" onClick={() => { baseline = current(); continueNavigation(); }}>Discard</Button>
+    <Button variant="primary" onClick={saveAndLeave}>Save &amp; leave</Button>
+  </svelte:fragment>
+</Modal>
 
 <div class="app-bg">
   <div class="app" class:fullscreen-editor={$isFullscreen}>
