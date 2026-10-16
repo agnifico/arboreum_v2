@@ -233,5 +233,6 @@
   :global(.portrait) .map-btn { width: 40px; height: 40px; border-radius: 10px; font-size: 16px; }
   :global(.portrait) .tree-btn { padding: 7px; }
   :global(.portrait) .map-ab { justify-content: center; margin-top: 4px; padding-top: 4px; }
+  :global(.portrait) .map-ab.off { display: none; } /* the map needs the room more (mobile pass) */
   :global(.portrait) .bay-label { display: none; }
 </style>

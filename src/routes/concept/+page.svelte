@@ -89,7 +89,8 @@
       // A slim side column down the right holds the speaker strip with the
       // Configure gear docked under it.
       const cols = "110px 90px 168px 30px";
-      const rows = ["80px", "1fr", showBay && "190px", bottom && "160px"].filter(Boolean);
+      // The screen takes what's left and scrolls inside; it never grows with the note.
+      const rows = ["80px", "minmax(0, 1fr)", showBay && "190px", bottom && "160px"].filter(Boolean);
       const sideRow = showBay || bottom ? "" : " side"; // nowhere else to dock it
       const areas = [
         '"cam plate plate plate"',

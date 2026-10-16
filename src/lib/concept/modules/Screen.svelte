@@ -202,7 +202,7 @@
 </section>
 
 <style>
-  .screen { grid-area: scr; }
+  .screen { grid-area: scr; min-height: 0; }
   .screen {
     padding: 26px 30px 30px;
   }
