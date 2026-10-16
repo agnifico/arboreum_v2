@@ -2,38 +2,18 @@
   import { formatKeys } from "../sample.js";
   import { useDevice } from "../device.svelte.js";
   import NoteRows from "../NoteRows.svelte";
+  import MonoEditor from "../MonoEditor.svelte";
   const device = useDevice();
   // Portrait has no List module, so the list takes over the screen.
   let showList = $derived(device.focus === "list" && !device.hasListModule);
 
-  // Interim read-out of the note's stored HTML as numbered mono lines.
-  // Build step 6 replaces this with the real editor.
-  function toLines(html) {
-    if (typeof DOMParser === "undefined" || !html) return [];
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const out = [];
-    const walk = (el, depth = 0) => {
-      for (const node of el.children) {
-        const tag = node.tagName;
-        if (/^H[1-6]$/.test(tag)) out.push([{ t: "#".repeat(Math.min(+tag[1], 3)) + " ", c: "tk-md" }, { t: node.textContent, c: "tk-h" }]);
-        else if (tag === "UL" || tag === "OL") {
-          [...node.children].forEach((li, i) => {
-            const task = li.dataset.checked;
-            const mark = task !== undefined ? (task === "true" ? "- [x] " : "- [ ] ") : tag === "OL" ? `${i + 1}. ` : "- ";
-            const text = [...li.childNodes].filter((c) => !/^(UL|OL)$/.test(c.tagName)).map((c) => c.textContent).join("").trim();
-            out.push([{ t: "  ".repeat(depth) + mark, c: "tk-md" }, { t: text, c: task === "true" ? "tk-done" : "" }]);
-            for (const sub of li.children) if (/^(UL|OL)$/.test(sub.tagName)) walk({ children: [sub] }, depth + 1);
-          });
-        } else if (tag === "BLOCKQUOTE") {
-          for (const p of node.children) out.push([{ t: "> ", c: "tk-md" }, { t: p.textContent, c: "tk-quote" }]);
-        } else out.push(node.textContent ? [{ t: node.textContent, c: "" }] : []);
-      }
-    };
-    walk(doc.body);
-    return out;
+  // Enter in the title moves on to the text.
+  function titleKey(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      device.editorApi?.focus();
+    }
   }
-  let lines = $derived(toLines(device.note?.text));
-  let cursorLine = $derived(lines.length - 1);
   let { missing, drawerLabel } = $props();
 </script>
 
@@ -46,23 +26,22 @@
       {#if showList}
         <span>▣ <b>NOTES</b> <span class="mode">· {device.notes.length}</span></span>
       {:else}
-        <span>▣ <b>{device.note?.title ?? "—"}</b>{#if device.focus !== "editor"} <span class="mode">· PREVIEW</span>{/if}</span>
+        {#if device.focus === "editor"}
+          <span class="title-wrap">▣ <input class="title-in" bind:value={device.draftTitle} placeholder="untitled" aria-label="Title" onkeydown={titleKey} /></span>
+        {:else}
+          <span>▣ <b>{device.note?.title ?? "—"}</b> <span class="mode">· PREVIEW</span></span>
+        {/if}
       {/if}
-      <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}<span class="dot-unsaved">●</span> UNSAVED{/if}<span class="wide-only"> <span class="sep">│</span> 11:42 <span class="sep">│</span> 16·10</span></span>
+      <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}{#if device.dirty}<span class="dot-unsaved">●</span> UNSAVED{:else if device.focus === "editor"}<span class="dot-saved">●</span> SAVED{/if}{/if}<span class="wide-only"> <span class="sep">│</span> 11:42 <span class="sep">│</span> 16·10</span></span>
     </div>
 
     {#if showList}
       <div class="code list-screen"><NoteRows big /></div>
-    {:else}
-      <div class="code" aria-label="Note text">
-        {#each lines as line, i}
-          <div class="ln" class:current={i === cursorLine}>
-            <span class="gutter">{i + 1}</span>
-            <span class="txt">{#each line as seg}<span class={seg.c}>{seg.t}</span>{/each}{#if i === cursorLine && device.focus === "editor"}<span class="cursor"></span>{/if}</span>
-          </div>
-        {/each}
-      </div>
     {/if}
+    <!-- The editor stays mounted (hidden under the portrait list) so it keeps its state -->
+    <div class="editor-area" class:hidden={showList} aria-label="Note text">
+      <MonoEditor />
+    </div>
 
     <!-- Missing-module alert + drawer handle (about the open note, so not on the list) -->
     {#if !showList}
@@ -206,6 +185,42 @@
     align-items: center;
     gap: 6px;
   }
+  /* Text stops where the bottom strip (40px) begins */
+  .editor-area {
+    flex: 1;
+    min-height: 0;
+    margin-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+  }
+  .hidden {
+    display: none;
+  }
+  .title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+  .title-in {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    font-weight: 500;
+    color: var(--phosphor);
+    caret-color: var(--signal);
+    outline: none;
+  }
+  .title-in::placeholder {
+    color: var(--phosphor-dim);
+  }
+  .dot-saved {
+    color: #6fae5a;
+  }
   .mode {
     color: var(--phosphor-dim);
     font-weight: 400;
@@ -230,42 +245,6 @@
     padding: 14px 120px 14px 0;
     font-size: 15px;
     line-height: 26px;
-  }
-  .ln {
-    display: flex;
-  }
-  .ln.current {
-    background: rgba(213, 228, 198, 0.04);
-  }
-  .gutter {
-    width: 54px;
-    flex-shrink: 0;
-    padding-right: 18px;
-    text-align: right;
-    color: #3d4b3b;
-    user-select: none;
-  }
-  .ln.current .gutter {
-    color: var(--phosphor-dim);
-  }
-  .txt {
-    white-space: pre-wrap;
-    min-width: 0;
-  }
-  .tk-md { color: #4f6150; }
-  .tk-h { color: #f3c58a; font-weight: 700; }
-  .tk-bold { color: #ffffff; font-weight: 700; }
-  .tk-quote { color: #a9bb9d; font-style: italic; }
-  .tk-done { color: #5f705c; text-decoration: line-through; }
-  .cursor {
-    display: inline-block;
-    width: 9px;
-    height: 18px;
-    margin-left: 1px;
-    vertical-align: -3px;
-    background: var(--signal);
-    box-shadow: 0 0 8px rgba(255, 106, 26, 0.6);
-    animation: blink 1.1s steps(1) infinite;
   }
   .alert {
     position: absolute;
@@ -396,8 +375,6 @@
   :global(.portrait) .status { padding: 9px 12px; font-size: 11px; }
   :global(.portrait) .wide-only { display: none; }
   :global(.portrait) .code { padding: 10px 14px 10px 0; font-size: 13px; line-height: 22px; }
-  :global(.portrait) .gutter { width: 34px; padding-right: 10px; }
-  :global(.portrait) .cursor { height: 15px; width: 8px; }
   :global(.portrait) .alert { top: 44px; right: 10px; padding: 4px 8px 4px 4px; font-size: 10px; }
   :global(.portrait) .bang { width: 16px; height: 16px; font-size: 11px; }
   :global(.portrait) .ab { right: 10px; bottom: 50px; gap: 10px; padding: 6px 9px; font-size: 10px; }
@@ -405,9 +382,6 @@
   :global(.portrait) .strip-label { width: 50px; }
   :global(.portrait) .keys { margin-left: 4px; gap: 4px; }
   :global(.portrait) .key { min-width: 20px; padding: 2px 4px; }
-  @keyframes blink {
-    50% { opacity: 0; }
-  }
   @keyframes pulse {
     50% { box-shadow: 0 0 2px rgba(229, 50, 59, 0.3); }
   }

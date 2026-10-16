@@ -125,7 +125,7 @@ Each step is small, checked in the browser, and committed on its own.
 5. ✅ **List screen and List module.**
    - The D-pad moves, A opens, B cycles the sort.
    - The index tabs also sort.
-6. **Editor.** Monospace "Sublime" styling:
+6. ✅ **Editor.** Monospace "Sublime" styling:
    - gutter line numbers and a highlighted current line;
    - an orange block cursor;
    - markdown-style shortcuts.

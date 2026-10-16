@@ -67,6 +67,16 @@ export class Device {
   /** Landscape has a List module; in portrait the list is a full screen. */
   hasListModule = $state(true);
 
+  // --- Editing ---
+  /** Set by the screen's editor: caret moves, commands, current HTML. */
+  editorApi = null;
+  /** Editing a note that hasn't been saved yet. */
+  isNew = $state(false);
+  draftTitle = $state("");
+  /** The editor's current HTML and what it was when loaded or last saved. */
+  html = $state("");
+  baseline = $state.raw({ title: "", html: "" });
+
   #timers = {};
   #msgTimer;
 
@@ -95,6 +105,20 @@ export class Device {
 
   get note() {
     return this.notes[this.index];
+  }
+
+  /** The note as stored (raw title, not the display "untitled"). */
+  get stored() {
+    return this.raw.find((n) => n.noteid === this.selectedId);
+  }
+
+  get dirty() {
+    if (this.focus !== "editor") return false;
+    return this.draftTitle !== this.baseline.title || this.html !== this.baseline.html;
+  }
+
+  setBaseline(html) {
+    this.baseline = { title: this.draftTitle, html };
   }
 
   get sortLabel() {
@@ -162,7 +186,7 @@ export class Device {
             { label: "SAVE", run: () => this.save() },
             { label: "NEW NOTE", run: () => this.newNote() },
             { label: "DELETE NOTE", run: () => this.askDelete() },
-            { label: "BACK TO LIST", run: () => (this.focus = "list") },
+            { label: "BACK TO LIST", run: () => this.leave() },
           ]
         : [
             { label: "NEW NOTE", run: () => this.newNote() },
@@ -180,9 +204,37 @@ export class Device {
   save() {
     this.say("SAVED ✓");
   }
-  newNote() {
+  /** Open the selected note for editing. */
+  open() {
+    if (!this.note) return;
+    this.isNew = false;
+    this.draftTitle = this.stored?.title ?? "";
+    this.baseline = { title: this.draftTitle, html: this.html };
     this.focus = "editor";
-    this.say("NEW NOTE");
+  }
+
+  newNote() {
+    this.isNew = true;
+    this.draftTitle = "";
+    this.focus = "editor";
+  }
+
+  /** Back to the list; asks first if there are unsaved changes. */
+  leave() {
+    if (!this.dirty) return this.#toList();
+    this.confirm({
+      title: "UNSAVED CHANGES",
+      text: this.isNew ? "This note hasn't been saved yet." : "You've changed this note since it was saved.",
+      yes: "KEEP EDITING",
+      no: "DISCARD",
+      onNo: () => this.#toList(),
+    });
+  }
+
+  #toList() {
+    this.isNew = false;
+    this.focus = "list";
+    this.editorApi?.reload();
   }
   askDelete() {
     const title = this.note?.title ?? "this note";
@@ -232,14 +284,15 @@ export class Device {
     // Left/right page through the list, five rows at a time.
     if (button === "left" && n) this.index = Math.max(0, this.index - 5);
     if (button === "right" && n) this.index = Math.min(n - 1, this.index + 5);
-    if (button === "a" && n) this.focus = "editor";
+    if (button === "a" && n) this.open();
     if (button === "b") this.cycleSort();
     if (button === "start") this.openMenu();
   };
 
   #editorInput = (button) => {
+    if (["up", "down", "left", "right"].includes(button)) this.editorApi?.move(button);
     if (button === "a") this.save();
-    if (button === "b") this.focus = "list";
+    if (button === "b") this.leave();
     if (button === "start") this.openMenu();
   };
 
