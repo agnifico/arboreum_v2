@@ -403,8 +403,8 @@
     exitEditor();
   });
 
-  // stay: keep editing after saving (Cmd/Ctrl+S); otherwise open the note.
-  async function saveNote({ stay = false } = {}) {
+  // Saving always keeps you in the editor (button and Cmd/Ctrl+S alike).
+  async function saveNote() {
     if (!editor || saveState === "saving") return false;
     saveState = "saving";
     const snapshot = current();
@@ -427,7 +427,7 @@
         const id = await db.notes.add(noteData);
         savedNote = { ...noteData, id };
         // Later saves (and reloads) now edit this note instead of making copies.
-        if (stay) replaceState(`${base}/newleaf?noteid=${noteData.noteid}`, {});
+        replaceState(`${base}/newleaf?noteid=${noteData.noteid}`, {});
       }
     } catch (error) {
       console.error("Failed to save note:", error);
@@ -438,10 +438,6 @@
 
     baseline = snapshot;
     saveState = "saved";
-    if (!stay) {
-      await goto(`${base}/read/${savedNote.noteid}`);
-      showToast("Saved ✓");
-    }
     return true;
   }
 
@@ -475,7 +471,7 @@
   }
 
   async function saveAndLeave() {
-    if (await saveNote({ stay: true })) await continueNavigation();
+    if (await saveNote()) await continueNavigation();
     else showLeaveConfirm = false;
   }
 
@@ -483,7 +479,7 @@
     if (event.key === "Escape") closePopovers();
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
       event.preventDefault();
-      saveNote({ stay: true });
+      saveNote();
     }
   }
 </script>

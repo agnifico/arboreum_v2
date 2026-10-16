@@ -82,13 +82,8 @@ If that changes, a migration and a test against v2 data come with it.
 
 Each question has a recommended option; work continued on that default.
 
-1. **Uncommitted work on `main` (dated 30 Apr): what should happen to it?**
-   - **What it was:** 134 changed files: an editor/sidebar rewrite, a Dexie v3 schema (drops the `text` index, adds `updatedAt`), Garden moved to `lib/components`, and the unused React tiptap templates in `@/components/` deleted.
-   - **Why it's not in this branch:** it was never deployed, and the brief describes the deployed app, so `polish/core` starts from `main` @ 628e80a.
-   - **Where it is now:** nothing was lost. It's in `git stash@{0}` ("WIP uncommitted on main (Apr 30 2026) - preserved before polish/core"), plus a patch copy outside the repo.
-   - **Recommend:** skim it, then drop it. This branch already covers its sidebar and title fixes, and its v3 schema isn't needed. Keep only its dead-file cleanup (see 6). If you do want v3, it needs its own migration test.
-   - **Heads-up:** `git stash pop` will conflict with this branch once it's merged.
-2. **Should Save keep you in the editor?** Now: Ctrl/⌘ S saves in place, and the Save button saves and opens the reading view (as before), with a "Saved ✓" toast. **Recommend** making the Save button stay in the editor too, since writing apps usually do, and adding a small "View" link to leave. I kept the old behaviour because it's a product call.
+1. ~~**Uncommitted work on `main` (30 Apr)**~~ **Decided: dropped.** It was covered by this branch.
+2. ~~**Should Save keep you in the editor?**~~ **Decided: yes.** The Save button now behaves like Ctrl/⌘ S and keeps you in the editor; no "View" link needed.
 3. **Mobile notes list: drawer or page?** I made it an overlay drawer: closed by default, opened with ☰, closed after you pick a note. **Recommend** keeping it. The alternative is a full-screen list page.
 4. **Sanitise imported HTML?** The reading view renders note HTML as-is. Notes written in the app are safe (Tiptap only produces its own schema), but a crafted backup file could carry script. **Recommend** a follow-up that passes imported HTML through Tiptap's schema (`generateJSON` → `generateHTML` from `@tiptap/core`, no new dependency). Left out here because it's security hardening, not polish.
 5. **Migrate to Svelte 5 syntax?** About 100 dev-terminal deprecation notices remain (`on:click`, `<slot>`). They aren't browser console messages. **Recommend** one mechanical PR (`npx sv migrate svelte-5`). It touches every component, including the map, so it's out of scope here.
