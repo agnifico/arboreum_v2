@@ -142,6 +142,8 @@
     font-weight: 500;
   }
   .list-screen {
+    display: flex;
+    flex-direction: column;
     padding: 6px 0;
   }
   /* Menu and confirm draw on the screen itself, like a device OS */

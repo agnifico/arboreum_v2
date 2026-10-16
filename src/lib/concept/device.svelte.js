@@ -229,6 +229,9 @@ export class Device {
     const n = this.notes.length;
     if (button === "up" && n) this.index = (this.index - 1 + n) % n;
     if (button === "down" && n) this.index = (this.index + 1) % n;
+    // Left/right page through the list, five rows at a time.
+    if (button === "left" && n) this.index = Math.max(0, this.index - 5);
+    if (button === "right" && n) this.index = Math.min(n - 1, this.index + 5);
     if (button === "a" && n) this.focus = "editor";
     if (button === "b") this.cycleSort();
     if (button === "start") this.openMenu();

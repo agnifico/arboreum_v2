@@ -4,11 +4,26 @@
   import { useDevice } from "./device.svelte.js";
   const device = useDevice();
   let { big = false } = $props();
+
+  // Keep the selected row in view as the D-pad moves through a long list.
+  let list = $state();
+  $effect(() => {
+    device.index;
+    list?.querySelector("li.sel")?.scrollIntoView({ block: "nearest" });
+  });
+
+  // Touch/mouse: tap selects, tapping the selected row again opens it.
+  function tap(i) {
+    if (i === device.index) device.press("a");
+    else device.index = i;
+  }
 </script>
 
-<ol class="list-rows" class:big>
-  {#each device.notes as n, i}
-    <li class:sel={i === device.index}>
+<ol class="list-rows" class:big bind:this={list}>
+  {#each device.notes as n, i (n.noteid)}
+    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+    <!-- Keyboard users drive the list with the D-pad keys (arrows, Enter) -->
+    <li class:sel={i === device.index} onclick={() => tap(i)}>
       <span class="li-num">{String(i + 1).padStart(2, "0")}</span>
       <img class="li-tree" src={n.tree} alt="" />
       <span class="li-title">{n.title}</span>
@@ -25,8 +40,12 @@
     margin: 0;
     padding: 6px 0;
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
   }
   .list-rows li {
+    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;

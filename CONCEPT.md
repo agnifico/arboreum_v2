@@ -122,7 +122,7 @@ Each step is small, checked in the browser, and committed on its own.
 
 **B · The core loop (desktop)**
 
-5. **List screen and List module.**
+5. ✅ **List screen and List module.**
    - The D-pad moves, A opens, B cycles the sort.
    - The index tabs also sort.
 6. **Editor.** Monospace "Sublime" styling:
