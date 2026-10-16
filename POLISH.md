@@ -51,7 +51,7 @@ If that changes, a migration and a test against v2 data come with it.
 ## 6. Accessibility
 
 - [x] **A1** The shared `Button` drops `title` and `aria-label`, so header icon buttons (Import, Export, About) have no tooltip.
-- [ ] **A2** Icon-only controls with no name or tooltip:
+- [x] **A2** Icon-only controls with no name or tooltip:
   - header: "…", ☰, +, ⇗, the green "open sidebar" strip
   - list: sort direction ▼
   - editor: sub, sup, heading −/size/+, map, tree, colour swatches, fullscreen, bubble and floating menus

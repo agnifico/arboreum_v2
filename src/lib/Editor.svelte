@@ -281,11 +281,15 @@
         TaskItem.configure({ nested: true }),
         TextAlign.configure({ types: ["heading", "paragraph"] }),
         StarterKit,
+        // Menus live on <body> so the editor's overflow-hidden frame can't
+        // clip them (and tippy doesn't warn about DOM order).
         FloatingMenu.configure({
           element: floatingMenu,
+          tippyOptions: { appendTo: () => document.body },
         }),
         BubbleMenu.configure({
           element: bubbleMenu,
+          tippyOptions: { appendTo: () => document.body },
           // No debounce: the debounced update isn't cleared on destroy and
           // logs a tippy warning when leaving the editor mid-selection.
           updateDelay: 0,
@@ -466,6 +470,8 @@
       class="ff"
       on:click={toggleFullscreen}
       class:shrink={$isFullscreen}
+      aria-label={$isFullscreen ? "Exit full screen" : "Full screen"}
+      title={$isFullscreen ? "Exit full screen" : "Full screen"}
       style="--expand-icon: url('{base}/icons/expand.svg'); --shrink-icon: url('{base}/icons/shrink.svg');"
     >
       &nbsp;
@@ -478,6 +484,7 @@
           bind:value={_title}
           name="title"
           placeholder="<title>"
+          aria-label="Title"
         />
         <div class="dashboard">
           <button
@@ -507,30 +514,35 @@
             <button
               on:click={() => editor.chain().focus().toggleBold().run()}
               class:active={isBold}
-              aria-label="Bold"><b>B</b></button
+              aria-label="Bold"
+              title="Bold"><b>B</b></button
             >
             <button
               on:click={() => editor.chain().focus().toggleItalic().run()}
               class:active={isItalic}
-              aria-label="Italic"><i>I</i></button
+              aria-label="Italic"
+              title="Italic"><i>I</i></button
             >
             <button
               on:click={() => editor.chain().focus().toggleStrike().run()}
               class:active={isStrike}
-              aria-label="Strike"><strike>S</strike></button
+              aria-label="Strike"
+              title="Strike"><strike>S</strike></button
             >
             <button
               on:click={() => editor.chain().focus().toggleUnderline().run()}
               class:active={isUnderline}
-              aria-label="Underline"><u>U</u></button
+              aria-label="Underline"
+              title="Underline"><u>U</u></button
             >
             <button
               on:click={() => editor.chain().focus().toggleCode().run()}
               class:active={isCode}
               aria-label="Code"
+              title="Code"
               ><img
                 src="{base}/icons/code.svg"
-                alt="Code"
+                alt=""
                 class="toolbar-icon"
               /></button
             >
@@ -538,9 +550,10 @@
               on:click={() => editor.chain().focus().toggleBlockquote().run()}
               class:active={isBlockquote}
               aria-label="Blockquote"
+              title="Blockquote"
               ><img
                 src="{base}/icons/quote.svg"
-                alt="Blockquote"
+                alt=""
                 class="toolbar-icon"
               /></button
             >
@@ -550,18 +563,21 @@
             <button
               on:click={() => editor.chain().focus().setParagraph().run()}
               class:active={isParagraph}
-              aria-label="Paragraph">¶</button
+              aria-label="Paragraph"
+              title="Paragraph">¶</button
             >
             <div class="list-dropdown">
               <button
                 class="dropdown-trigger"
                 on:click={() => (showListDropdown = !showListDropdown)}
-                aria-label="List Type"
+                aria-label="List type"
+              title="List type"
+                aria-expanded={showListDropdown}
               >
                 <img
                   src="{base}{lists.find((a) => a.name === activeListType)
                     ?.icon || '/icons/u-list.svg'}"
-                  alt="Current list type"
+                  alt=""
                   class="toolbar-icon"
                 />
                 <span class="dropdown-arrow">▼</span>
@@ -579,10 +595,11 @@
                         (list.name === "orderedList" && isOrderedList) ||
                         (list.name === "taskList" && isTaskList)}
                       aria-label={list.label}
+                      title={list.label}
                     >
                       <img
                         src="{base}{list.icon}"
-                        alt={list.label}
+                        alt=""
                         class="toolbar-icon"
                       />
                     </button>
@@ -591,15 +608,17 @@
               {/if}
             </div>
             <button on:click={addImage} aria-label="Add Image"
+              title="Add Image"
               ><img
                 src="{base}/icons/image.svg"
-                alt="Add Image"
+                alt=""
                 class="toolbar-icon"
               /></button
             >
             <button
               on:click={() => editor.chain().focus().setHardBreak().run()}
-              aria-label="Hard Break">↵</button
+              aria-label="Hard Break"
+              title="Hard Break">↵</button
             >
           </div>
 
@@ -608,6 +627,8 @@
             <div id="headingSizeSelector">
               <button
                 class="thin-btn"
+                aria-label="Smaller text"
+                title="Smaller text"
                 on:click={() => {
                   let newSize = size < 6 ? size + 1 : size;
                   size = newSize;
@@ -620,6 +641,8 @@
               >
               <button
                 class:active={activeHeadingLevel > 0}
+                aria-label={size === 4 ? "Text size: paragraph" : `Toggle heading ${size}`}
+                title="Text size"
                 on:click={() => {
                   if (size !== 4) {
                     editor.chain().focus().toggleHeading({ level: size }).run();
@@ -628,6 +651,8 @@
               >
               <button
                 class="thin-btn"
+                aria-label="Bigger text"
+                title="Bigger text"
                 on:click={() => {
                   let newSize = size > 1 ? size - 1 : size;
                   size = newSize;
@@ -643,24 +668,30 @@
               on:click={addLink}
               class:active={isLink}
               aria-label="Add Link"
+              title="Add Link"
               ><img
                 src="{base}/icons/link.svg"
-                alt="Add Link"
+                alt=""
                 class="toolbar-icon"
               /></button
             >
             <button
               on:click={() => editor.chain().focus().toggleHighlight().run()}
               class:active={isHighlight}
-              aria-label="Highlight">H</button
+              aria-label="Highlight"
+              title="Highlight">H</button
             >
             <button
               on:click={() => editor.chain().focus().toggleSubscript().run()}
-              class:active={isSubscript}>x₂</button
+              class:active={isSubscript}
+              aria-label="Subscript"
+              title="Subscript">x₂</button
             >
             <button
               on:click={() => editor.chain().focus().toggleSuperscript().run()}
-              class:active={isSuperscript}>x²</button
+              class:active={isSuperscript}
+              aria-label="Superscript"
+              title="Superscript">x²</button
             >
           </div>
           <div class="quadrant-bottom-right quadrant">
@@ -668,12 +699,14 @@
               <button
                 class="dropdown-trigger"
                 on:click={() => (showAlignDropdown = !showAlignDropdown)}
-                aria-label="Text Alignment"
+                aria-label="Text alignment"
+              title="Text alignment"
+                aria-expanded={showAlignDropdown}
               >
                 <img
                   src="{base}{alignments.find((a) => a.name === textAlign)
                     ?.icon || '/icons/left-align.svg'}"
-                  alt="Current alignment"
+                  alt=""
                   class="toolbar-icon"
                 />
                 <span class="dropdown-arrow">▼</span>
@@ -692,10 +725,11 @@
                       }}
                       class:active={textAlign === alignment.name}
                       aria-label={alignment.label}
+                      title={alignment.label}
                     >
                       <img
                         src="{base}{alignment.icon}"
-                        alt={alignment.label}
+                        alt=""
                         class="toolbar-icon"
                       />
                     </button>
@@ -707,11 +741,13 @@
               <button
                 class="palette-trigger"
                 on:click={() => (showColorPalette = !showColorPalette)}
-                aria-label="Toggle Color Palette"
+                aria-label="Text colour"
+              title="Text colour"
+                aria-expanded={showColorPalette}
               >
                 <img
                   src="{base}/icons/palette.svg"
-                  alt="Color Palette"
+                  alt=""
                   class="toolbar-icon"
                 />
               </button>
@@ -720,6 +756,9 @@
                   <button
                     type="button"
                     class="color-swatch"
+                    aria-label={`Text colour: ${color.name}`}
+                    title={color.name}
+                    tabindex={showColorPalette ? 0 : -1}
                     style:background-color={color.hex}
                     on:click={() => {
                       editor.chain().focus().setColor(color.hex).run();
@@ -732,6 +771,9 @@
                 {/each}
                 <button
                   class="color-swatch"
+                  aria-label="Clear text colour"
+                  title="Clear colour"
+                  tabindex={showColorPalette ? 0 : -1}
                   on:click={() => {
                     editor.chain().focus().unsetColor().run();
                     showColorPalette = false;
@@ -744,8 +786,13 @@
 
         <div class="side-controls">
           <div class="selector-buttons">
-            <button class="selector-trigger" on:click={enterPlacementMode}>
-              <img src="{base}/map.svg" alt="Select map location" />
+            <button
+              class="selector-trigger"
+              on:click={enterPlacementMode}
+              aria-label="Place this tree on the map"
+              title="Place this tree on the map"
+            >
+              <img src="{base}/map.svg" alt="" />
             </button>
 
             <div class="tree-selector">
@@ -753,8 +800,11 @@
                 class="selector-trigger"
                 bind:this={treeTrigger}
                 on:click={toggleTreeSelector}
+                aria-label="Choose this note's tree"
+                aria-expanded={showTreeSelector}
+                title="Choose this note's tree"
               >
-                <img src="{base}{treemoji}" alt="Selected tree icon" />
+                <img src="{base}{treemoji}" alt="" />
               </button>
               {#if showTreeSelector}
                 <div class="trees-grid" style={treePopoverStyle}>
@@ -791,6 +841,7 @@
     type="button"
     on:click={() => editor.chain().focus().toggleBold().run()}
     class:active={editor?.isActive("bold")}
+    aria-label="Bold"
   >
     <strong>B</strong>
   </button>
@@ -798,6 +849,7 @@
     type="button"
     on:click={() => editor.chain().focus().toggleItalic().run()}
     class:active={editor?.isActive("italic")}
+    aria-label="Italic"
   >
     <em>I</em>
   </button>
@@ -805,6 +857,7 @@
     type="button"
     on:click={() => editor.chain().focus().toggleStrike().run()}
     class:active={editor?.isActive("strike")}
+    aria-label="Strike"
   >
     <strike>S</strike>
   </button>
@@ -815,6 +868,8 @@
     type="button"
     on:click={() => editor.chain().focus().toggleCode().run()}
     class:active={editor?.isActive("code")}
+    aria-label="Code"
+    title="Code"
   >
     ❮❯
   </button>
@@ -822,6 +877,8 @@
     type="button"
     on:click={() => editor.chain().focus().toggleBulletList().run()}
     class:active={editor?.isActive("bulletList")}
+    aria-label="Bullet list"
+    title="Bullet list"
   >
     <img src="{base}/icons/u-list.svg" alt="" class="toolbar-icon" />
   </button>
@@ -829,6 +886,8 @@
     type="button"
     on:click={() => editor.chain().focus().toggleOrderedList().run()}
     class:active={editor?.isActive("orderedList")}
+    aria-label="Ordered list"
+    title="Ordered list"
   >
     <img src="{base}/icons/o-list.svg" alt="" class="toolbar-icon" />
   </button>
@@ -836,12 +895,16 @@
     type="button"
     on:click={() => editor.chain().focus().toggleBlockquote().run()}
     class:active={editor?.isActive("blockQuote")}
+    aria-label="Quote"
+    title="Quote"
   >
     ""
   </button>
   <button
     type="button"
     on:click={() => editor.chain().focus().setHardBreak().run()}
+    aria-label="Line break"
+    title="Line break"
   >
     ↵
   </button>
