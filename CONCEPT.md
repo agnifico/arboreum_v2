@@ -5,6 +5,8 @@ A conceptual design project. Arboreum's notes, presented as a piece of swappable
 - **Writing** is classic plain-text editing, Sublime-style: monospace and evenly spaced.
 - **The interface** is a console built from hardware-like modules you can slot in and out.
 
+It is built at `/concept` inside the working app. Once it's complete, it gets ported to become the main interface, and the current ("classic") interface is archived.
+
 It lives at `/concept` inside the working app. It reads the same notes in the browser (IndexedDB `arboreum`) and leaves the existing app untouched. It may grow into its own project later.
 
 ## Modules
@@ -56,12 +58,20 @@ On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and Tab 
 - **Fonts:** Chakra Petch for printing on the hardware; JetBrains Mono on the screens.
 - **Layouts:** two handcrafted ones, landscape for desktop and portrait for mobile.
 
+## Code structure
+
+- `src/routes/concept/+page.svelte`: the stage, the device grid (desktop and mobile layouts) and the module toggles.
+- `src/lib/concept/modules/*.svelte`: one component per module (Camera, Nameplate, ListModule, Screen, MapViewer, DPad, ControlPad, Speaker). Mobile tweaks sit beside each module's own styles.
+- `src/lib/concept/materials.css`: shared materials (module bodies, screws, etched labels, glass, pips). It's scoped to the `.arb` root with `:where()`, so module styles win and nothing leaks into the main app.
+- `src/lib/concept/Configurator.svelte`: the page-level Configure panel.
+- `src/lib/concept/sample.js`: sample content, used until step 4 connects real notes.
+
 ## Build order
 
 Each step is small, checked in the browser, and committed on its own.
 
 **A · Foundations**
-1. **Split into components.** One file per module, plus shared materials and colour tokens, so each module can evolve on its own.
+1. ✅ **Split into components.** One file per module, plus shared materials and colour tokens, so each module can evolve on its own.
 2. **Input bus.** A single source for D-pad, A, B and Start.
    - It takes input from the on-screen buttons and from the keyboard (arrows, Enter, Esc, Tab).
    - Each screen declares what A and B do, and the context strip renders that automatically.

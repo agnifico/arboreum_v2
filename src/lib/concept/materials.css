@@ -1,0 +1,135 @@
+/* Shared materials for the 1610F modules: bodies, screws, etched labels, glass.
+   Scoped to the .arb root with :where() so each module's own styles win. */
+
+:where(.arb) .mod {
+  --face: var(--alu);
+  --face-hi: var(--alu-hi);
+  --side: var(--alu-side);
+  position: relative;
+  border-radius: 14px;
+  background: linear-gradient(165deg, var(--face-hi), var(--face) 38%, color-mix(in oklab, var(--face), black 8%));
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.12),
+    0 6px 0 var(--side),
+    0 6px 0 1px rgba(0, 0, 0, 0.3),
+    0 16px 20px -6px rgba(40, 36, 24, 0.45);
+}
+
+:where(.arb) .alu { --face: var(--alu); --face-hi: var(--alu-hi); --side: var(--alu-side); }
+
+:where(.arb) .bone { --face: var(--bone); --face-hi: var(--bone-hi); --side: var(--bone-side); }
+
+:where(.arb) .moss { --face: var(--moss); --face-hi: var(--moss-hi); --side: var(--moss-side); }
+
+:where(.arb) .graphite {
+  --face: var(--graphite);
+  --face-hi: var(--graphite-hi);
+  --side: var(--graphite-side);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3),
+    0 6px 0 var(--side),
+    0 6px 0 1px rgba(0, 0, 0, 0.4),
+    0 16px 20px -6px rgba(40, 36, 24, 0.55);
+}
+
+:where(.arb) .screw {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fbfbfa, #b8bcbb 40%, #6a6f6d 75%, #464a48);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 1px rgba(0, 0, 0, 0.35);
+}
+
+:where(.arb) .screw::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 4.5px;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(40, 42, 41, 0.75);
+  transform: rotate(-35deg);
+}
+
+:where(.arb) .s-tl { top: 9px; left: 9px; }
+
+:where(.arb) .s-tr { top: 9px; right: 9px; }
+
+:where(.arb) .s-bl { bottom: 9px; left: 9px; }
+
+:where(.arb) .s-br { bottom: 9px; right: 9px; }
+
+:where(.arb) .etch,
+:where(.arb) .etch-dark {
+  font-family: var(--label);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+:where(.arb) .etch {
+  color: rgba(30, 32, 31, 0.55);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+:where(.arb) .etch-dark {
+  color: rgba(210, 214, 210, 0.4);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* One class of weight: beats the app's global button rule, stays below module styles */
+.arb button {
+  font: inherit;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+:where(.arb) .glass,
+:where(.arb) .list-glass,
+:where(.arb) .map-glass {
+  position: relative;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: radial-gradient(120% 90% at 30% 20%, #142019, var(--glass) 70%);
+  box-shadow:
+    inset 0 0 0 2px #050706,
+    inset 0 3px 10px rgba(0, 0, 0, 0.8),
+    0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  font-family: var(--mono);
+  color: var(--phosphor);
+}
+
+:where(.arb) .glare {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.07) 0 22%, transparent 22.5% 100%);
+  pointer-events: none;
+}
+
+:where(.arb) .pip {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-style: normal;
+  font-size: 10px;
+  color: #10130f;
+}
+
+:where(.arb) .pip.a { background: var(--signal); }
+
+:where(.arb) .pip.b { background: #8e9a88; }
+
+:where(.arb) .pip.st { background: #4c5a49; color: var(--phosphor); border-radius: 4px; width: 22px; }
+
+:where(.arb) .mobile .pip { width: 16px; height: 16px; font-size: 9px; }
+
+:where(.arb) .mobile .pip.st { width: 19px; }
