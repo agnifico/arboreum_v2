@@ -77,9 +77,17 @@
   let availW = $derived(stageW - pad.x * 2);
   let availH = $derived(winH - pad.top - pad.bottom);
 
-  // Portrait is designed at 440 x 953 (a 9 : 19.5 phone); the screen row takes what's left.
+  // Portrait is designed 440 wide and spans the window's width; the screen
+  // row takes whatever height is left, down to a usable minimum (below that
+  // the console zooms to fit the height instead).
   const PORTRAIT_W = 440;
-  const PORTRAIT_H = 953;
+  const PORTRAIT_MIN_H = 720;
+  let portraitH = $derived.by(() => {
+    const padH = showChassis ? 44 : 0; // the enclosure's own padding
+    const k = Math.min(availW / (PORTRAIT_W + padH), 1.25);
+    const padV = showChassis ? 52 : 14;
+    return Math.max(PORTRAIT_MIN_H, availH / k) - padV;
+  });
 
   let scale = $derived(natW && natH ? Math.min(availW / natW, availH / natH, 1.25) : 1);
 
@@ -92,32 +100,46 @@
   // column, and the Map viewer zooms in to use it.
   let tallBay = $derived(view === "landscape" && showBay && (!showSpeaker || !(showDpad || showCtl)));
 
-  // Grid layout per view; the right column only exists if something is in it.
   // Grid layout per view, from the placement rules (CONCEPT.md): controls
   // sit below the screen; a side holds at most one dock; with no controls
   // the screen takes the height.
   let grid = $derived.by(() => {
     const bottom = showDpad || showCtl;
     const pair = (n) => (showDpad && showCtl ? `${"dpad ".repeat(n - 1)}ctl` : (showDpad ? "dpad " : "ctl ").repeat(n).trim());
+    // The control slot's share of the bottom row: half beside the D-pad for
+    // the control pad, two thirds for the Format deck (it matters more there).
+    const deckShare = showDpad && showCtl && device.controls === "deck" ? 2 / 3 : null;
     if (view === "portrait") {
-      // A slim side column down the right holds the speaker strip with the
-      // Configure gear docked under it.
-      const cols = "110px 90px 168px 30px";
+      // With the speaker, a slim side column down the right holds its strip
+      // and the Configure gear; without it there's no column (the gear docks
+      // in the nameplate) and the modules take the full width.
+      const side = showSpeaker;
+      const main = PORTRAIT_W - (side ? 44 : 0); // 30px column + gap
+      const ctlW = Math.round((main - 14) * (deckShare ?? 1 / 2));
+      const cols = ["110px", `${main - 28 - 110 - ctlW}px`, `${ctlW}px`, side && "30px"].filter(Boolean).join(" ");
       // The screen takes what's left and scrolls inside; it never grows with the note.
       // Controls sit right under the screen (as in landscape); the bay goes below them.
       const rows = ["80px", "minmax(0, 1fr)", bottom && "160px", showBay && "190px"].filter(Boolean);
-      const sideRow = showBay || bottom ? "" : " side"; // nowhere else to dock it
+      const sc = side ? " side" : "";
       const areas = [
-        '"cam plate plate plate"',
-        `"scr scr scr ${sideRow ? "side" : "scr"}"`,
-        bottom && `"${showDpad && showCtl ? "dpad dpad ctl" : pair(3)} side"`,
-        showBay && '"bay bay bay side"',
+        `"cam plate plate${side ? " plate" : ""}"`,
+        `"scr scr scr${side ? (showBay || bottom ? " scr" : " side") : ""}"`,
+        bottom && `"${showDpad && showCtl ? "dpad dpad ctl" : pair(3)}${sc}"`,
+        showBay && `"bay bay bay${sc}"`,
       ].filter(Boolean);
-      return `width: ${PORTRAIT_W}px; height: ${PORTRAIT_H}px; grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`;
+      return `width: ${PORTRAIT_W}px; height: ${portraitH}px; grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`;
     }
     const list = leftList;
     const right = showBay || showSpeaker;
-    const cols = [...(list ? ["150px", "110px"] : ["150px"]), "400px", "420px", right && "300px"].filter(Boolean);
+    // Bottom-row cells keep their total width; the Format deck takes two thirds.
+    const cells = list ? [400, 420] : [150, 400, 420];
+    if (deckShare) {
+      const total = cells.reduce((x, y) => x + y) + 14 * (cells.length - 1);
+      const deckW = Math.round((total - 14) * deckShare);
+      cells[cells.length - 2] += cells[cells.length - 1] - deckW;
+      cells[cells.length - 1] = deckW;
+    }
+    const cols = [list && "150px", list && "110px", ...cells.map((w) => `${w}px`), right && "300px"].filter(Boolean);
     const n = cols.length - (right ? 1 : 0); // columns left of the right column
     // Right column: with a bottom row, bay over speaker; without one, just one of them.
     const r2 = right ? (showBay ? " bay" : bottom ? " scr" : " spk") : "";
@@ -125,8 +147,8 @@
     const row2 = list ? "list list scr scr" : "scr scr scr";
     // Bottom row cells (left of the right column): under the list it's still the list.
     const under = list ? "list list " : "";
-    const cells = n - (list ? 2 : 0);
-    const row3 = under + (showDpad && showCtl ? `${"dpad ".repeat(cells - 1)}ctl` : pair(cells));
+    const nCells = n - (list ? 2 : 0);
+    const row3 = under + (showDpad && showCtl ? `${"dpad ".repeat(nCells - 1)}ctl` : pair(nCells));
     const areas = [
       `"cam ${"plate ".repeat(n - 1 + (right ? 1 : 0)).trim()}"`,
       `"${row2}${r2}"`,
@@ -175,7 +197,7 @@
       {/if}
 
       <Camera />
-      <Nameplate />
+      <Nameplate gear={view === "portrait" && !showSpeaker} />
       {#if view === "landscape" && leftList}<ListModule />{/if}
       <Screen />
       {#if showBay}
@@ -192,14 +214,16 @@
       {#if showCtl}
         {#key device.controls}
           <div class="slot ctl-slot" in:insert={{ y: true }} out:eject={{ y: true }}>
-            {#if device.controls === "deck"}<FormatDeck />{:else}<ControlPad />{/if}
+            {#if device.controls === "deck"}<FormatDeck rows={view === "portrait" && showDpad ? 3 : 2} />{:else}<ControlPad />{/if}
           </div>
         {/key}
       {/if}
       {#if view === "portrait"}
-        <div class="side">
+        <!-- The Configure gear docks under the speaker strip, or (without
+             the speaker) at the nameplate's left end -->
+        <div class={showSpeaker ? "side" : "plate-dock"}>
           {#if showSpeaker}<Speaker />{/if}
-          <Configurator bind:view bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl docked />
+          <Configurator bind:view bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl docked drop={!showSpeaker} />
         </div>
       {:else if showSpeaker && (showDpad || showCtl || !showBay)}
         <!-- (with no controls row the right column has room for one module) -->
@@ -299,6 +323,13 @@
     align-items: center;
     justify-content: flex-end;
     gap: 12px;
+  }
+  .plate-dock {
+    grid-area: plate;
+    align-self: center;
+    justify-self: start;
+    margin-left: 18px;
+    z-index: 2;
   }
   .c-tl { top: 9px; left: 9px; }
   .c-tr { top: 9px; right: 9px; }

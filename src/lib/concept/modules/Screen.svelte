@@ -419,9 +419,11 @@
     font-size: 9px;
     letter-spacing: 0.2em;
     color: var(--phosphor);
-    background: rgba(213, 228, 198, 0.1);
-    border-left: 1px solid rgba(213, 228, 198, 0.3);
+    background: #223026; /* opaque: it has to stay findable over long text */
+    border: 1px solid rgba(213, 228, 198, 0.45);
+    border-right: none;
     border-radius: 4px 0 0 4px;
+    box-shadow: -4px 0 10px rgba(0, 0, 0, 0.5);
     cursor: pointer;
   }
   .drawer-tab {
@@ -455,8 +457,8 @@
   }
   .drawer-tab.warn {
     color: #ffd9d9;
-    background: rgba(229, 50, 59, 0.25);
-    border-left-color: rgba(229, 50, 59, 0.6);
+    background: #4a1f22;
+    border-color: rgba(229, 50, 59, 0.75);
   }
   .drawer-tab.open {
     right: min(44%, 300px);

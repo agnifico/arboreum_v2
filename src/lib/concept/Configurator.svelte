@@ -12,6 +12,7 @@
     showDpad = $bindable(true),
     showCtl = $bindable(true),
     docked = false, // portrait: a gear docked in the console under the speaker
+    drop = false, // docked at the top (the nameplate): the panel opens downward
   } = $props();
   const device = useDevice();
   let panelOpen = $state(false);
@@ -57,7 +58,7 @@
 <svelte:window onkeydown={handleKeydown} onclick={handleWindowClick} />
 
 <!-- Page-level configurator: outside the device, so nothing on it moves -->
-<div class="config" class:docked>
+<div class="config" class:docked class:drop>
   {#if panelOpen}
     <div class="config-panel" role="dialog" aria-label="Configure the device">
       <p class="cfg-h">ORIENTATION</p>
@@ -143,6 +144,12 @@
     position: absolute;
     right: 0;
     bottom: calc(100% + 10px);
+  }
+  .drop .config-panel {
+    left: 0;
+    right: auto;
+    top: calc(100% + 10px);
+    bottom: auto;
   }
   .config-btn {
     display: flex;

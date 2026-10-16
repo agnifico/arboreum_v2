@@ -12,7 +12,7 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 | Module | What it is | Notes |
 |---|---|---|
 | **Camera** | Top-left. The media button: adds an image to the note. | Its LED lights while an image comes in. |
-| **Nameplate** | Fixed hardware title bar reading ARBOREUM 1610F. | Branding only, not customisable. Model numbers are hexadecimal: 1610F is `0x1610F`. |
+| **Nameplate** | Fixed hardware title bar: ARBOREUM at the right end with 1610F under it, stripes at the left (landscape adds the line "Classic note taking, reimagined / Customisation within structure"). | Branding only, not customisable. Model numbers are hexadecimal: 1610F is `0x1610F`. |
 | **Screen** | Where writing happens. The notes list is a full screen here too, not a drawer. | |
 | **Bay** | Swappable slot: **Map viewer**, **Treemoji** or **List**. | Picked in Configure; the old module ejects and the new one slides in. Whatever is slotted does its job; the drawer covers the rest. |
 | **D-pad** | Moves through the list and the text. | |
@@ -32,12 +32,13 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
   - It also switches the orientation (landscape/portrait).
   - Turning modules off follows the placement rules: no List module means the list opens full screen; a lone control module takes the bottom row; no controls means the screen takes the height.
   - Landscape: a small pill at the bottom right.
-  - Portrait: a gear docked in the console's side column, under the speaker strip.
+  - Portrait: a gear docked in the console's side column, under the speaker strip. Without the speaker there's no side column; the gear docks at the nameplate's left end and its panel opens downward.
 - **Portrait arrangement** (formerly "mobile"):
   - The console is shaped to the phone's own screen, and the screen gets every bit of height the other modules don't need.
   - The D-pad and control pad share the row right under the screen, as in landscape. On the control pad, B and A sit side by side with Start below them.
   - The bay has its own row below the controls, with the Map viewer's Move and Tree keys on one side (in thumb reach at the bottom).
-  - The speaker is a thin full-height strip down the right.
+  - The speaker is a thin full-height strip down the right. Without it, the other modules take the full width.
+  - The console always spans the window's width; the screen takes whatever height is left (down to a usable minimum, below which the console zooms to fit the height).
 - **Enclosure:** an optional dark frame behind the modules. It's off by default.
 - **Bay:** holds one of three modules, picked in Configure (BAY switch, then MAP · TREEMOJI · LIST).
   - **Map viewer (MAP-01):** plot and tree. Desktop has its two keys side by side; portrait stacks them on one side.
@@ -97,7 +98,7 @@ The layout splits into three separate things:
 
 1. **Arrangement:** where the modules sit. There are two hand-crafted arrangements, **landscape** and **portrait**, and both follow the placement rules below.
 2. **Fit:** how an arrangement meets the window.
-   - **Fixed:** the arrangement keeps its designed proportions and zooms as a whole, centred on the mat, like a product photo. Portrait is designed at 440 × 953 (a 9 : 19.5 phone).
+   - **Fixed:** the arrangement keeps its designed proportions and zooms as a whole, centred on the mat, like a product photo. Portrait is the exception in height: it's designed 440 wide and always spans the width (a phone's visible height varies with the browser's bars), and its screen row takes the height that's left, down to a 720px console.
    - **Fluid:** always fills the window exactly; the screen is the elastic module.
 3. **Mode:** Fixed or Fluid.
 
@@ -117,6 +118,7 @@ That gives four results (fixed landscape, fluid landscape, fixed portrait, fluid
 2. **Controls** always sit below the screen.
 3. **Beside the screen** (landscape only), at most one dock per side: the **list on the left**, the **bay (map viewer) on the right**.
 4. **The bottom row is a pair:** either **D-pad + A/B**, or **List + something else**. A/B never appears without the D-pad.
+   - **Split:** D-pad + control pad share the row half and half. D-pad + Format deck: the deck takes two thirds (it matters more there). In portrait the deck beside the D-pad has three rows of wide keys; without the D-pad it spans the row in two rows of thumb-sized keys.
 5. **No controls row:** the screen goes full screen (touch and keyboard only).
 6. **Portrait:** side docks move below the controls row. The list becomes a full screen rather than a module. The speaker is filler and takes a thin edge strip.
 
@@ -190,9 +192,16 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 **D-pad feel:** more tuning.
 
+## Ideas for later
+
+- **Select key, Gboard-style.** A Select button: hold it and move with the D-pad to select a block of text (the usual tap-and-drag selection stays). Needs the input bus to know when a key is held, not just pressed.
+- **Mini A/B on the Format deck (open question).** A small A, B, Start (and Select) on the deck would make D-pad + deck a complete console, and a natural typing posture on phones; the control pad would become the big-buttons choice. To settle: whether the strip's FORMAT page stays while the deck is in (today it steps aside, as the deck's virtual stand-in), and how the keys fit in portrait (three rows, or a small A/B column).
+- **D-pad without controls.** Today the D-pad can be on with no control slot filled; it means little without A/B. Decide whether Configure should prevent it.
+
 ## Fine-tuning backlog (component-by-component pass)
 
 - **Map viewer, mobile:** give the screen a custom shape (a clip-path cut-out) with the Move and Plant buttons set into that cut-out, instead of sitting beside a plain rectangle.
+- **Drawer tab:** opaque, with a firmer edge and a shadow, so it stays findable over long text. *Done.*
 - **Wells rule (applies everywhere):** a recessed well's top padding sets the base, left/right padding is its own value, and the bottom padding equals the top plus the key's drop shadow (round keys 5px, Start 3px).
 
 ## Working plan (decided)
@@ -253,6 +262,7 @@ Each step is small, checked in the browser, and committed on its own.
 14. **Fluid fit.** The console fills the window, the screen is elastic, and orientation follows the space with a buffer.
 15. **Fixed dock choices.** Configure lets the user pick from the allowed placements (sides for the list, bay and speaker, and the bottom-row pair).
 16. **Typing posture.** When the on-screen keyboard opens, the lower modules fold into a thin strip; they come back when it closes.
+    - **The keyboard on demand (found in phone testing):** focusing the editor shouldn't raise the phone's keyboard. The editor gets `inputmode="none"` (caret and selection still work, no keyboard), and a keyboard key (⌨) raises it by switching to `inputmode="text"`, then lowers it again. Where Chrome's VirtualKeyboard API exists (Android), use `virtualkeyboardpolicy="manual"` with `navigator.virtualKeyboard.show()` / `hide()`; iOS may need a blur and refocus for the switch to take. Tapping the text moves the caret without raising the keyboard.
 17. **Portrait behaviour.** Touch input, the list as a full screen, the drawer, thumb reach, and checks on a real phone and an iPad.
     - Known: in portrait the gutter's line numbers drift about a line from the text on long notes, and the Map viewer's A/B strip squeezes the small map when it shows. Treemoji's tree grid has small tiles in the short bay row. The screen already keeps a fixed height and scrolls inside.
 
