@@ -5,9 +5,7 @@ A conceptual design project. Arboreum's notes, presented as a piece of swappable
 - **Writing** is classic plain-text editing, Sublime-style: monospace and evenly spaced.
 - **The interface** is a console built from hardware-like modules you can slot in and out.
 
-It is built at `/concept` inside the working app. Once it's complete, it gets ported to become the main interface, and the current ("classic") interface is archived.
-
-It lives at `/concept` inside the working app. It reads the same notes in the browser (IndexedDB `arboreum`) and leaves the existing app untouched. It may grow into its own project later.
+It is built at `/concept` inside the working app, on the same notes (IndexedDB `arboreum`), and leaves the existing app untouched. Once it's complete, it gets ported to become the main interface, and the current ("classic") interface is archived. It may grow into its own project later.
 
 ## Modules
 
