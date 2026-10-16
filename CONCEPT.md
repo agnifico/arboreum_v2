@@ -153,7 +153,7 @@ How that plays out, with the Map viewer as the worked example:
 
 The project blends real-world hardware, UI/UX and modern web layout, and it uses that blend on purpose. Modules that exist only for the look can give way to ones that do something:
 - **Without the Map viewer, the speaker lets the screen grow:** with the bay pulled, the main screen widens into the space.
-- **Without the speaker, the bay grows:** with the speaker pulled and the Map viewer slotted, the Map viewer takes the whole right column and its map zooms in (9 tiles across instead of 12, as many rows as fit).
+- **Without the speaker, the bay grows:** with the speaker pulled and the Map viewer slotted, the Map viewer takes the whole right column and its map zooms in (9 tiles across instead of 12, as many rows as fit). A larger map asset can come later.
 
 The physical metaphor decides the rules (one dock per side, controls below the screen); the web decides how the space flows.
 
