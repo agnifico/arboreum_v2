@@ -8,7 +8,7 @@ If that changes, a migration and a test against v2 data come with it.
 
 ## 1. Editor
 
-- [ ] **E1** Tree picker popover is clipped by the editor's `overflow: hidden`: at 1000px it runs 135px past the right edge, at 375px it's cut off on the left.
+- [x] **E1** Tree picker popover is clipped by the editor's `overflow: hidden`: at 1000px it runs 135px past the right edge, at 375px it's cut off on the left.
 - [x] **E2** Cmd/Ctrl+S doesn't save (the browser's "Save page" opens instead).
 - [x] **E3** No warning when leaving with unsaved changes (in-app links, reload, closing the tab).
 - [x] **E4** No "saved" feedback: Save silently jumps to the reading view.

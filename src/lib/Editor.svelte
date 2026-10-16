@@ -56,6 +56,34 @@
   let mapX = $state(note?.mapX ?? null);
   let mapY = $state(note?.mapY ?? null);
   let showTreeSelector = $state(false);
+  let treeTrigger = $state();
+  let treePopoverStyle = $state("");
+
+  // The picker is position: fixed so the editor's rounded, overflow-hidden
+  // frame can't clip it; place it under its button, kept inside the viewport.
+  function placeTreePopover() {
+    if (!treeTrigger) return;
+    const r = treeTrigger.getBoundingClientRect();
+    const margin = 8;
+    const width = Math.min(300, window.innerWidth - margin * 2);
+    const left = Math.min(
+      Math.max(r.left + r.width / 2 - width / 2, margin),
+      window.innerWidth - width - margin
+    );
+    const top = Math.min(r.bottom + 6, window.innerHeight - Math.min(240, window.innerHeight * 0.6) - margin);
+    treePopoverStyle = `left:${left}px; top:${top}px; width:${width}px;`;
+  }
+
+  function toggleTreeSelector() {
+    if (!showTreeSelector) placeTreePopover();
+    showTreeSelector = !showTreeSelector;
+  }
+
+  function closeTreeSelectorOnScroll(event) {
+    if (showTreeSelector && !event.target.closest?.(".trees-grid")) {
+      showTreeSelector = false;
+    }
+  }
 
   let editor;
 
@@ -408,7 +436,11 @@
   }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window
+  on:keydown={handleKeydown}
+  on:resize={() => (showTreeSelector = false)}
+  on:scroll|capture={closeTreeSelectorOnScroll}
+/>
 
 <Modal
   bind:show={showLeaveConfirm}
@@ -716,14 +748,13 @@
             <div class="tree-selector">
               <button
                 class="selector-trigger"
-                on:click={() => {
-                  showTreeSelector = !showTreeSelector;
-                }}
+                bind:this={treeTrigger}
+                on:click={toggleTreeSelector}
               >
                 <img src="{base}{treemoji}" alt="Selected tree icon" />
               </button>
               {#if showTreeSelector}
-                <div class="trees-grid">
+                <div class="trees-grid" style={treePopoverStyle}>
                   {#each trees as tree (tree.filePath)}
                     <label>
                       <input
@@ -1075,16 +1106,14 @@
     flex: 1;
   }
   .trees-grid {
-    position: absolute;
-    top: 110%;
-    left: 50%;
-    transform: translateX(-50%);
+    position: fixed;
+    box-sizing: border-box;
     z-index: 100;
     background-color: #38362e;
     border: 2px solid #dad7cd;
     border-radius: 8px;
     padding: 10px;
-    height: 150px;
+    max-height: min(240px, 60vh);
     width: 300px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
