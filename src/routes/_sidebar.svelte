@@ -9,7 +9,7 @@
   import { page } from "$app/state";
   import { skipUnsavedGuard } from "$lib/stores.js";
 
-  let { notes = [] } = $props();
+  let { notes = null } = $props(); // null until IndexedDB has answered
   let to_del = $state([]);
   let sidebar = $state("sidebar");
   let select_switch = $state(false);
@@ -121,6 +121,9 @@
     {/if}
   </div>
   <div class="notes">
+    {#if Array.isArray(notes) && notes.length === 0}
+      <p class="empty">No notes yet. Your first one will sprout here.</p>
+    {/if}
     {#if sortedNotes}
       {#each sortedNotes as i (i.id)}
         <FileIcon
@@ -204,6 +207,15 @@
       background-color: var(--evergreen);
       background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35));
     }
+  }
+
+  .empty {
+    font-family: "Fira Code", monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    padding: 0.5rem;
+    margin: 0;
   }
 
   .notes {

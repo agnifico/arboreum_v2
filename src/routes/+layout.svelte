@@ -63,7 +63,7 @@
   // Guard liveQuery to only run on the client
   const notes = browser
     ? liveQuery(() => db.notes.orderBy("createdAt").reverse().toArray())
-    : writable([]);
+    : writable(null);
   
   function toggleSidebar() {
     sidebar_switch = !sidebar_switch;
