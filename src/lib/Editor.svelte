@@ -49,8 +49,8 @@
   let _title = $state(note?.title || "");
   let body = $state(note?.text || "");
   let treemoji = $state(note?.icon || "/Tree2.png");
-  let mapX = $state(note?.mapX || null);
-  let mapY = $state(note?.mapY || null);
+  let mapX = $state(note?.mapX ?? null);
+  let mapY = $state(note?.mapY ?? null);
   let showTreeSelector = $state(false);
 
   let editor;
@@ -60,8 +60,8 @@
     _title = note?.title || "";
     body = note?.text || "";
     treemoji = note?.icon || "/Tree2.png";
-    mapX = note?.mapX || null;
-    mapY = note?.mapY || null;
+    mapX = note?.mapX ?? null;
+    mapY = note?.mapY ?? null;
 
     if (editor && body !== editor.getHTML()) {
       editor.commands.setContent(body);
