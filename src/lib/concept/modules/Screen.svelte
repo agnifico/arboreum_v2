@@ -1,10 +1,39 @@
 <script>
-  import { lines, cursorLine, formatKeys } from "../sample.js";
+  import { formatKeys } from "../sample.js";
   import { useDevice } from "../device.svelte.js";
   import NoteRows from "../NoteRows.svelte";
   const device = useDevice();
   // Portrait has no List module, so the list takes over the screen.
   let showList = $derived(device.focus === "list" && !device.hasListModule);
+
+  // Interim read-out of the note's stored HTML as numbered mono lines.
+  // Build step 6 replaces this with the real editor.
+  function toLines(html) {
+    if (typeof DOMParser === "undefined" || !html) return [];
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const out = [];
+    const walk = (el, depth = 0) => {
+      for (const node of el.children) {
+        const tag = node.tagName;
+        if (/^H[1-6]$/.test(tag)) out.push([{ t: "#".repeat(Math.min(+tag[1], 3)) + " ", c: "tk-md" }, { t: node.textContent, c: "tk-h" }]);
+        else if (tag === "UL" || tag === "OL") {
+          [...node.children].forEach((li, i) => {
+            const task = li.dataset.checked;
+            const mark = task !== undefined ? (task === "true" ? "- [x] " : "- [ ] ") : tag === "OL" ? `${i + 1}. ` : "- ";
+            const text = [...li.childNodes].filter((c) => !/^(UL|OL)$/.test(c.tagName)).map((c) => c.textContent).join("").trim();
+            out.push([{ t: "  ".repeat(depth) + mark, c: "tk-md" }, { t: text, c: task === "true" ? "tk-done" : "" }]);
+            for (const sub of li.children) if (/^(UL|OL)$/.test(sub.tagName)) walk({ children: [sub] }, depth + 1);
+          });
+        } else if (tag === "BLOCKQUOTE") {
+          for (const p of node.children) out.push([{ t: "> ", c: "tk-md" }, { t: p.textContent, c: "tk-quote" }]);
+        } else out.push(node.textContent ? [{ t: node.textContent, c: "" }] : []);
+      }
+    };
+    walk(doc.body);
+    return out;
+  }
+  let lines = $derived(toLines(device.note?.text));
+  let cursorLine = $derived(lines.length - 1);
   let { missing, drawerLabel } = $props();
 </script>
 

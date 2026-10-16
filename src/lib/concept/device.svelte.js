@@ -1,13 +1,35 @@
 // The 1610F's shared state: one place every module reads from and every
 // input (on-screen keys or the keyboard) goes through. See CONCEPT.md, "Inputs".
 import { getContext, setContext } from "svelte";
-import { notes as sampleNotes } from "./sample.js";
+import { liveQuery } from "dexie";
+import { db } from "$lib/db.js";
 
 const KEY = "arb-device";
 export const provideDevice = (device) => setContext(KEY, device);
 export const useDevice = () => getContext(KEY);
 
 export const BUTTONS = ["up", "down", "left", "right", "a", "b", "start"];
+
+export const SORTS = [
+  { key: "saved", label: "SAVED" },
+  { key: "az", label: "A–Z" },
+  { key: "made", label: "MADE" },
+];
+
+const time = (v) => (v ? new Date(v).getTime() || 0 : 0);
+
+/** "now", "5m", "2h", "3d", "2w", "4mo", "1y" */
+export function ago(v, now = Date.now()) {
+  const s = Math.max(0, (now - time(v)) / 1000);
+  if (s < 60) return "now";
+  const steps = [["m", 60], ["h", 60], ["d", 24], ["w", 7], ["mo", 4.35], ["y", 12]];
+  let n = s / 60;
+  for (let i = 0; i < steps.length; i++) {
+    const next = steps[i + 1];
+    if (!next || n < next[1]) return `${Math.floor(n)}${steps[i][0]}`;
+    n /= next[1];
+  }
+}
 
 // Keyboard ↔ hardware. Outside the editor every key maps; inside it only Esc
 // (B) and Ctrl/⌘ S (A) do, so typing stays normal. Start is M (for menu);
@@ -28,9 +50,12 @@ export class Device {
   lit = $state(Object.fromEntries(BUTTONS.map((b) => [b, false])));
   /** Which part of the device has the D-pad: the notes list or the editor. */
   focus = $state("list");
-  /** Selected note in the list. */
-  index = $state(0);
-  notes = $state(sampleNotes);
+  /** Notes as stored (the app's IndexedDB), kept live. */
+  raw = $state.raw([]);
+  loaded = $state(false);
+  sort = $state("saved");
+  /** Selection follows the note (its noteid), not the row number. */
+  selectedId = $state(null);
   /** Short status message on the screen, e.g. "SAVED ✓". */
   message = $state("");
   /**
@@ -45,8 +70,58 @@ export class Device {
   #timers = {};
   #msgTimer;
 
+  /** The notes in list order, shaped for display. */
+  get notes() {
+    const list = this.raw.map((n) => ({
+      ...n,
+      title: n.title?.trim() || "untitled",
+      tree: n.icon || "/Tree2.png",
+      when: ago(n.updatedAt ?? n.createdAt),
+    }));
+    if (this.sort === "az") {
+      return list.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base", numeric: true }));
+    }
+    const key = this.sort === "made" ? "createdAt" : "updatedAt";
+    return list.sort((a, b) => time(b[key] ?? b.createdAt) - time(a[key] ?? a.createdAt));
+  }
+
+  get index() {
+    const i = this.notes.findIndex((n) => n.noteid === this.selectedId);
+    return i < 0 ? 0 : i;
+  }
+  set index(i) {
+    this.selectedId = this.notes[i]?.noteid ?? null;
+  }
+
   get note() {
     return this.notes[this.index];
+  }
+
+  get sortLabel() {
+    return SORTS.find((x) => x.key === this.sort).label;
+  }
+
+  /** Start reading notes; returns a stop function. Browser only. */
+  start() {
+    const sub = liveQuery(() => db.notes.toArray()).subscribe({
+      next: (rows) => {
+        this.raw = rows;
+        this.loaded = true;
+        if (!rows.some((n) => n.noteid === this.selectedId)) this.selectedId = this.notes[0]?.noteid ?? null;
+      },
+      error: (e) => console.error("Couldn't read notes:", e),
+    });
+    return () => sub.unsubscribe();
+  }
+
+  setSort(key) {
+    this.sort = key;
+    this.say(`SORT · ${this.sortLabel}`);
+  }
+
+  cycleSort() {
+    const i = SORTS.findIndex((x) => x.key === this.sort);
+    this.setSort(SORTS[(i + 1) % SORTS.length].key);
   }
 
   /** What A, B and Start do right now (the screen's context strip). */
@@ -155,7 +230,7 @@ export class Device {
     if (button === "up" && n) this.index = (this.index - 1 + n) % n;
     if (button === "down" && n) this.index = (this.index + 1) % n;
     if (button === "a" && n) this.focus = "editor";
-    if (button === "b") this.say("SORT · NEXT");
+    if (button === "b") this.cycleSort();
     if (button === "start") this.openMenu();
   };
 

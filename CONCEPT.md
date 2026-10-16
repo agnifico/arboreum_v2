@@ -118,7 +118,7 @@ Each step is small, checked in the browser, and committed on its own.
    - It takes input from the on-screen buttons and from the keyboard (arrows, Enter, Esc, Tab).
    - Each screen declares what A and B do, and the context strip renders that automatically.
 3. ✅ **Screen states.** List, Editor, Start menu and Confirm, plus the moves between them.
-4. **Real notes.** Read and write the app's IndexedDB through the existing `db.js`, with no schema change.
+4. ✅ **Real notes.** Read and write the app's IndexedDB through the existing `db.js`, with no schema change.
 
 **B · The core loop (desktop)**
 

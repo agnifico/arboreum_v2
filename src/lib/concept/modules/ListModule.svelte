@@ -1,5 +1,5 @@
 <script>
-  import { useDevice } from "../device.svelte.js";
+  import { useDevice, SORTS } from "../device.svelte.js";
   import NoteRows from "../NoteRows.svelte";
   const device = useDevice();
 </script>
@@ -10,16 +10,17 @@
   <div class="list-glass">
     <div class="list-head">
       <span>NOTES · {device.notes.length}</span>
-      <span class="list-sort">SAVED ▾</span>
+      <span class="list-sort">{device.sortLabel} ▾</span>
     </div>
     <NoteRows />
     <div class="list-foot"><i class="pip a">A</i>OPEN <i class="pip b">B</i>SORT</div>
     <div class="glare" aria-hidden="true"></div>
   </div>
-  <div class="tabs" aria-hidden="true">
-    <span class="tab on">SAVED</span>
-    <span class="tab">A–Z</span>
-    <span class="tab">MADE</span>
+  <!-- Physical index tabs: sort the list -->
+  <div class="tabs" role="group" aria-label="Sort notes">
+    {#each SORTS as t}
+      <button class="tab" class:on={device.sort === t.key} aria-pressed={device.sort === t.key} onclick={() => device.setSort(t.key)}>{t.label}</button>
+    {/each}
   </div>
   <span class="etch-dark list-label">LST-01</span>
 </section>

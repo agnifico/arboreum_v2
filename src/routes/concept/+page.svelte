@@ -16,6 +16,7 @@
   $effect(() => {
     device.hasListModule = view === "landscape";
   });
+  onMount(() => device.start());
 
   function handleKeydown(event) {
     if (device.handleKey(event)) event.preventDefault();
