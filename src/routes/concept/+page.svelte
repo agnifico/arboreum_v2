@@ -10,6 +10,13 @@
   import ControlPad from "$lib/concept/modules/ControlPad.svelte";
   import Speaker from "$lib/concept/modules/Speaker.svelte";
   import Configurator from "$lib/concept/Configurator.svelte";
+  import { Device, provideDevice } from "$lib/concept/device.svelte.js";
+
+  const device = provideDevice(new Device());
+
+  function handleKeydown(event) {
+    if (device.handleKey(event)) event.preventDefault();
+  }
 
   // Look test 01: free-standing modules that together make the 1610F.
   // Landscape and portrait arrangements, fitted FIXED. See CONCEPT.md.
@@ -82,7 +89,7 @@
   let drawerLabel = $derived(showBay ? "TREE" : "TREE · PLOT");
 </script>
 
-<svelte:window bind:innerHeight={winH} />
+<svelte:window bind:innerHeight={winH} onkeydown={handleKeydown} />
 
 <svelte:head>
   <title>Arboreum 1610F · look test</title>

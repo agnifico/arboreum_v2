@@ -1,23 +1,25 @@
 <script>
   import { lines, cursorLine, formatKeys } from "../sample.js";
+  import { useDevice } from "../device.svelte.js";
+  const device = useDevice();
   let { missing, drawerLabel } = $props();
 </script>
 
 <!-- SCREEN -->
-<section class="mod graphite screen" aria-label="Screen module">
+<section class="mod graphite screen" class:focused={device.focus === "editor"} aria-label="Screen module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="glass">
     <div class="status">
-      <span>▣ <b>morning-pages</b></span>
-      <span class="status-r"><span class="dot-unsaved">●</span> UNSAVED<span class="wide-only"> <span class="sep">│</span> 11:42 <span class="sep">│</span> 16·10</span></span>
+      <span>▣ <b>{device.notes[device.index]?.title ?? "—"}</b>{#if device.focus !== "editor"} <span class="mode">· PREVIEW</span>{/if}</span>
+      <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}<span class="dot-unsaved">●</span> UNSAVED{/if}<span class="wide-only"> <span class="sep">│</span> 11:42 <span class="sep">│</span> 16·10</span></span>
     </div>
 
     <div class="code" aria-label="Note text">
       {#each lines as line, i}
         <div class="ln" class:current={i === cursorLine}>
           <span class="gutter">{i + 1}</span>
-          <span class="txt">{#each line as seg}<span class={seg.c}>{seg.t}</span>{/each}{#if i === cursorLine}<span class="cursor"></span>{/if}</span>
+          <span class="txt">{#each line as seg}<span class={seg.c}>{seg.t}</span>{/each}{#if i === cursorLine && device.focus === "editor"}<span class="cursor"></span>{/if}</span>
         </div>
       {/each}
     </div>
@@ -32,9 +34,9 @@
 
     <!-- A/B context: overlaid, always visible -->
     <div class="ab">
-      <span><i class="pip a">A</i>SAVE</span>
-      <span><i class="pip b">B</i>LIST</span>
-      <span><i class="pip st">≡</i>START</span>
+      <span><i class="pip a">A</i>{device.labels.a}</span>
+      <span><i class="pip b">B</i>{device.labels.b}</span>
+      <span><i class="pip st">≡</i>{device.labels.start}</span>
     </div>
 
     <!-- Secondary strip: paged with ◀ ▶ (format · details) -->
@@ -80,6 +82,14 @@
   .status b {
     color: var(--phosphor);
     font-weight: 500;
+  }
+  .mode {
+    color: var(--phosphor-dim);
+    font-weight: 400;
+  }
+  .msg {
+    color: var(--signal);
+    font-weight: 700;
   }
   .dot-unsaved {
     color: var(--signal);

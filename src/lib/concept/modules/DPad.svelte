@@ -1,12 +1,17 @@
+<script>
+  import { useDevice } from "../device.svelte.js";
+  const device = useDevice();
+</script>
+
 <!-- D-PAD -->
 <section class="mod moss dpadmod" aria-label="D-pad module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="dpad">
-    <button class="arm up" aria-label="Up"><span>▲</span></button>
-    <button class="arm right" aria-label="Right"><span>▶</span></button>
-    <button class="arm down" aria-label="Down"><span>▼</span></button>
-    <button class="arm left" aria-label="Left"><span>◀</span></button>
+    <button class="arm up" class:lit={device.lit.up} aria-label="Up" onclick={() => device.press("up")}><span>▲</span></button>
+    <button class="arm right" class:lit={device.lit.right} aria-label="Right" onclick={() => device.press("right")}><span>▶</span></button>
+    <button class="arm down" class:lit={device.lit.down} aria-label="Down" onclick={() => device.press("down")}><span>▼</span></button>
+    <button class="arm left" class:lit={device.lit.left} aria-label="Left" onclick={() => device.press("left")}><span>◀</span></button>
     <span class="hub"></span>
   </div>
   <span class="etch dpad-label">NAV-01</span>
@@ -40,7 +45,8 @@
     box-shadow: 0 4px 0 #0e0f0e, inset 0 1px 0 rgba(255, 255, 255, 0.12);
     transition: transform 0.06s ease, box-shadow 0.06s ease;
   }
-  .arm:active {
+  .arm:active,
+  .arm.lit {
     transform: translateY(3px);
     box-shadow: 0 1px 0 #0e0f0e;
   }

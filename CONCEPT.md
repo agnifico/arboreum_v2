@@ -53,7 +53,7 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 | Map viewer | cursor | plant here | cancel | — |
 | Confirm | — | yes | no | — |
 
-On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and Tab is Start.
+On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and **M** is Start. Tab stays free for moving keyboard focus. Inside the editor only Esc (B) and Ctrl/⌘ S (A) map, so typing stays normal.
 
 ## Look
 
@@ -114,7 +114,7 @@ Each step is small, checked in the browser, and committed on its own.
 **A · Foundations**
 1. ✅ **Split into components.** One file per module, plus shared materials and colour tokens, so each module can evolve on its own.
 1b. ✅ **Fixed fit.** One fit rule everywhere (no device special cases), and orientation picked from the screen's shape. Verified with a resize sweep from 1440 to 320px wide, at three heights and in both orientations: no cut-offs, scrolling or jumps.
-2. **Input bus.** A single source for D-pad, A, B and Start.
+2. ✅ **Input bus.** A single source for D-pad, A, B and Start.
    - It takes input from the on-screen buttons and from the keyboard (arrows, Enter, Esc, Tab).
    - Each screen declares what A and B do, and the context strip renders that automatically.
 3. **Screen states.** List, Editor, Start menu and Confirm, plus the moves between them.

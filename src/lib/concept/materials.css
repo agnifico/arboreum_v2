@@ -133,3 +133,17 @@
 :where(.arb) .portrait .pip { width: 16px; height: 16px; font-size: 9px; }
 
 :where(.arb) .portrait .pip.st { width: 19px; }
+
+/* Input focus: the module that currently has the D-pad shows a lit bar */
+:where(.arb) .mod.focused::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  width: 26px;
+  height: 4px;
+  margin-left: -13px;
+  border-radius: 2px;
+  background: var(--signal);
+  box-shadow: 0 0 8px var(--signal);
+}

@@ -1,18 +1,19 @@
 <script>
-  import { notes, selectedNote } from "../sample.js";
+  import { useDevice } from "../device.svelte.js";
+  const device = useDevice();
 </script>
 
 <!-- LIST (desktop): notes as a numbered list with index tabs -->
-<section class="mod graphite list" aria-label="List module">
+<section class="mod graphite list" class:focused={device.focus === "list"} aria-label="List module">
   <span class="screw s-tl"></span><span class="screw s-bl"></span>
   <div class="list-glass">
     <div class="list-head">
-      <span>NOTES · {notes.length}</span>
+      <span>NOTES · {device.notes.length}</span>
       <span class="list-sort">SAVED ▾</span>
     </div>
     <ol class="list-rows">
-      {#each notes as n, i}
-        <li class:sel={i === selectedNote}>
+      {#each device.notes as n, i}
+        <li class:sel={i === device.index}>
           <span class="li-num">{String(i + 1).padStart(2, "0")}</span>
           <img class="li-tree" src={n.tree} alt="" />
           <span class="li-title">{n.title}</span>

@@ -1,3 +1,8 @@
+<script>
+  import { useDevice } from "../device.svelte.js";
+  const device = useDevice();
+</script>
+
 <!-- CONTROL PAD: Start, B, A in one straight row -->
 <section class="mod bone ctl" aria-label="Control pad">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
@@ -5,14 +10,14 @@
   <div class="ctl-row">
     <!-- Start: its function is on the key, in a well like the A/B pad -->
     <div class="start-well">
-      <button class="start" aria-label="Start">START</button>
+      <button class="start" class:lit={device.lit.start} aria-label="Start: {device.labels.start}" onclick={() => device.press("start")}>START</button>
     </div>
     <div class="ab-pad">
       <div class="btn-col">
-        <button class="round b" aria-label="B">B</button>
+        <button class="round b" class:lit={device.lit.b} aria-label="B: {device.labels.b}" onclick={() => device.press("b")}>B</button>
       </div>
       <div class="btn-col">
-        <button class="round a" aria-label="A">A</button>
+        <button class="round a" class:lit={device.lit.a} aria-label="A: {device.labels.a}" onclick={() => device.press("a")}>A</button>
       </div>
     </div>
   </div>
@@ -59,7 +64,8 @@
     background: linear-gradient(180deg, #4a4e4c, #2c2f2e);
     box-shadow: 0 3px 0 #141615, inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
-  .start:active {
+  .start:active,
+  .start.lit {
     box-shadow: 0 1px 0 #141615;
     transform: translateY(2px);
   }
@@ -91,11 +97,14 @@
     background: radial-gradient(circle at 40% 30%, #555a57, #333735 60%, #262928);
     box-shadow: 0 5px 0 #121413, 0 8px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
-  .round:active {
+  .round:active,
+  .round.lit {
     transform: translateY(4px);
   }
-  .round.a:active { box-shadow: 0 1px 0 var(--signal-side), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
-  .round.b:active { box-shadow: 0 1px 0 #121413; }
+  .round.a:active,
+  .round.a.lit { box-shadow: 0 1px 0 var(--signal-side), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+  .round.b:active,
+  .round.b.lit { box-shadow: 0 1px 0 #121413; }
   .ctl-label {
     position: absolute;
     left: 0;
