@@ -276,6 +276,13 @@ export class Device {
     return SORTS.find((x) => x.key === this.sort).label;
   }
 
+  /** Where the editor puts the caret the next time it takes focus. */
+  caretAt = "end";
+
+  #markReady;
+  /** Resolves once notes are loaded (and the welcome note added, if due). */
+  ready = new Promise((r) => (this.#markReady = r));
+
   /** Start reading notes; returns a stop function. Browser only. */
   start() {
     const sub = liveQuery(() => db.notes.toArray()).subscribe({
@@ -283,7 +290,7 @@ export class Device {
         this.raw = rows;
         const first = !this.loaded;
         this.loaded = true;
-        if (first) this.#seedWelcome();
+        if (first) this.#seedWelcome().finally(() => this.#markReady());
         if (!rows.some((n) => n.noteid === this.selectedId)) this.selectedId = this.notes[0]?.noteid ?? null;
       },
       error: (e) => console.error("Couldn't read notes:", e),
@@ -307,7 +314,8 @@ export class Device {
     const now = new Date();
     const note = { ...WELCOME, createdAt: now, updatedAt: now, mapX: this.cursor.x, mapY: this.cursor.y };
     try {
-      await db.notes.add(note);
+      note.id = await db.notes.add(note);
+      if (!this.raw.some((n) => n.noteid === WELCOME_ID)) this.raw = [...this.raw, note];
       this.selectedId = WELCOME_ID;
     } catch (error) {
       console.error("Couldn't add the welcome note:", error);
@@ -319,9 +327,9 @@ export class Device {
     this.say(`SORT · ${this.sortLabel}`);
   }
 
-  cycleSort() {
+  cycleSort(step = 1) {
     const i = SORTS.findIndex((x) => x.key === this.sort);
-    this.setSort(SORTS[(i + 1) % SORTS.length].key);
+    this.setSort(SORTS[(i + step + SORTS.length) % SORTS.length].key);
   }
 
   /** What A, B and Start do right now (the screen's context strip). */
@@ -363,22 +371,22 @@ export class Device {
 
   // --- Screens --------------------------------------------------------
 
+  /** One Start menu, always in the same order; only what applies is shown. */
   openMenu() {
-    const items =
-      this.focus === "editor"
-        ? [
-            { label: "SAVE", run: () => this.save() },
-            { label: this.hasMapViewer ? "CHOOSE TREE" : "TREE & PLOT", run: () => this.openDrawer() },
-            { label: "NEW NOTE", run: () => this.newNote() },
-            { label: "DELETE NOTE", run: () => this.askDelete() },
-            { label: "CLOSE NOTE", run: () => this.leave() },
-          ]
-        : [
-            { label: "NEW NOTE", run: () => this.newNote() },
-            { label: `SORT · ${this.sortLabel} ▸`, run: () => this.cycleSort() },
-            { label: "SAVE BACKUP", run: () => this.saveBackup() },
-            { label: "LOAD BACKUP", run: () => this.loadBackup() },
-          ];
+    const e = this.editing;
+    const has = !!this.note;
+    const items = [
+      e && { label: "SAVE", run: () => this.save() },
+      !e && has && { label: "OPEN NOTE", run: () => this.open() },
+      { label: "NEW NOTE", run: () => this.newNote() },
+      e && { label: this.hasMapViewer ? "CHOOSE TREE" : "TREE & PLOT", run: () => this.openDrawer() },
+      // Left/right rotate the sort without closing the menu.
+      { label: () => `SORT ◂ ${this.sortLabel} ▸`, run: () => this.cycleSort(), cycle: (d) => this.cycleSort(d) },
+      (e || has) && { label: "DELETE NOTE", run: () => this.askDelete() },
+      e && { label: "CLOSE NOTE", run: () => this.leave() },
+      { label: "SAVE BACKUP", run: () => this.saveBackup() },
+      { label: "LOAD BACKUP", run: () => this.loadBackup() },
+    ].filter(Boolean);
     this.overlay = { kind: "menu", title: "MENU", hint: "CTRL/⌘ K", items, index: 0 };
   }
 
@@ -660,6 +668,7 @@ export class Device {
     const n = m.items.length;
     if (button === "up") m.index = (m.index - 1 + n) % n;
     if (button === "down") m.index = (m.index + 1) % n;
+    if ((button === "left" || button === "right") && m.items[m.index].cycle) m.items[m.index].cycle(button === "left" ? -1 : 1);
     if (button === "b" || button === "start") this.overlay = null;
     if (button === "a") {
       const item = m.items[m.index];

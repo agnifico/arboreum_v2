@@ -178,7 +178,7 @@
         <div class="ov-title"><span>{device.overlay.title}</span>{#if device.overlay.hint}<span class="ov-hint">{device.overlay.hint}</span>{/if}</div>
         {#each device.overlay.items as item, i}
           <div class="ov-item" class:sel={i === device.overlay.index} role="menuitem">
-            <span class="ov-caret">{i === device.overlay.index ? "▸" : ""}</span>{item.label}
+            <span class="ov-caret">{i === device.overlay.index ? "▸" : ""}</span>{typeof item.label === "function" ? item.label() : item.label}
           </div>
         {/each}
       </div>

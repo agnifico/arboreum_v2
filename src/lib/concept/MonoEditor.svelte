@@ -94,8 +94,9 @@
       if (!editor) return;
       editor.setEditable(editable);
       // A click already placed the caret; otherwise start at the end (or top for new).
-      if (editable && !openedByClick) editor.commands.focus(device.isNew ? "start" : "end");
+      if (editable && !openedByClick) editor.commands.focus(device.isNew ? "start" : device.caretAt);
       else if (!editable) editor.commands.blur();
+      device.caretAt = "end";
       openedByClick = false;
       measure();
     });

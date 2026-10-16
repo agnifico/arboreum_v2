@@ -19,7 +19,12 @@
   });
   onMount(() => {
     const stop = device.start();
-    device.openMenu(); // the Start menu greets you; B or Ctrl/⌘ K closes it
+    // Start in a note, ready to write (no menu in the way).
+    device.ready.then(() => {
+      device.caretAt = "start";
+      if (device.note) device.open();
+      else device.newNote();
+    });
     return stop;
   });
 
