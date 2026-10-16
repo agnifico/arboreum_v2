@@ -1,7 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte";
   import "../app.css";
-  export const ssr = false;
   let { children } = $props();
   import Sidebar from "./_sidebar.svelte";
   import Button from "$lib/components/controls/Button.svelte";
