@@ -286,6 +286,9 @@
         }),
         BubbleMenu.configure({
           element: bubbleMenu,
+          // No debounce: the debounced update isn't cleared on destroy and
+          // logs a tippy warning when leaving the editor mid-selection.
+          updateDelay: 0,
         }),
       ],
       content: body,
