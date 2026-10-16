@@ -25,7 +25,7 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
   - Top row: camera, then the nameplate.
   - Middle row: List module on the left, then the screen, then the bay on the right.
   - Bottom row: D-pad, then the control pad, then the speaker. They stay visible so the device reads at a glance.
-- **Mobile:** a portrait stack: camera and nameplate, then the screen, the bay (optional), the D-pad with the control pad, and the speaker (optional). On mobile the list opens full screen instead of as a module.
+- **Mobile:** a portrait stack: camera and nameplate, then the screen, the D-pad with the control pad, the bay (optional), and the speaker (optional). On mobile the list opens full screen unless the bay holds it.
 - **Control pad:** Start, B and A in one straight row.
 - **Configure button:** the only thing on the page besides the console (no caption).
   - Modules: list (landscape), D-pad, control pad, bay, speaker. Screen: show markup, screen glare (off by default). Body: enclosure.
@@ -35,7 +35,8 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
   - Portrait: a gear docked in the console's side column, under the speaker strip.
 - **Portrait arrangement** (formerly "mobile"):
   - The console is shaped to the phone's own screen, and the screen gets every bit of height the other modules don't need.
-  - The map viewer has its own row, with Move and Plant on one side. The D-pad and control pad share a row; A sits above B.
+  - The D-pad and control pad share the row right under the screen, as in landscape. On the control pad, B and A sit side by side with Start below them.
+  - The bay has its own row below the controls, with the Map viewer's Move and Tree keys on one side (in thumb reach at the bottom).
   - The speaker is a thin full-height strip down the right.
 - **Enclosure:** an optional dark frame behind the modules. It's off by default.
 - **Bay:** for now it holds the Map viewer. Desktop has its two buttons side by side; mobile puts them at opposite corners.
@@ -112,7 +113,7 @@ That gives four results (fixed landscape, fluid landscape, fixed portrait, fluid
 3. **Beside the screen** (landscape only), at most one dock per side: the **list on the left**, the **bay (map viewer) on the right**.
 4. **The bottom row is a pair:** either **D-pad + A/B**, or **List + something else**. A/B never appears without the D-pad.
 5. **No controls row:** the screen goes full screen (touch and keyboard only).
-6. **Portrait:** side docks move below the screen, above the controls row. The list becomes a full screen rather than a module. The speaker is filler and takes a thin edge strip.
+6. **Portrait:** side docks move below the controls row. The list becomes a full screen rather than a module. The speaker is filler and takes a thin edge strip.
 
 Drag-and-drop docking is out for now: the rules above cover a small set of modules (up to about 15) without per-device tuning.
 

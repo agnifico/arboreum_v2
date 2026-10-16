@@ -90,13 +90,14 @@
       // Configure gear docked under it.
       const cols = "110px 90px 168px 30px";
       // The screen takes what's left and scrolls inside; it never grows with the note.
-      const rows = ["80px", "minmax(0, 1fr)", showBay && "190px", bottom && "160px"].filter(Boolean);
+      // Controls sit right under the screen (as in landscape); the bay goes below them.
+      const rows = ["80px", "minmax(0, 1fr)", bottom && "160px", showBay && "190px"].filter(Boolean);
       const sideRow = showBay || bottom ? "" : " side"; // nowhere else to dock it
       const areas = [
         '"cam plate plate plate"',
         `"scr scr scr ${sideRow ? "side" : "scr"}"`,
-        showBay && '"bay bay bay side"',
         bottom && `"${showDpad && showCtl ? "dpad dpad ctl" : pair(3)} side"`,
+        showBay && '"bay bay bay side"',
       ].filter(Boolean);
       return `width: ${PORTRAIT_W}px; height: ${PORTRAIT_H}px; grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`;
     }
