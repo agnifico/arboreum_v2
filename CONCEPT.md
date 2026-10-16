@@ -136,6 +136,7 @@ How the strip works:
 - **Position:** a thumbnail's position is measured in **lines**, so the line height is the unit. It moves one line at a time along the strip, like a ruler.
 - **Captions:** the text on that line is the caption; putting text beside a thumbnail is how you write next to an image.
 - **Spacing:** thumbnails can't overlap.
+- **Linking (optional, off by default):** a small link dot sits between a thumbnail and the line beside it. Clicking it joins the two into one row-cell: add or remove lines above, and the thumbnail moves with its line. Unlinked thumbnails keep their line number.
 
 Input:
 - **Camera module:** adds an image (file picker; on phones it can open the camera).
@@ -144,13 +145,10 @@ Input:
 
 **Default edge** for a new note: bottom (text first, scrapbook after).
 
-**Storage (proposed):**
-- **Where:** a separate `images` table (note id, image data, width/height, order, line).
-- **Size:** images are downscaled on import so IndexedDB stays small, and they're included in Export/Import.
-- **Migration:** this is a database version bump, so it ships with a migration and a test against data saved by the current version. The note's `imageEdge` is a plain field, with no index.
-- **Main app:** it keeps working, because its saves merge fields and its import keeps unknown fields.
-
-**Open questions:**
-1. When lines are added above a strip image, should it move with its line? (Recommended: yes, so captions stay next to their image.) Or should it keep a fixed line number?
-2. Is the `images` table and version bump OK?
-3. Old notes with inline images: show those images in the note's edge gallery when opened in the concept, and only convert the note if it's saved there. (Recommended.)
+**Storage (decided):** images never touch the notes database (`arboreum` in IndexedDB stays exactly as it is).
+- **Where:** the browser's **Origin Private File System**. It works in all modern browsers and needs no permission prompt. Each note gets a folder: `notes/<noteid>/` holds the image files plus `layout.json` (edge, order, line positions, links).
+- **Persistence:** the browser is asked to keep this storage (`navigator.storage.persist()`), so it isn't cleared when space runs low.
+- **Optional:** "Save to a folder on my computer" (File System Access API), only where the browser supports it (Chrome, Edge).
+- **Size:** images are downscaled on import.
+- **Known gap:** images aren't in the app's current Export/Import file. Backups will need an image-aware format later.
+- **Old notes:** inline images in old notes get no compatibility work; the concept ignores them. No notes are deleted.
