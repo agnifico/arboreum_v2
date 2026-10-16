@@ -52,17 +52,20 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 |---|---|---|---|---|
 | List | move | open | new note | menu (new, sort, backup) |
 | Editor | cursor | save | new note (the open note is saved and closed first) | menu (save, tree, new, delete, close) |
-| Map viewer | cursor | plant here | back | — |
+| Map viewer · MOVE | cursor | plant here | back (cursor returns to the tree) | — |
+| Map viewer · TREE | tree grid | pick | back | — |
 | Drawer | move | pick / plant | close | switch tree ↔ plot |
 | Confirm | — | yes | no | third choice, if any |
 
 **Leaving a note always saves it:** B, opening another note, or Close note. A brand-new note with nothing in it is simply dropped. Hardware keys don't take keyboard focus when clicked, so typing carries on in the editor.
 
-On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and **Ctrl/⌘ K** is Start. Tab stays free for moving keyboard focus. Inside the editor only Esc (B), Ctrl/⌘ S (save) and Ctrl/⌘ K (Start) map, so typing stays normal.
+On a computer keyboard: arrow keys are the D-pad, **Enter, Space or the letter A** is A, **Esc or the letter B** is B, and **Ctrl/⌘ K** is Start. Space and the letters only count where nothing is typed (the list, the map, the drawer, menus and confirms), never while writing a note. Tab stays free for moving keyboard focus. Inside the editor only Esc (B), Ctrl/⌘ S (save) and Ctrl/⌘ K (Start) map, so typing stays normal.
 - Why not Shift: inside a text editor Shift already means capitals and selection.
 - Why not Ctrl/⌘ M: on a Mac ⌘ M minimises the window.
 
-Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the page. The Start menu is open when the page loads.
+Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the page. The page opens straight into a note, with no menu.
+
+**The Map viewer's own keys.** MOVE and TREE each hand the D-pad to the Map viewer; pressing the same key again leaves, exactly like B. While the Map viewer has the D-pad, its own screen shows the A/B context and the main screen's strip steps aside. With the Map viewer slotted there is no tree/plot drawer at all. Leaving the editor and coming back (map, menu) puts the caret back where it was.
 
 ## Look
 
@@ -113,14 +116,38 @@ That gives four results (fixed landscape, fluid landscape, fixed portrait, fluid
 
 Drag-and-drop docking is out for now: the rules above cover a small set of modules (up to about 15) without per-device tuning.
 
-## Principle: concept never beats usability
+## Design philosophy (the theory under the project)
 
-Everything works three ways on desktop:
-- **Hardware keys** (on-screen D-pad, A, B, Start);
-- **the keyboard;**
-- **the mouse:** click anything you can see.
+This is the basis for the "about / design philosophy" page (one or two pages) that goes with the concept page. Write it from here.
 
-Persistent everyday features (for example selecting several notes and deleting them) stay, even if they don't map neatly onto the hardware.
+### 1. Concept never beats usability
+
+The hardware fiction is a skin over a tool people actually use. Persistent everyday features (for example selecting several notes and deleting them) stay, even if they don't map neatly onto the hardware.
+
+### 2. Three equivalent ways to do everything
+
+Every action has three complete routes, and each one works on its own:
+
+1. **Classic desktop:** keyboard shortcuts and the mouse, the way any app works (click a tile, click it again; type; Ctrl/⌘ S).
+2. **Touching the console:** pointing at the hardware with the cursor, or a finger, as if it were a touch-screen device (press MOVE, press A, tap the screen).
+3. **The console way:** only the D-pad, A, B and Start, with menus.
+
+They are deliberately, heavily redundant, and users can mix them mid-action: press MOVE, nudge with the arrow keys, finish with the mouse. Whatever hand is already moving should just work. The aim is a device that feels smooth in a way nobody can quite explain.
+
+How that plays out, with the Map viewer as the worked example:
+- **Mouse only:** click a tile: you're in move mode with the cursor there. Click other tiles to move it. Hover the cursor's own tile and the crosshair becomes a green cross; click it again to plant. Leave by pressing MOVE again.
+- **Keyboard only:** arrows, then Enter / Space / A to accept, Esc / B to back out.
+- **Console only:** MOVE, D-pad, A / B.
+
+**What it deliberately doesn't do:** the A/B context strips are labels, never buttons. They aren't made clickable on desktop as a shortcut. The point is to show that the three routes are seamless without that crutch: on-screen controls are real hardware keys, and the screen content itself is clickable.
+
+### 3. Hardware is a layout tool
+
+The project blends real-world hardware, UI/UX and modern web layout, and it uses that blend on purpose. Modules that exist only for the look can give way to ones that do something:
+- **Without the Map viewer, the speaker lets the screen grow:** with the bay pulled, the main screen widens into the space.
+- **Without the speaker, the bay grows:** with the speaker pulled and the Map viewer slotted, the Map viewer takes the whole right column and its map zooms in (9 × 12 bigger tiles in place of 12 × 9). A larger map asset can come later.
+
+The physical metaphor decides the rules (one dock per side, controls below the screen); the web decides how the space flows.
 
 ## Interaction consistency pass (next big pass)
 
@@ -130,10 +157,10 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 **Mouse everywhere on desktop:**
 - menu items and confirm choices are clickable;
-- the A/B chips in a confirm are clickable;
-- the drawer is clickable too.
+- the drawer is clickable too;
+- A/B context chips stay labels, not buttons (see Design philosophy, §2).
 
-**Keyboard parity:** in a menu or confirm the letter keys **A** and **B** also act as A and B, since nothing is being typed there. Today only Enter and Esc do.
+**Keyboard parity:** ✅ Space and the letters A / B act as A and B wherever nothing is typed.
 
 **Focus and highlight moving between modules:** one rule for how the cursor, highlight and focus move between the list, the editor, the Map viewer and the drawer.
 
@@ -199,9 +226,9 @@ Each step is small, checked in the browser, and committed on its own.
 **C · Modules that know about each other**
 
 9. ✅ **Missing modules.** What's slotted decides the red **!** and the right-hand drawer (tree or plot picker), laid out like the missing module.
-10. ✅ **Map viewer.** Real note positions, a cursor, and Move/Plant, using the same map data as the app.
+10. ✅ **Map viewer.** Real note positions and a cursor, using the same map data as the app. MOVE and TREE: it owns both the plot and the tree grid, with its own A/B context; a full mouse flow (tap a tile, tap again to plant); it zooms in when it has the whole column.
 11. **Treemoji and bay swapping.**
-    - Treemoji: the tree picker plus the emoji buddy.
+    - Treemoji: the emoji buddy. (The tree picker now lives in the Map viewer; decide whether Treemoji takes it over when it's slotted instead.)
     - The bay swaps between Map, Treemoji and List, with slide-in/eject motion.
 12. **Format deck.** A module that swaps with the control pad.
 13. **Camera.** Image upload into the note.
@@ -215,7 +242,7 @@ Each step is small, checked in the browser, and committed on its own.
 
 **E · The concept page**
 
-18. **The page around the device.** An intro, an exploded blueprint view with callouts, module spec sheets, a swap playground, and what's next.
+18. **The page around the device.** An intro, an exploded blueprint view with callouts, module spec sheets, a swap playground, and what's next. Plus one or two pages on the design philosophy, written from the section above.
 19. **Finishing.**
     - Motion, plus optional click sounds through the speaker module.
     - Accessibility and performance.
