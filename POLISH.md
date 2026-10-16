@@ -30,8 +30,8 @@ If that changes, a migration and a test against v2 data come with it.
 
 ## 3. Data
 
-- [ ] **D1** Export → import doesn't give back the same notes: every note gets a new `id`, and `createdAt`/`updatedAt` come back as strings.
-- [ ] **D2** Import accepts any JSON array: an entry without `noteid` can't be opened, and one without `title` crashes the list (`note.title.length`).
+- [x] **D1** Export → import doesn't give back the same notes: every note gets a new `id`, and `createdAt`/`updatedAt` come back as strings.
+- [x] **D2** Import accepts any JSON array: an entry without `noteid` can't be opened, and one without `title` crashes the list (`note.title.length`).
 - [ ] **D3** Reading view can't scroll: long notes are cut off at the bottom of the window.
 - [ ] **D4** A long unbroken title or word pushes the reading view to 3000px+ wide.
 - [ ] **D5** A whitespace-only title is saved as-is and shows as a blank row.

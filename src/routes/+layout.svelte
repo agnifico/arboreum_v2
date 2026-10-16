@@ -14,10 +14,11 @@
   import { writable } from 'svelte/store';
   import Garden from './Garden.svelte';
   import { base } from '$app/paths';
+  import { normalizeBackup } from '$lib/backup.js';
 
   let sidebar_switch = $state(true);
   let showImportConfirm = $state(false);
-  let notesToImport = $state(null);
+  let notesToImport = $state.raw(null); // raw: IndexedDB can't clone $state proxies
   let showMoreMenu = $state(false);
 
   function handleClickOutside(event) {
@@ -77,12 +78,12 @@
       const reader = new FileReader();
       reader.onload = readerEvent => {
         try {
-          const importedData = JSON.parse(readerEvent.target.result);
-          if (Array.isArray(importedData)) {
-            notesToImport = importedData;
+          const { notes: parsed } = normalizeBackup(JSON.parse(readerEvent.target.result));
+          if (parsed.length > 0) {
+            notesToImport = parsed;
             showImportConfirm = true;
           } else {
-            alert('Error: Invalid backup file format.');
+            alert("That file doesn't contain any Arboreum notes. Pick a backup made with Export.");
           }
         } catch (err) {
           alert('Error reading or parsing file. Is it a valid JSON backup?');
@@ -98,14 +99,10 @@
     if (!notesToImport) return;
 
     try {
-      const notesForImport = notesToImport.map(note => {
-        const { id, ...rest } = note;
-        return rest;
-      });
-
+      // Clear + add in one transaction: if anything fails, nothing is lost.
       await db.transaction('rw', db.notes, async () => {
         await db.notes.clear();
-        await db.notes.bulkAdd(notesForImport);
+        await db.notes.bulkAdd(notesToImport);
       });
     } catch (error) {
       console.error("Failed to import notes:", error);
