@@ -13,6 +13,9 @@
   import { Device, provideDevice } from "$lib/concept/device.svelte.js";
 
   const device = provideDevice(new Device());
+  $effect(() => {
+    device.hasListModule = view === "landscape";
+  });
 
   function handleKeydown(event) {
     if (device.handleKey(event)) event.preventDefault();

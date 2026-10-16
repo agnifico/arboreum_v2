@@ -1,7 +1,10 @@
 <script>
   import { lines, cursorLine, formatKeys } from "../sample.js";
   import { useDevice } from "../device.svelte.js";
+  import NoteRows from "../NoteRows.svelte";
   const device = useDevice();
+  // Portrait has no List module, so the list takes over the screen.
+  let showList = $derived(device.focus === "list" && !device.hasListModule);
   let { missing, drawerLabel } = $props();
 </script>
 
@@ -11,26 +14,36 @@
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="glass">
     <div class="status">
-      <span>▣ <b>{device.notes[device.index]?.title ?? "—"}</b>{#if device.focus !== "editor"} <span class="mode">· PREVIEW</span>{/if}</span>
+      {#if showList}
+        <span>▣ <b>NOTES</b> <span class="mode">· {device.notes.length}</span></span>
+      {:else}
+        <span>▣ <b>{device.note?.title ?? "—"}</b>{#if device.focus !== "editor"} <span class="mode">· PREVIEW</span>{/if}</span>
+      {/if}
       <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}<span class="dot-unsaved">●</span> UNSAVED{/if}<span class="wide-only"> <span class="sep">│</span> 11:42 <span class="sep">│</span> 16·10</span></span>
     </div>
 
-    <div class="code" aria-label="Note text">
-      {#each lines as line, i}
-        <div class="ln" class:current={i === cursorLine}>
-          <span class="gutter">{i + 1}</span>
-          <span class="txt">{#each line as seg}<span class={seg.c}>{seg.t}</span>{/each}{#if i === cursorLine && device.focus === "editor"}<span class="cursor"></span>{/if}</span>
-        </div>
-      {/each}
-    </div>
+    {#if showList}
+      <div class="code list-screen"><NoteRows big /></div>
+    {:else}
+      <div class="code" aria-label="Note text">
+        {#each lines as line, i}
+          <div class="ln" class:current={i === cursorLine}>
+            <span class="gutter">{i + 1}</span>
+            <span class="txt">{#each line as seg}<span class={seg.c}>{seg.t}</span>{/each}{#if i === cursorLine && device.focus === "editor"}<span class="cursor"></span>{/if}</span>
+          </div>
+        {/each}
+      </div>
+    {/if}
 
-    <!-- Missing-module alert + drawer handle -->
+    <!-- Missing-module alert + drawer handle (about the open note, so not on the list) -->
+    {#if !showList}
     <div class="alert">
       <span class="bang">!</span>
       <span>{missing}</span>
       <span class="alert-arrow">▸</span>
     </div>
     <div class="drawer-tab" aria-hidden="true">{drawerLabel}</div>
+    {/if}
 
     <!-- A/B context: overlaid, always visible -->
     <div class="ab">
@@ -49,6 +62,22 @@
       </span>
       <span class="pages"><i class="on"></i><i></i></span>
     </div>
+    {#if device.overlay?.kind === "menu"}
+      <div class="overlay" role="menu" aria-label={device.overlay.title}>
+        <div class="ov-title">{device.overlay.title}</div>
+        {#each device.overlay.items as item, i}
+          <div class="ov-item" class:sel={i === device.overlay.index} role="menuitem">
+            <span class="ov-caret">{i === device.overlay.index ? "▸" : ""}</span>{item.label}
+          </div>
+        {/each}
+      </div>
+    {:else if device.overlay?.kind === "confirm"}
+      <div class="overlay confirm" role="alertdialog" aria-label={device.overlay.title}>
+        <div class="ov-title">{device.overlay.title}</div>
+        <p class="ov-text">{device.overlay.text}</p>
+        <div class="ov-keys"><span><i class="pip a">A</i>{device.overlay.yes}</span><span><i class="pip b">B</i>{device.overlay.no}</span></div>
+      </div>
+    {/if}
     <div class="glare" aria-hidden="true"></div>
   </div>
   <span class="etch-dark screen-label">SCR-01 · MONO</span>
@@ -82,6 +111,69 @@
   .status b {
     color: var(--phosphor);
     font-weight: 500;
+  }
+  .list-screen {
+    padding: 6px 0;
+  }
+  /* Menu and confirm draw on the screen itself, like a device OS */
+  .overlay {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    transform: translate(-50%, -50%);
+    min-width: 260px;
+    max-width: 80%;
+    padding: 12px 0 10px;
+    background: #080c09; /* opaque: bright text would ghost through */
+    border: 1px solid rgba(213, 228, 198, 0.25);
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px #000, 0 12px 30px rgba(0, 0, 0, 0.6);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    z-index: 3;
+  }
+  .ov-title {
+    padding: 0 18px 8px;
+    margin-bottom: 6px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--phosphor-dim);
+    border-bottom: 1px solid rgba(213, 228, 198, 0.1);
+  }
+  .ov-item {
+    display: flex;
+    gap: 8px;
+    padding: 6px 18px;
+    color: #a9bb9d;
+  }
+  .ov-item.sel {
+    color: #fff;
+    background: rgba(255, 106, 26, 0.14);
+  }
+  .ov-caret {
+    width: 10px;
+    color: var(--signal);
+  }
+  .confirm .ov-title {
+    color: #ff9ea3;
+  }
+  .ov-text {
+    margin: 4px 18px 12px;
+    line-height: 1.5;
+    color: var(--phosphor);
+  }
+  .ov-keys {
+    display: flex;
+    gap: 16px;
+    padding: 0 18px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .ov-keys span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
   .mode {
     color: var(--phosphor-dim);
