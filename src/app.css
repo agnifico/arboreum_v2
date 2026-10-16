@@ -100,6 +100,17 @@ button {
   color: var(--highlight-text);
 }
 
+/* Danger Button: For destructive actions like "Delete" */
+.btn-danger {
+  background-color: var(--red);
+  border: 2px solid var(--charcoal);
+  color: var(--red-accent);
+}
+.btn-danger:hover {
+  background-color: var(--orange);
+  color: var(--highlight-text);
+}
+
 /* Ghost Button: For secondary actions like "Sidebar" toggle */
 .btn-ghost {
   background-color: transparent;

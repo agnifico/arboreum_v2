@@ -39,6 +39,12 @@
     return sorted;
   });
 
+  let deleteMessage = $derived(
+    to_del.length === 1
+      ? `Delete “${to_del[0].title?.trim() || "Untitled"}”? Its tree leaves your garden too. This can't be undone.`
+      : `Delete ${to_del.length} notes? Their trees leave your garden too. This can't be undone.`
+  );
+
   function toggleSelect() {
     select_switch = !select_switch;
     if (!select_switch) {
@@ -109,12 +115,14 @@
   </div>
 </div>
 
-<Modal bind:show={showDeleteConfirm} title="Confirm Deletion">
+<Modal bind:show={showDeleteConfirm} title={to_del.length === 1 ? "Delete note?" : "Delete notes?"} message={deleteMessage}>
   <svelte:fragment slot="footer">
     <Button variant="ghost" onClick={() => (showDeleteConfirm = false)}
       >Cancel</Button
     >
-    <Button variant="primary" onClick={executeDelete}>Delete</Button>
+    <Button variant="danger" onClick={executeDelete}>
+      Delete{to_del.length > 1 ? ` ${to_del.length}` : ""}
+    </Button>
   </svelte:fragment>
 </Modal>
 
