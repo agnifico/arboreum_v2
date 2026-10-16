@@ -58,7 +58,9 @@
     const curEl = (at.nodeType === 1 ? at : at.parentElement)?.closest("p, h1, h2, h3, h4, h5, h6, pre");
     gutter = [...blocks].map((el, i) => {
       const r = el.getBoundingClientRect();
-      return { n: i + 1, top: r.top - hostTop, height: r.height, current: el === curEl && device.focus === "editor" };
+      // Numbers take their line's height, so they line up with taller headings.
+      const lh = parseFloat(getComputedStyle(el).lineHeight) || 26;
+      return { n: i + 1, top: r.top - hostTop, height: r.height, lh, current: el === curEl && device.focus === "editor" };
     });
   }
 
@@ -164,10 +166,10 @@
   <div class="gutter" aria-hidden="true">
     {#each gutter as g}
       {#if g.current}<span class="curline" style="top:{g.top}px; height:{g.height}px"></span>{/if}
-      <span class="num" class:cur={g.current} style="top:{g.top}px">{g.n}</span>
+      <span class="num" class:cur={g.current} style="top:{g.top}px; line-height:{g.lh}px">{g.n}</span>
     {/each}
   </div>
-  <div class="mono" class:editing={device.focus === "editor"} bind:this={mount}></div>
+  <div class="mono" class:markup={device.showMarkup} class:editing={device.focus === "editor"} bind:this={mount}></div>
 </div>
 
 <style>
@@ -230,9 +232,10 @@
     font-weight: 700;
     color: #f3c58a;
   }
-  .mono :global(h1::before) { content: "# "; }
-  .mono :global(h2::before) { content: "## "; }
-  .mono :global(:is(h3, h4, h5, h6)::before) { content: "### "; }
+  /* Markup mode (Configure → Show markup): the markers show as text */
+  .mono.markup :global(h1::before) { content: "# "; }
+  .mono.markup :global(h2::before) { content: "## "; }
+  .mono.markup :global(:is(h3, h4, h5, h6)::before) { content: "### "; }
   .mono :global(:is(h1, h2, h3, h4, h5, h6)::before),
   .mono :global(strong::before),
   .mono :global(strong::after),
@@ -250,35 +253,46 @@
     font-style: normal;
   }
   .mono :global(strong) { color: #fff; font-weight: 700; }
-  .mono :global(strong::before),
-  .mono :global(strong::after) { content: "**"; }
+  .mono.markup :global(strong::before),
+  .mono.markup :global(strong::after) { content: "**"; }
   .mono :global(em) { font-style: italic; color: #e3ecd9; }
-  .mono :global(em::before),
-  .mono :global(em::after) { content: "_"; }
-  .mono :global(s::before),
-  .mono :global(s::after) { content: "~~"; }
+  .mono.markup :global(em::before),
+  .mono.markup :global(em::after) { content: "_"; }
+  .mono.markup :global(s::before),
+  .mono.markup :global(s::after) { content: "~~"; }
   .mono :global(code) { color: #9fd8c4; }
-  .mono :global(code::before),
-  .mono :global(code::after) { content: "`"; }
+  .mono.markup :global(code::before),
+  .mono.markup :global(code::after) { content: "`"; }
   .mono :global(mark) { background: rgba(255, 209, 102, 0.22); color: inherit; }
   .mono :global(a) { color: #8fd3ff; text-decoration: underline; text-underline-offset: 3px; }
   .mono :global(sup),
   .mono :global(sub) { line-height: 0; font-size: 0.75em; }
   .mono :global(blockquote) { color: #a9bb9d; font-style: italic; }
-  .mono :global(blockquote p::before) { content: "> "; }
+  .mono.markup :global(blockquote p::before) { content: "> "; }
   .mono :global(pre) { color: #9fd8c4; white-space: pre-wrap; }
   .mono :global(pre code::before),
   .mono :global(pre code::after) { content: none; }
   /* Divider: a line of dashes, one grid row tall */
   .mono :global(hr) { border: none; height: 26px; margin: 0; position: relative; }
-  .mono :global(hr::before) { content: "---"; color: #4f6150; }
+  .mono.markup :global(hr::before) { content: "---"; color: #4f6150; }
+
+  /* Styled mode (default): no markers; headings a step bigger on their own
+     taller line, so it's still monospace line by line */
+  .mono:not(.markup) :global(h1) { font-size: 1.5em; line-height: 38px; }
+  .mono:not(.markup) :global(h2) { font-size: 1.28em; line-height: 32px; }
+  .mono:not(.markup) :global(:is(h3, h4, h5, h6)) { font-size: 1.12em; line-height: 28px; }
+  .mono:not(.markup) :global(code:not(pre code)) { background: rgba(159, 216, 196, 0.1); border-radius: 3px; padding: 0 0.3ch; }
+  .mono:not(.markup) :global(pre) { background: rgba(159, 216, 196, 0.06); border-radius: 4px; padding: 0 1ch; }
+  .mono:not(.markup) :global(blockquote) { border-left: 2px solid #4f6150; padding-left: 1.5ch; }
+  .mono:not(.markup) :global(hr) { background: linear-gradient(transparent 12px, rgba(213, 228, 198, 0.18) 12px 13px, transparent 13px); }
 
   /* Lists: markers drawn as text, two-space indent per level */
   .mono :global(ul),
   .mono :global(ol) { list-style: none; padding-left: 0; }
   .mono :global(li li),
   .mono :global(li [data-type="taskList"]) { padding-left: 2ch; }
-  .mono :global(ul:not([data-type]) > li > p:first-child::before) { content: "- "; }
+  .mono :global(ul:not([data-type]) > li > p:first-child::before) { content: "• "; }
+  .mono.markup :global(ul:not([data-type]) > li > p:first-child::before) { content: "- "; }
   .mono :global(ol) { counter-reset: line-ol; }
   .mono :global(ol > li) { counter-increment: line-ol; }
   .mono :global(ol > li > p:first-child::before) { content: counter(line-ol) ". "; }

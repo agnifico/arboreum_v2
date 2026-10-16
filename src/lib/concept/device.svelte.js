@@ -96,6 +96,8 @@ export class Device {
   /** Formatting under the caret (for lit format keys) and the word count. */
   active = $state({});
   words = $state(0);
+  /** Configure → Show markup: draw markers (#, **, _) instead of styling. */
+  showMarkup = $state(false);
   /** Bottom strip page: "format" or "details". */
   stripPage = $state("format");
 

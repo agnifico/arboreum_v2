@@ -53,6 +53,10 @@
       <button class="toggle" aria-pressed={showChassis} onclick={() => (showChassis = !showChassis)}>
         <span class="sw" class:on={showChassis}></span> ENCLOSURE
       </button>
+      <p class="cfg-h">SCREEN</p>
+      <button class="toggle" aria-pressed={device.showMarkup} onclick={() => (device.showMarkup = !device.showMarkup)}>
+        <span class="sw" class:on={device.showMarkup}></span> SHOW MARKUP
+      </button>
       <button class="toggle" aria-pressed={showGlare} onclick={() => (showGlare = !showGlare)}>
         <span class="sw" class:on={showGlare}></span> SCREEN GLARE
       </button>

@@ -186,6 +186,10 @@ The concept keeps the current Tiptap editor, so notes stay rich-text HTML and bo
 
 **Carries over unchanged:** bold, italic, underline, strike, text colours, highlight, links, sub/superscript, inline code, quotes. JetBrains Mono's bold and italic keep the same width, so the grid holds.
 
+**Styled or markup (Configure → Show markup):**
+- **Styled (default):** bold is bold with no `**`, and headings are a step bigger, each on its own taller line, so it stays monospace line by line. Code gets a tint, quotes a side rule, bullets are `•`, and the divider is a line.
+- **Markup:** the markers show as text (`#`, `**`, `_`, `~~`, `` ` ``, `- `, `>`, `---`).
+
 **Changes in the concept:**
 - **Text size:** headings show as `#` / `##` / `###` with colour and weight instead of bigger type. The size control becomes heading levels 1–3; older H4–H6 show as `###`.
 - **Alignment:** centre, right and justify aren't offered, since they don't fit a code-style grid. Existing aligned text displays left-aligned, and the stored data isn't changed.
