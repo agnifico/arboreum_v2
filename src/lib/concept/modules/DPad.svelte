@@ -41,10 +41,10 @@
     transform: translateY(3px);
     box-shadow: 0 1px 0 #0e0f0e;
   }
-  .up { left: 46px; top: 8px; border-radius: 7px 7px 0 0; }
-  .down { left: 46px; bottom: 12px; border-radius: 0 0 7px 7px; }
-  .left { left: 8px; top: 44px; border-radius: 7px 0 0 7px; }
-  .right { right: 8px; top: 44px; border-radius: 0 7px 7px 0; }
+  .up { left: 46px; top: 5px; border-radius: 7px 7px 0 0; z-index: 2;}
+  .down { left: 46px; bottom: 5px; border-radius: 0 0 7px 7px; z-index: 2;}
+  .left { left: 8px; top: 44px; border-radius: 7px 0 0 7px; z-index: 2;}
+  .right { right: 8px; top: 44px; border-radius: 0 7px 7px 0; z-index: 2;}
   .hub {
     position: absolute;
     left: 46px;

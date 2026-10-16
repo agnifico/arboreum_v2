@@ -40,7 +40,7 @@
   }
   .start {
     width: 58px;
-    height: 18px;
+    height: 24px;
     border-radius: 9px;
     background: linear-gradient(180deg, #4a4e4c, #2c2f2e);
     box-shadow: 0 3px 0 #141615, inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -52,7 +52,7 @@
   .ab-pad {
     display: flex;
     gap: 20px;
-    padding: 10px 16px;
+    padding: 10px 16px 16px;
     border-radius: 44px;
     background: color-mix(in oklab, var(--bone), black 9%);
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2), 0 1px 0 rgba(255, 255, 255, 0.6);
