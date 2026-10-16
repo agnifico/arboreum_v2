@@ -38,9 +38,14 @@
     if (isMobile) sidebar_switch = false;
   });
 
+  function handleEscape(event) {
+    if (showMoreMenu && event.key === 'Escape') showMoreMenu = false;
+  }
+
   onMount(() => {
     if (browser) {
       window.addEventListener('click', handleClickOutside);
+      window.addEventListener('keydown', handleEscape);
       updateIsMobile();
       if (isMobile) sidebar_switch = false;
       mobileQuery.addEventListener('change', updateIsMobile);
@@ -50,6 +55,7 @@
   onDestroy(() => {
     if (browser) {
       window.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('keydown', handleEscape);
       mobileQuery.removeEventListener('change', updateIsMobile);
     }
   });

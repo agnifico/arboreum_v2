@@ -58,7 +58,7 @@ If that changes, a migration and a test against v2 data come with it.
 - [x] **A3** Tree picker options are `display: none` radios, so they can't be reached by keyboard.
 - [x] **A4** Dialogs don't move focus in, don't trap Tab, and aren't `aria-modal`.
 - [x] **A5** Focus visibility is inconsistent: the title input has `outline: none`, and default rings vanish on dark controls.
-- [ ] **A6** Popovers (sort, list, align, tree, colour, mobile "…") don't close with Escape.
+- [x] **A6** Popovers (sort, list, align, tree, colour, mobile "…") don't close with Escape.
 
 ## 7. Console
 

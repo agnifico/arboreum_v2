@@ -279,6 +279,22 @@
     }
   }
 
+  // Escape closes any open popover; focus goes back to its button if it was inside.
+  function closePopovers() {
+    const focused = document.activeElement;
+    for (const [open, sel, close] of [
+      [showTreeSelector, ".tree-selector", () => (showTreeSelector = false)],
+      [showListDropdown, ".list-dropdown", () => (showListDropdown = false)],
+      [showAlignDropdown, ".align-dropdown", () => (showAlignDropdown = false)],
+      [showColorPalette, ".color-palette-container", () => (showColorPalette = false)],
+    ]) {
+      if (!open) continue;
+      const container = focused?.closest?.(sel);
+      close();
+      if (container) container.querySelector("button")?.focus();
+    }
+  }
+
   function handleClickOutside(event) {
     if (showTreeSelector && !event.target.closest(".tree-selector")) {
       showTreeSelector = false;
@@ -462,6 +478,7 @@
   }
 
   function handleKeydown(event) {
+    if (event.key === "Escape") closePopovers();
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
       event.preventDefault();
       saveNote({ stay: true });

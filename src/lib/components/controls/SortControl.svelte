@@ -20,13 +20,31 @@
     value = key;
     showDropdown = false;
   }
+
+  let wrapper;
+  let trigger;
+
+  function handleWindowClick(event) {
+    if (showDropdown && !wrapper.contains(event.target)) showDropdown = false;
+  }
+
+  function handleWindowKeydown(event) {
+    if (showDropdown && event.key === 'Escape') {
+      const hadFocus = wrapper.contains(document.activeElement);
+      showDropdown = false;
+      if (hadFocus) trigger.focus();
+    }
+  }
 </script>
 
-<div class="sort-control-wrapper">
+<svelte:window on:click={handleWindowClick} on:keydown={handleWindowKeydown} />
+
+<div class="sort-control-wrapper" bind:this={wrapper}>
   <div class="sort-control">
     <div class="dropdown-container">
       <button
         class="dropdown-trigger"
+        bind:this={trigger}
         on:click={() => showDropdown = !showDropdown}
         aria-label={`Sort by: ${options.find(o => o.key === value)?.label}`}
         aria-haspopup="true"
