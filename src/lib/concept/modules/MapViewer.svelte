@@ -1,6 +1,7 @@
 <script>
   import { useDevice } from "../device.svelte.js";
   import GardenMap from "../GardenMap.svelte";
+  import { TREES } from "../trees.js";
   const device = useDevice();
   // Hardware keys don't take keyboard focus on click, so typing carries on
   // in the editor (keyboard users can still Tab to them).
@@ -13,7 +14,10 @@
     const n = device.note;
     return n && n.mapX != null && n.mapY != null ? { x: n.mapX, y: n.mapY } : null;
   });
+  let focused = $derived(device.focus === "map");
+  let treeMode = $derived(focused && device.mapMode === "tree");
   let readout = $derived.by(() => {
+    if (treeMode) return TREES[device.treeIndex].name.toUpperCase();
     if (!view) return "NOT PLANTED";
     const at = device.plots.find((p) => p.x === view.x && p.y === view.y);
     const where = `PLOT ${pad2(view.x)},${pad2(view.y)}`;
@@ -23,28 +27,56 @@
 </script>
 
 <!-- BAY: Map viewer -->
-<section class="mod alu bay" class:focused={device.focus === "map"} aria-label="Map viewer module">
+<section class="mod alu bay" class:focused aria-label="Map viewer module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="map-glass">
     <div class="map-grid">
-      <GardenMap
-        cursor={view}
-        plots={device.plots}
-        blink={device.focus === "map"}
-        onpick={device.editing ? (t) => { device.cursor = t; device.focus = "map"; } : null}
-      />
+      {#if treeMode}
+        <!-- TREE: the trees as a grid, driven like the map (D-pad, A picks, B back) -->
+        <div class="trees" role="radiogroup" aria-label="Trees">
+          {#each TREES as t, i}
+            <button
+              class="tree"
+              class:cur={i === device.treeIndex}
+              class:chosen={t.src === device.draftIcon}
+              role="radio"
+              aria-checked={t.src === device.draftIcon}
+              aria-label={t.name}
+              onmousedown={keepFocus}
+              onclick={() => device.pickTree(i)}
+            ><img src={t.src} alt="" /></button>
+          {/each}
+        </div>
+      {:else}
+        <GardenMap
+          cursor={view}
+          plots={device.plots}
+          blink={focused}
+          onpick={device.editing ? (t) => { device.cursor = t; device.enterMap("plot"); } : null}
+        />
+      {/if}
     </div>
     <div class="map-read" class:taken={readout.endsWith("TAKEN")}>{readout}</div>
+    <!-- The A/B context lives here while the Map viewer has the D-pad -->
+    {#if focused}
+      <div class="map-ab">
+        <span><i class="pip a">A</i>{device.labels.a}</span>
+        <span><i class="pip b">B</i>{device.labels.b}</span>
+      </div>
+    {/if}
   </div>
   <div class="map-btns">
     <div class="mb-wrap mb-move">
-      <button class="map-btn" class:on={device.focus === "map"} aria-label="Move the map cursor" onmousedown={keepFocus} onclick={() => device.enterMap()}>✥</button>
+      <button class="map-btn" class:on={focused && !treeMode} aria-label="Move this note's tree on the map" onmousedown={keepFocus} onclick={() => device.enterMap("plot")}>✥</button>
       <span class="etch">MOVE</span>
     </div>
-    <div class="mb-wrap mb-plant">
-      <button class="map-btn plant" aria-label="Plant here" onmousedown={keepFocus} onclick={() => device.plant()}>✎</button>
-      <span class="etch">PLANT</span>
+    <div class="mb-wrap mb-tree">
+      <!-- Shows the note's tree; picks a different one -->
+      <button class="map-btn tree-btn" class:on={treeMode} aria-label="Choose this note's tree" onmousedown={keepFocus} onclick={() => device.enterMap("tree")}>
+        {#if device.editing && device.draftIcon}<img src={device.draftIcon} alt="" />{:else}?{/if}
+      </button>
+      <span class="etch">TREE</span>
     </div>
   </div>
   <span class="etch bay-label">MAP-01</span>
@@ -77,6 +109,57 @@
     outline: 2px solid var(--signal);
     outline-offset: 2px;
   }
+  .trees {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(0, 1fr); /* rows share the map window's height */
+    gap: 6px;
+    height: 100%;
+  }
+  .tree {
+    min-width: 0;
+    min-height: 0;
+    padding: 4px;
+    border-radius: 6px;
+    background: rgba(213, 228, 198, 0.05);
+    border: 1px solid transparent;
+  }
+  .tree img,
+  .tree-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+  .tree.chosen {
+    background: rgba(213, 228, 198, 0.14);
+  }
+  .tree.cur {
+    border-color: var(--signal);
+    box-shadow: 0 0 0 1px var(--signal);
+  }
+  .tree-btn {
+    padding: 10px;
+    font-family: var(--label);
+    font-weight: 700;
+  }
+  /* The A/B strip, moved here while the Map viewer has the D-pad */
+  .map-ab {
+    display: flex;
+    gap: 14px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(213, 228, 198, 0.1);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--phosphor);
+  }
+  .map-ab span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
   .map-read {
     margin-top: 8px;
     font-size: 10.5px;
@@ -104,17 +187,9 @@
     box-shadow: 0 5px 0 #121413, 0 8px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
     transition: transform 0.06s ease, box-shadow 0.06s ease;
   }
-  .map-btn.plant {
-    color: #fff3ea;
-    background: radial-gradient(circle at 40% 30%, #ff9a5c, var(--signal) 55%, #e2560c);
-    box-shadow: 0 5px 0 var(--signal-side), 0 8px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  }
   .map-btn:active {
     transform: translateY(4px);
     box-shadow: 0 1px 0 #121413;
-  }
-  .map-btn.plant:active {
-    box-shadow: 0 1px 0 var(--signal-side);
   }
   .bay-label {
     position: absolute;
@@ -132,5 +207,7 @@
   :global(.portrait) .map-btns { flex-direction: column; justify-content: center; gap: 8px; }
   :global(.portrait) .mb-wrap { gap: 6px; }
   :global(.portrait) .map-btn { width: 40px; height: 40px; border-radius: 10px; font-size: 16px; }
+  :global(.portrait) .tree-btn { padding: 7px; }
+  :global(.portrait) .map-ab { justify-content: center; margin-top: 4px; padding-top: 4px; }
   :global(.portrait) .bay-label { display: none; }
 </style>

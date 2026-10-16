@@ -77,6 +77,7 @@
           <span class="alert-arrow">▸</span>
         </button>
       {/if}
+      {#if device.drawerSections.length}
       <button
         class="drawer-tab"
         class:warn={drawerWarn}
@@ -91,6 +92,7 @@
           {:else}<span class="tab-text">{sec.toUpperCase()}</span>{/if}
         {/each}
       </button>
+      {/if}
       {#if drawerOpen}
         <div class="drawer" role="dialog" aria-label="{drawerLabel} (virtual module)">
           {#if device.drawerSections.length > 1}
@@ -136,7 +138,8 @@
     {/if}
 
     <!-- A/B context: overlaid, always visible -->
-    <div class="ab">
+    <!-- (while the Map viewer has the D-pad, its own screen shows this) -->
+    <div class="ab" class:away={device.focus === "map"}>
       <span><i class="pip a">A</i>{device.labels.a}</span>
       <span><i class="pip b">B</i>{device.labels.b}</span>
       <span><i class="pip st">≡</i>{device.labels.start}</span>
@@ -586,6 +589,9 @@
     background: rgba(5, 8, 6, 0.85);
     border: 1px solid rgba(213, 228, 198, 0.16);
     border-radius: 6px;
+  }
+  .ab.away {
+    display: none;
   }
   .ab span {
     display: flex;

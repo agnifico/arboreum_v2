@@ -92,6 +92,8 @@ export class Device {
   cursor = $state({ x: 12, y: 7 });
   /** The screen's slide-out drawer: which section, and the tree under the D-pad. */
   drawerSection = $state("tree"); // "tree" | "plot"
+  /** What the Map viewer's grid is showing while it has the D-pad. */
+  mapMode = $state("plot"); // "plot" | "tree"
   treeIndex = $state(0);
   /** Formatting under the caret (for lit format keys) and the word count. */
   active = $state({});
@@ -221,15 +223,16 @@ export class Device {
   /** What the drawer stands in for: modules that aren't slotted. The tree
       always lives here until the Treemoji module exists (build step 11). */
   get drawerSections() {
-    return ["tree", !this.hasMapViewer && "plot"].filter(Boolean);
+    // With the Map viewer slotted it handles both tree and plot; no drawer.
+    return this.hasMapViewer ? [] : ["tree", "plot"];
   }
 
   /** The red "!": tap it to go where the missing thing is handled. */
   resolveMissing() {
     const m = this.missing;
     if (!m.length) return;
-    if (m.includes("plot") && this.hasMapViewer && !m.includes("tree")) return this.enterMap();
-    this.openDrawer(m.find((x) => this.drawerSections.includes(x)) ?? "tree");
+    if (this.hasMapViewer) return this.enterMap(m.includes("tree") ? "tree" : "plot");
+    this.openDrawer(m.includes("tree") ? "tree" : "plot");
   }
 
   openDrawer(section = "tree") {
@@ -249,6 +252,7 @@ export class Device {
     this.treeIndex = i;
     this.draftIcon = TREES[i].src;
     this.say(TREES[i].name.toUpperCase());
+    if (this.focus === "map") return void (this.focus = "editor");
     // Go on to the plot if it's also missing and handled here; else done.
     if (!this.draftPlot && this.drawerSections.includes("plot")) this.drawerSection = "plot";
     else this.closeDrawer();
@@ -339,6 +343,7 @@ export class Device {
     const o = this.overlay;
     if (o?.kind === "menu") return { a: "SELECT", b: "CLOSE", start: "CLOSE" };
     if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—" };
+    if (this.focus === "map" && this.mapMode === "tree") return { a: "PICK", b: "BACK", start: "—" };
     if (this.focus === "map" || (this.focus === "drawer" && this.drawerSection === "plot")) {
       const at = this.atCursor;
       const other = this.focus === "drawer" ? "TREE" : "—";
@@ -381,7 +386,7 @@ export class Device {
       e && { label: "SAVE", run: () => this.save() },
       !e && has && { label: "OPEN NOTE", run: () => this.open() },
       { label: "NEW NOTE", run: () => this.newNote() },
-      e && { label: this.hasMapViewer ? "CHOOSE TREE" : "TREE & PLOT", run: () => this.openDrawer() },
+      e && { label: "CHOOSE TREE", run: () => (this.hasMapViewer ? this.enterMap("tree") : this.openDrawer("tree")) },
       // Left/right rotate the sort without closing the menu.
       { label: () => `SORT ◂ ${this.sortLabel} ▸`, run: () => this.cycleSort(), cycle: (d) => this.cycleSort(d) },
       (e || has) && { label: "DELETE NOTE", run: () => this.askDelete() },
@@ -578,11 +583,16 @@ export class Device {
 
   // --- Map: plant the open note's tree ----------------------------------
   /** Hand the D-pad to the map (Map viewer or the drawer's plot picker). */
-  enterMap() {
-    if (!this.editing) return this.say("OPEN A NOTE TO PLANT");
-    if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
+  enterMap(mode = "plot") {
+    if (!this.editing) return this.say("OPEN A NOTE FIRST");
+    this.mapMode = mode;
+    if (mode === "tree") {
+      const t = TREES.findIndex((x) => x.src === this.draftIcon);
+      this.treeIndex = t < 0 ? 0 : t;
+    } else if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
     this.focus = "map";
   }
+
 
   moveCursor(dx, dy) {
     this.cursor = {
@@ -602,11 +612,18 @@ export class Device {
   }
 
   #mapInput = (button) => {
+    if (button === "b") return void (this.focus = "editor");
+    if (this.mapMode === "tree") {
+      const step = { left: -1, right: 1, up: -4, down: 4 }[button]; // 4 trees a row
+      if (step) this.treeIndex = Math.max(0, Math.min(TREES.length - 1, this.treeIndex + step));
+      if (button === "a") this.pickTree();
+      return;
+    }
     const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[button];
     if (d) this.moveCursor(...d);
     if (button === "a") this.plant();
-    if (button === "b") this.focus = "editor";
   };
+
 
   // --- Formatting (bottom strip, later the Format deck) ----------------
   static FORMATS = [
