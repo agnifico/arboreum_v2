@@ -82,14 +82,23 @@
         class:warn={drawerWarn}
         class:open={drawerOpen}
         aria-expanded={drawerOpen}
+        aria-label="{drawerLabel}: {device.draftIcon ? treeName(device.draftIcon) : 'no tree yet'}"
         onclick={() => (drawerOpen ? device.closeDrawer() : device.openDrawer())}
-      >{drawerLabel}</button>
+      >
+        {#each device.drawerSections as sec}
+          {#if sec === "tree"}
+            {#if device.draftIcon}<img class="tab-tree" src={device.draftIcon} alt="" />{:else}<span class="tab-none">?</span>{/if}
+          {:else}<span class="tab-text">{sec.toUpperCase()}</span>{/if}
+        {/each}
+      </button>
       {#if drawerOpen}
         <div class="drawer" role="dialog" aria-label="{drawerLabel} (virtual module)">
           {#if device.drawerSections.length > 1}
             <div class="dr-tabs">
               {#each device.drawerSections as sec}
-                <button class:on={device.drawerSection === sec} onclick={() => (device.drawerSection = sec)}>{sec.toUpperCase()}</button>
+                <button class:on={device.drawerSection === sec} aria-label={sec} onclick={() => (device.drawerSection = sec)}>
+                  {#if sec === "tree"}{#if device.draftIcon}<img class="sec-tree" src={device.draftIcon} alt="" />{:else}?{/if}{:else}{sec.toUpperCase()}{/if}
+                </button>
               {/each}
             </div>
           {/if}
@@ -401,6 +410,35 @@
     border-left: 1px solid rgba(213, 228, 198, 0.3);
     border-radius: 4px 0 0 4px;
     cursor: pointer;
+  }
+  .drawer-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    writing-mode: horizontal-tb; /* only the words run vertically */
+  }
+  .tab-text {
+    writing-mode: vertical-rl;
+  }
+  .tab-tree {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+  .tab-none {
+    writing-mode: horizontal-tb;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .sec-tree {
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin: 0 auto;
+    object-fit: contain;
+    image-rendering: pixelated;
   }
   .drawer-tab.warn {
     color: #ffd9d9;
