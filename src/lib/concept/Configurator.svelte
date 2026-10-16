@@ -7,6 +7,9 @@
     showSpeaker = $bindable(true),
     showChassis = $bindable(false),
     showGlare = $bindable(false),
+    showList = $bindable(true),
+    showDpad = $bindable(true),
+    showCtl = $bindable(true),
     docked = false, // portrait: a gear docked in the console under the speaker
   } = $props();
   const device = useDevice();
@@ -44,14 +47,20 @@
         <button class:on={view === "portrait"} aria-pressed={view === "portrait"} onclick={() => (view = "portrait")}>PORTRAIT</button>
       </div>
       <p class="cfg-h">MODULES</p>
+      <button class="toggle" aria-pressed={showList} disabled={view !== "landscape"} onclick={() => (showList = !showList)}>
+        <span class="sw" class:on={showList && view === "landscape"}></span> LIST
+      </button>
+      <button class="toggle" aria-pressed={showDpad} onclick={() => (showDpad = !showDpad)}>
+        <span class="sw" class:on={showDpad}></span> D-PAD
+      </button>
+      <button class="toggle" aria-pressed={showCtl} onclick={() => (showCtl = !showCtl)}>
+        <span class="sw" class:on={showCtl}></span> CONTROL PAD
+      </button>
       <button class="toggle" aria-pressed={showBay} onclick={() => (showBay = !showBay)}>
         <span class="sw" class:on={showBay}></span> BAY · MAP VIEWER
       </button>
       <button class="toggle" aria-pressed={showSpeaker} onclick={() => (showSpeaker = !showSpeaker)}>
         <span class="sw" class:on={showSpeaker}></span> SPEAKER
-      </button>
-      <button class="toggle" aria-pressed={showChassis} onclick={() => (showChassis = !showChassis)}>
-        <span class="sw" class:on={showChassis}></span> ENCLOSURE
       </button>
       <p class="cfg-h">SCREEN</p>
       <button class="toggle" aria-pressed={device.showMarkup} onclick={() => (device.showMarkup = !device.showMarkup)}>
@@ -60,8 +69,12 @@
       <button class="toggle" aria-pressed={showGlare} onclick={() => (showGlare = !showGlare)}>
         <span class="sw" class:on={showGlare}></span> SCREEN GLARE
       </button>
+      <p class="cfg-h">BODY</p>
+      <button class="toggle" aria-pressed={showChassis} onclick={() => (showChassis = !showChassis)}>
+        <span class="sw" class:on={showChassis}></span> ENCLOSURE
+      </button>
       <p class="cfg-note">
-        {view === "landscape" ? "The list sits beside the screen in landscape." : "In portrait the list opens full screen."}
+        {view === "landscape" ? "Without the List module, the list opens full screen. Without controls, the keyboard and mouse drive the device." : "In portrait the list opens full screen."}
       </p>
     </div>
   {/if}
@@ -176,6 +189,10 @@
     color: #fff3ea;
     background: var(--graphite);
     box-shadow: 0 2px 0 var(--graphite-side);
+  }
+  .toggle:disabled {
+    opacity: 0.4;
+    cursor: default;
   }
   .toggle {
     display: flex;

@@ -14,7 +14,7 @@
 
   const device = provideDevice(new Device());
   $effect(() => {
-    device.hasListModule = view === "landscape";
+    device.hasListModule = view === "landscape" && showList;
     device.hasMapViewer = showBay;
   });
   onMount(() => {
@@ -40,6 +40,9 @@
   let showSpeaker = $state(true);
   let showChassis = $state(false); // optional enclosure behind the modules
   let showGlare = $state(false); // reflections on the screens
+  let showList = $state(true); // landscape only; otherwise the list is a full screen
+  let showDpad = $state(true);
+  let showCtl = $state(true);
 
   // The device is drawn at its natural size, then scaled to fit the window.
   let natW = $state(0);
@@ -72,31 +75,45 @@
   });
 
   // Grid layout per view; the right column only exists if something is in it.
+  // Grid layout per view, from the placement rules (CONCEPT.md): controls
+  // sit below the screen; a side holds at most one dock; with no controls
+  // the screen takes the height.
   let grid = $derived.by(() => {
+    const bottom = showDpad || showCtl;
+    const pair = (n) => (showDpad && showCtl ? `${"dpad ".repeat(n - 1)}ctl` : (showDpad ? "dpad " : "ctl ").repeat(n).trim());
     if (view === "portrait") {
-      // A slim side column down the right of the lower modules holds the
-      // speaker strip with the Configure gear docked under it, so the
-      // top-to-bottom space goes to the screen.
+      // A slim side column down the right holds the speaker strip with the
+      // Configure gear docked under it.
       const cols = "110px 90px 168px 30px";
-      const rows = ["80px", "1fr", showBay && "190px", "160px"].filter(Boolean);
+      const rows = ["80px", "1fr", showBay && "190px", bottom && "160px"].filter(Boolean);
+      const sideRow = showBay || bottom ? "" : " side"; // nowhere else to dock it
       const areas = [
         '"cam plate plate plate"',
-        '"scr scr scr scr"',
+        `"scr scr scr ${sideRow ? "side" : "scr"}"`,
         showBay && '"bay bay bay side"',
-        '"dpad dpad ctl side"',
+        bottom && `"${showDpad && showCtl ? "dpad dpad ctl" : pair(3)} side"`,
       ].filter(Boolean);
       return `width: ${PORTRAIT_W}px; height: ${PORTRAIT_H}px; grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`;
     }
+    const list = showList;
     const right = showBay || showSpeaker;
-    const cols = ["150px", "110px", "400px", "420px", right && "300px"].filter(Boolean);
-    const r2 = right ? (showBay ? " bay" : " scr") : "";
+    const cols = [...(list ? ["150px", "110px"] : ["150px"]), "400px", "420px", right && "300px"].filter(Boolean);
+    const n = cols.length - (right ? 1 : 0); // columns left of the right column
+    // Right column: with a bottom row, bay over speaker; without one, just one of them.
+    const r2 = right ? (showBay ? " bay" : bottom ? " scr" : " spk") : "";
     const r3 = right ? (showSpeaker ? " spk" : " bay") : "";
+    const row2 = list ? "list list scr scr" : "scr scr scr";
+    // Bottom row cells (left of the right column): under the list it's still the list.
+    const under = list ? "list list " : "";
+    const cells = n - (list ? 2 : 0);
+    const row3 = under + (showDpad && showCtl ? `${"dpad ".repeat(cells - 1)}ctl` : pair(cells));
     const areas = [
-      `"cam plate plate plate${right ? " plate" : ""}"`,
-      `"list list scr scr${r2}"`,
-      `"list list dpad ctl${r3}"`,
-    ];
-    return `grid-template-columns: ${cols.join(" ")}; grid-template-rows: 112px 440px 182px; grid-template-areas: ${areas.join(" ")};`;
+      `"cam ${"plate ".repeat(n - 1 + (right ? 1 : 0)).trim()}"`,
+      `"${row2}${r2}"`,
+      bottom && `"${row3}${r3}"`,
+    ].filter(Boolean);
+    const rows = bottom ? "112px 440px 182px" : "112px 636px";
+    return `grid-template-columns: ${cols.join(" ")}; grid-template-rows: ${rows}; grid-template-areas: ${areas.join(" ")};`;
   });
 
 </script>
@@ -139,24 +156,25 @@
 
       <Camera />
       <Nameplate />
-      {#if view === "landscape"}<ListModule />{/if}
+      {#if view === "landscape" && showList}<ListModule />{/if}
       <Screen />
       {#if showBay}<MapViewer />{/if}
-      <DPad />
-      <ControlPad />
+      {#if showDpad}<DPad />{/if}
+      {#if showCtl}<ControlPad />{/if}
       {#if view === "portrait"}
         <div class="side">
           {#if showSpeaker}<Speaker />{/if}
-          <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis bind:showGlare docked />
+          <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl docked />
         </div>
-      {:else if showSpeaker}
+      {:else if showSpeaker && (showDpad || showCtl || !showBay)}
+        <!-- (with no controls row the right column has room for one module) -->
         <Speaker />
       {/if}
     </div>
   </div>
 
   {#if view === "landscape"}
-    <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis bind:showGlare />
+    <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
   {/if}
 </main>
 
