@@ -73,7 +73,10 @@
   function measure() {
     if (!editor || !host) return;
     const blocks = editor.view.dom.querySelectorAll("p, h1, h2, h3, h4, h5, h6, pre");
-    const hostTop = host.getBoundingClientRect().top - host.scrollTop;
+    // Screen rects are zoomed with the console; the gutter is laid out in its
+    // own unzoomed pixels, so divide the zoom back out.
+    const hr = host.getBoundingClientRect();
+    const k = hr.height / host.offsetHeight || 1;
     const at = editor.view.domAtPos(editor.state.selection.from).node;
     const curEl = (at.nodeType === 1 ? at : at.parentElement)?.closest("p, h1, h2, h3, h4, h5, h6, pre");
     // New images land beside the caret's line.
@@ -84,7 +87,7 @@
       const r = el.getBoundingClientRect();
       // Numbers take their line's height, so they line up with taller headings.
       const lh = parseFloat(getComputedStyle(el).lineHeight) || 26;
-      return { n: i + 1, top: r.top - hostTop, height: r.height, lh, current: el === curEl && device.focus === "editor" };
+      return { n: i + 1, top: (r.top - hr.top) / k + host.scrollTop, height: r.height / k, lh, current: el === curEl && device.focus === "editor" };
     });
   }
 
