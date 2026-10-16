@@ -4,6 +4,7 @@
   // `- ` and `[ ]` are drawn by CSS, not stored. See CONCEPT.md, "Editor".
   import { onMount, onDestroy, untrack } from "svelte";
   import { Editor } from "@tiptap/core";
+  import { EditorState } from "@tiptap/pm/state";
   import { StarterKit } from "@tiptap/starter-kit";
   import Underline from "@tiptap/extension-underline";
   import Highlight from "@tiptap/extension-highlight";
@@ -71,6 +72,10 @@
     if (!editor || key === loadedKey) return;
     loadedKey = key;
     editor.commands.setContent(html || "", false);
+    // Each note starts with a fresh undo history: undo can't empty a note you
+    // just opened, or replay another note's steps onto this one.
+    const { doc, plugins } = editor.state;
+    editor.view.updateState(EditorState.create({ doc, plugins }));
     device.html = editor.getHTML();
     device.setBaseline(device.html);
     report();
