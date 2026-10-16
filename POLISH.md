@@ -13,7 +13,7 @@ If that changes, a migration and a test against v2 data come with it.
 - [x] **E3** No warning when leaving with unsaved changes (in-app links, reload, closing the tab).
 - [x] **E4** No "saved" feedback: Save silently jumps to the reading view.
 - [x] **E5** Editing a note whose tree sits at map x=0 or y=0 saves that coordinate as `null` (`mapX || null`), so the tree loses its place.
-- [ ] **E6** The rotating emoji message is a focusable button that does nothing.
+- [x] **E6** The rotating emoji message is a focusable button that does nothing.
 - [ ] **E7** Floating-menu quote button never shows as active (checks `blockQuote` instead of `blockquote`).
 - Verified OK: title and body editing; Bold, Italic, Strike, Underline, Code, Quote, ¶, lists (bullet, ordered, task), heading −/size/+, link, image, highlight, sub, sup, hard break, alignment (4), colours and clear colour, fullscreen.
 

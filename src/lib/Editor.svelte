@@ -827,7 +827,8 @@
             </div>
           </div>
 
-          <button type="button" class="treemo"> {emojiMessage} </button>
+          <!-- Decorative, changes every second: hidden from screen readers -->
+          <span class="treemo" aria-hidden="true">{emojiMessage}</span>
         </div>
       </div>
     </div>
@@ -1213,7 +1214,15 @@
       rgba(255, 255, 255, 0.08) 0px 1px 0px inset;
   }
   .treemo {
-    width: calc(2 * var(--control-button-height) + 0.5rem);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    font-family: "Fira Code";
+    white-space: nowrap;
+    overflow: hidden;
+    /* fits the longest message on one line, so the toolbar doesn't jiggle */
+    width: 15ch;
     height: var(--control-button-height);
     font-size: 1rem;
     background-color: #588157;
