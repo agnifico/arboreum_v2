@@ -22,6 +22,8 @@
 
 :where(.arb) .moss { --face: var(--moss); --face-hi: var(--moss-hi); --side: var(--moss-side); }
 
+:where(.arb) .lichen { --face: var(--lichen); --face-hi: var(--lichen-hi); --side: var(--lichen-side); }
+
 :where(.arb) .graphite {
   --face: var(--graphite);
   --face-hi: var(--graphite-hi);
@@ -151,4 +153,33 @@
 /* Configure → Screen glare (off by default) */
 :where(.arb) .no-glare .glare {
   display: none;
+}
+
+/* Latch: a small orange catch in a module's etched label (e.g. ⇄ swap) */
+:where(.arb) .latch {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: inherit;
+  background: none;
+  letter-spacing: inherit;
+  text-shadow: inherit;
+}
+:where(.arb) .latch i {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 13px;
+  border-radius: 3px;
+  font-style: normal;
+  font-size: 10px;
+  color: #2b1406;
+  text-shadow: none;
+  background: var(--signal);
+  box-shadow: 0 2px 0 var(--signal-side);
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+:where(.arb) .latch:active i {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--signal-side);
 }

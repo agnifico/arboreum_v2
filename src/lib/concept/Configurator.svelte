@@ -4,6 +4,7 @@
   let {
     view = $bindable("landscape"),
     showBay = $bindable(true),
+    bayModule = $bindable("map"),
     showSpeaker = $bindable(true),
     showChassis = $bindable(false),
     showGlare = $bindable(false),
@@ -27,6 +28,24 @@
     wasOpen = open;
   });
 
+  // One List module: putting it in the bay takes it off the left, and back.
+  let listInBay = $derived(showBay && bayModule === "list");
+  let listLeft = $derived(view === "landscape" && showList && !listInBay);
+  function toggleList() {
+    if (listLeft) return void (showList = false);
+    showList = true;
+    if (listInBay) bayModule = "map";
+  }
+  function fillBay(m) {
+    bayModule = m;
+    if (m === "list") showList = false;
+  }
+  const BAY = [
+    ["map", "MAP"],
+    ["treemoji", "TREEMOJI"],
+    ["list", "LIST"],
+  ];
+
   function handleKeydown(event) {
     if (event.key === "Escape") panelOpen = false;
   }
@@ -47,18 +66,28 @@
         <button class:on={view === "portrait"} aria-pressed={view === "portrait"} onclick={() => (view = "portrait")}>PORTRAIT</button>
       </div>
       <p class="cfg-h">MODULES</p>
-      <button class="toggle" aria-pressed={showList} disabled={view !== "landscape"} onclick={() => (showList = !showList)}>
-        <span class="sw" class:on={showList && view === "landscape"}></span> LIST
+      <button class="toggle" aria-pressed={listLeft} disabled={view !== "landscape"} onclick={toggleList}>
+        <span class="sw" class:on={listLeft}></span> LIST
       </button>
       <button class="toggle" aria-pressed={showDpad} onclick={() => (showDpad = !showDpad)}>
         <span class="sw" class:on={showDpad}></span> D-PAD
       </button>
       <button class="toggle" aria-pressed={showCtl} onclick={() => (showCtl = !showCtl)}>
-        <span class="sw" class:on={showCtl}></span> CONTROL PAD
+        <span class="sw" class:on={showCtl}></span> CONTROLS
       </button>
+      <div class="seg sub-seg" role="group" aria-label="What the control slot holds">
+        {#each [["pad", "CONTROL PAD"], ["deck", "FORMAT DECK"]] as [key, label]}
+          <button class:on={showCtl && device.controls === key} aria-pressed={showCtl && device.controls === key} disabled={!showCtl} onclick={() => (device.controls = key)}>{label}</button>
+        {/each}
+      </div>
       <button class="toggle" aria-pressed={showBay} onclick={() => (showBay = !showBay)}>
-        <span class="sw" class:on={showBay}></span> BAY · MAP VIEWER
+        <span class="sw" class:on={showBay}></span> BAY
       </button>
+      <div class="seg sub-seg" role="group" aria-label="What the bay holds">
+        {#each BAY as [key, label]}
+          <button class:on={showBay && bayModule === key} aria-pressed={showBay && bayModule === key} disabled={!showBay} onclick={() => fillBay(key)}>{label}</button>
+        {/each}
+      </div>
       <button class="toggle" aria-pressed={showSpeaker} onclick={() => (showSpeaker = !showSpeaker)}>
         <span class="sw" class:on={showSpeaker}></span> SPEAKER
       </button>
@@ -74,7 +103,7 @@
         <span class="sw" class:on={showChassis}></span> ENCLOSURE
       </button>
       <p class="cfg-note">
-        {view === "landscape" ? "Without the List module, the list opens full screen. Without controls, the keyboard and mouse drive the device." : "In portrait the list opens full screen."}
+        {view === "landscape" ? "Without the List module, the list opens full screen. Without controls, the keyboard and mouse drive the device." : "In portrait the list opens full screen, unless the bay holds it."}
       </p>
     </div>
   {/if}
@@ -189,6 +218,20 @@
     color: #fff3ea;
     background: var(--graphite);
     box-shadow: 0 2px 0 var(--graphite-side);
+  }
+  /* What a slot holds, under its switch */
+  .sub-seg {
+    margin: 2px 0 6px 44px;
+  }
+  .sub-seg button {
+    flex: auto;
+    padding: 6px 6px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+  .sub-seg button:disabled {
+    cursor: default;
+    opacity: 0.5;
   }
   .toggle:disabled {
     opacity: 0.4;

@@ -4,7 +4,7 @@
   const device = useDevice();
 </script>
 
-<!-- LIST (desktop): notes as a numbered list with index tabs -->
+<!-- LIST: notes as a numbered list with index tabs (left dock, or the bay) -->
 <section class="mod graphite list" class:focused={device.focus === "list"} aria-label="List module">
   <span class="screw s-tl"></span><span class="screw s-bl"></span>
   <div class="list-glass">
@@ -94,4 +94,11 @@
     text-align: center;
     font-size: 9px;
   }
+  /* Portrait bay: a short row, so the tabs lie flat and A/B stay on the screen */
+  :global(.portrait) .list { padding: 16px 66px 16px 18px; }
+  :global(.portrait) .list-head { padding: 8px 12px; }
+  :global(.portrait) .list-foot,
+  :global(.portrait) .list-label { display: none; }
+  :global(.portrait) .tabs { right: 10px; top: 16px; gap: 5px; }
+  :global(.portrait) .tab { writing-mode: horizontal-tb; width: 46px; padding: 5px 0; border-radius: 0 4px 4px 0; text-align: center; }
 </style>

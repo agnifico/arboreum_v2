@@ -8,6 +8,7 @@ import { normalizeBackup } from "$lib/backup.js";
 import { COLS, ROWS } from "./garden.js";
 import { TREES } from "./trees.js";
 import { WELCOME, WELCOME_ID } from "./welcome.js";
+import * as media from "./media.js";
 
 const KEY = "arb-device";
 export const provideDevice = (device) => setContext(KEY, device);
@@ -59,8 +60,9 @@ const LOOSE_KEYS = new Set([" ", "a", "A", "b", "B"]);
 export class Device {
   /** Keys currently lit, so keyboard presses show on the hardware too. */
   lit = $state(Object.fromEntries(BUTTONS.map((b) => [b, false])));
-  /** Which part of the device has the D-pad: "list", "editor", "map" (the
-      Map viewer) or "drawer" (the screen's slide-out). */
+  /** Which part of the device has the D-pad: "list", "editor", "bay" (the
+      module in the bay: Map viewer or Treemoji), "drawer" (the screen's
+      slide-out) or "image" (arranging the note's images). */
   focus = $state("list");
   /** Notes as stored (the app's IndexedDB), kept live. */
   raw = $state.raw([]);
@@ -94,14 +96,15 @@ export class Device {
   draftIcon = $state(null);
   draftPlot = $state(null); // [x, y] or null
   baseline = $state.raw({ title: "", html: "", icon: null, plot: null });
-  /** Which modules are slotted (set by the page from Configure). */
-  hasMapViewer = $state(true);
+  /** What the bay holds: "map", "treemoji", "list" or null (empty). Set
+      through slot(), from Configure. */
+  bay = $state("map");
   /** Map cursor, shared by the Map viewer and the drawer's plot picker. */
   cursor = $state({ x: 12, y: 7 });
   /** The screen's slide-out drawer: which section, and the tree under the D-pad. */
   drawerSection = $state("tree"); // "tree" | "plot"
-  /** What the Map viewer's grid is showing while it has the D-pad. */
-  mapMode = $state("plot"); // "plot" | "tree"
+  /** What the bay module's screen shows while it has the D-pad. */
+  bayMode = $state("plot"); // "plot" (Map viewer) | "tree" (either)
   treeIndex = $state(0);
   /** Formatting under the caret (for lit format keys) and the word count. */
   active = $state({});
@@ -110,6 +113,35 @@ export class Device {
   showMarkup = $state(false);
   /** Bottom strip page: "format" or "details". */
   stripPage = $state("format");
+  /** What sits in the control slot: the control pad ("pad") or the Format
+      deck ("deck"). Its latch, or Configure, swaps them. */
+  controls = $state("pad");
+  /** Whether the control slot is filled at all (set by the page from Configure). */
+  ctlSlotted = $state(true);
+  get hasDeck() {
+    return this.ctlSlotted && this.controls === "deck";
+  }
+  /** The strip's pages: with the Format deck slotted, its format keys step aside. */
+  get stripPages() {
+    return this.hasDeck ? ["details"] : ["format", "details"];
+  }
+  swapControls() {
+    this.controls = this.controls === "pad" ? "deck" : "pad";
+  }
+
+  // --- Images (the Camera) ---
+  /** The shown note's images: its layout ({ edge, images }) and a URL each. */
+  media = $state(media.emptyLayout());
+  mediaUrls = $state({});
+  #mediaKey = null; // whose images are loaded
+  /** The image under the D-pad (focus "image"), and the layout B goes back to. */
+  imageSel = $state(null);
+  #imageBefore = null;
+  /** The Camera's LED: on while an image is coming in. */
+  camBusy = $state(false);
+  /** Set by the editor: the line (block) the caret is on, and how many there are. */
+  caretLine = 1;
+  lineCount = 1;
 
   #timers = {};
   #msgTimer;
@@ -228,24 +260,50 @@ export class Device {
     return [!this.draftIcon && "tree", !this.pendingPlot && "plot"].filter(Boolean);
   }
 
-  /** What the drawer stands in for: modules that aren't slotted. The tree
-      always lives here until the Treemoji module exists (build step 11). */
+  get hasMapViewer() {
+    return this.bay === "map";
+  }
+  /** Who handles each job: a slotted module ("bay") or the drawer. The Map
+      viewer does tree and plot; Treemoji does the tree. */
+  get treeInBay() {
+    return this.bay === "map" || this.bay === "treemoji";
+  }
+
+  /** What the drawer stands in for: the jobs no slotted module handles. */
   get drawerSections() {
-    // With the Map viewer slotted it handles both tree and plot; no drawer.
-    return this.hasMapViewer ? [] : ["tree", "plot"];
+    return [!this.treeInBay && "tree", !this.hasMapViewer && "plot"].filter(Boolean);
+  }
+
+  /** Slot a module into the bay (or empty it). If the D-pad was on
+      something that just left, it goes back to the note. */
+  slot(module) {
+    this.bay = module;
+    if (this.focus === "bay" && !(this.bayMode === "tree" ? this.treeInBay : this.hasMapViewer)) this.focus = this.editing ? "editor" : "list";
+    if (this.focus === "drawer" && !this.drawerSections.includes(this.drawerSection)) {
+      if (this.drawerSections.length) this.drawerSection = this.drawerSections[0];
+      else this.closeDrawer();
+    }
+  }
+
+  /** Choose a tree: on the module that does it, or in the drawer. */
+  chooseTree() {
+    return this.treeInBay ? this.enterBay("tree") : this.openDrawer("tree");
   }
 
   /** The red "!": tap it to go where the missing thing is handled. */
   resolveMissing() {
     const m = this.missing;
     if (!m.length) return;
-    if (this.hasMapViewer) return this.enterMap(m.includes("tree") ? "tree" : "plot");
-    this.openDrawer(m.includes("tree") ? "tree" : "plot");
+    if (m.includes("tree")) return this.chooseTree();
+    if (this.hasMapViewer) return this.enterBay("plot");
+    this.openDrawer("plot");
   }
 
   openDrawer(section = "tree") {
     if (!this.editing) return;
-    this.drawerSection = this.drawerSections.includes(section) ? section : "tree";
+    const sections = this.drawerSections;
+    if (!sections.length) return;
+    this.drawerSection = sections.includes(section) ? section : sections[0];
     const i = TREES.findIndex((t) => t.src === this.draftIcon);
     this.treeIndex = i < 0 ? 0 : i;
     if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
@@ -260,7 +318,7 @@ export class Device {
     this.treeIndex = i;
     this.draftIcon = TREES[i].src;
     this.say(TREES[i].name.toUpperCase());
-    if (this.focus === "map") return void (this.focus = "editor");
+    if (this.focus === "bay") return void (this.focus = "editor");
     // Go on to the plot if it's also missing and handled here; else done.
     if (!this.draftPlot && this.drawerSections.includes("plot")) this.drawerSection = "plot";
     else this.closeDrawer();
@@ -351,8 +409,9 @@ export class Device {
     const o = this.overlay;
     if (o?.kind === "menu") return { a: "SELECT", b: "CLOSE", start: "CLOSE" };
     if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—" };
-    if (this.focus === "map" && this.mapMode === "tree") return { a: "PICK", b: "BACK", start: "—" };
-    if (this.focus === "map" || (this.focus === "drawer" && this.drawerSection === "plot")) {
+    if (this.focus === "image") return { a: "DONE", b: "CANCEL", start: "REMOVE" };
+    if (this.focus === "bay" && this.bayMode === "tree") return { a: "PICK", b: "BACK", start: "—" };
+    if (this.focus === "bay" || (this.focus === "drawer" && this.drawerSection === "plot")) {
       const at = this.atCursor;
       const other = this.focus === "drawer" ? "TREE" : "—";
       return { a: at && !at.mine ? "TAKEN" : "PLANT", b: this.focus === "drawer" ? "CLOSE" : "BACK", start: other };
@@ -366,7 +425,8 @@ export class Device {
     this.light(button);
     if (this.overlay?.kind === "menu") return this.#menuInput(button);
     if (this.overlay?.kind === "confirm") return this.#confirmInput(button);
-    if (this.focus === "map") return this.#mapInput(button);
+    if (this.focus === "bay") return this.#bayInput(button);
+    if (this.focus === "image") return this.#imageInput(button);
     if (this.focus === "drawer") return this.#drawerInput(button);
     if (this.focus === "editor") return this.#editorInput(button);
     return this.#listInput(button);
@@ -394,7 +454,10 @@ export class Device {
       e && { label: "SAVE", run: () => this.save() },
       !e && has && { label: "OPEN NOTE", run: () => this.open() },
       { label: "NEW NOTE", run: () => this.newNote() },
-      e && { label: "CHOOSE TREE", run: () => (this.hasMapViewer ? this.enterMap("tree") : this.openDrawer("tree")) },
+      e && { label: "CHOOSE TREE", run: () => this.chooseTree() },
+      e && { label: "ADD IMAGE", run: () => this.pickImages() },
+      e && this.media.images.length && { label: () => `IMAGE EDGE ◂ ${this.media.edge.toUpperCase()} ▸`, run: () => this.cycleEdge(), cycle: (d) => this.cycleEdge(d) },
+      e && this.media.images.length && { label: "ARRANGE IMAGES", run: () => this.arrangeImages() },
       // Left/right rotate the sort without closing the menu.
       { label: () => `SORT ◂ ${this.sortLabel} ▸`, run: () => this.cycleSort(), cycle: (d) => this.cycleSort(d) },
       (e || has) && { label: "DELETE NOTE", run: () => this.askDelete() },
@@ -462,6 +525,7 @@ export class Device {
       return this.say("COULDN'T DELETE", 3000);
     }
     this.raw = this.raw.filter((n) => n.noteid !== stored.noteid);
+    media.dropNote(stored.noteid); // its images go with it
     // Only leave the editor if the deleted note is the one that's open.
     if (this.editingId === stored.noteid) {
       this.isNew = false;
@@ -589,22 +653,33 @@ export class Device {
     if (closed.saved) this.say(`SAVED “${closed.title}”`);
   }
 
-  // --- Map: plant the open note's tree ----------------------------------
-  /** Hand the D-pad to the map (Map viewer or the drawer's plot picker). */
-  enterMap(mode = "plot", at = null) {
+  // --- The bay module: plant the open note's tree, or choose it ---------
+  /** Hand the D-pad to the bay module: its map ("plot") or tree grid ("tree"). */
+  enterBay(mode = "plot", at = null) {
     if (!this.editing) return this.say("OPEN A NOTE FIRST");
-    this.mapMode = mode;
+    if (mode === "tree" ? !this.treeInBay : !this.hasMapViewer) return;
+    this.bayMode = mode;
     if (mode === "tree") {
       const t = TREES.findIndex((x) => x.src === this.draftIcon);
       this.treeIndex = t < 0 ? 0 : t;
     } else if (at) this.cursor = at; // a tapped tile: the cursor goes where you pointed
     else if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
-    this.focus = "map";
+    this.focus = "bay";
   }
-  /** The Map viewer's MOVE / TREE keys: press to enter, press again to leave (as B). */
-  toggleMap(mode) {
-    if (this.focus === "map" && this.mapMode === mode) return this.#mapInput("b");
-    this.enterMap(mode);
+  /** The bay module's own keys (MOVE, TREE): press to enter, press again to leave (as B). */
+  toggleBay(mode) {
+    if (this.focus === "bay" && this.bayMode === mode) return this.#bayInput("b");
+    this.enterBay(mode);
+  }
+
+  /** Treemoji's ◀ ▶: flip straight through the trees (part of the draft until saved). */
+  cycleTree(step) {
+    if (!this.editing) return this.say("OPEN A NOTE FIRST");
+    const i = TREES.findIndex((t) => t.src === this.draftIcon);
+    const next = i < 0 ? (step > 0 ? 0 : TREES.length - 1) : (i + step + TREES.length) % TREES.length;
+    this.treeIndex = next;
+    this.draftIcon = TREES[next].src;
+    this.say(TREES[next].name.toUpperCase());
   }
 
 
@@ -625,13 +700,13 @@ export class Device {
     this.say(`PLANTED · ${String(this.cursor.x).padStart(2, "0")},${String(this.cursor.y).padStart(2, "0")}`);
   }
 
-  #mapInput = (button) => {
+  #bayInput = (button) => {
     if (button === "b") {
       // Back, not "move here": the cursor returns to the tree's plot.
-      if (this.mapMode === "plot" && this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
+      if (this.bayMode === "plot" && this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
       return void (this.focus = "editor");
     }
-    if (this.mapMode === "tree") {
+    if (this.bayMode === "tree") {
       const step = { left: -1, right: 1, up: -4, down: 4 }[button]; // 4 trees a row
       if (step) this.treeIndex = Math.max(0, Math.min(TREES.length - 1, this.treeIndex + step));
       if (button === "a") this.pickTree();
@@ -642,6 +717,162 @@ export class Device {
     if (button === "a") this.plant();
   };
 
+
+  // --- Images: the Camera adds them; one edge per note -----------------
+  /** Load the images for the note on screen (the editor calls this). */
+  async showMedia(key) {
+    if (key === this.#mediaKey) return;
+    // A new note's first save gives it a real id: still the same note.
+    if (this.#mediaKey === "new" && key === this.editingId) return void (this.#mediaKey = key);
+    this.#mediaKey = key;
+    const { layout, urls } = await media.load(key === "new" || key === "none" ? null : key);
+    if (this.#mediaKey !== key) return media.revoke(urls); // moved on meanwhile
+    const old = this.mediaUrls;
+    this.media = layout;
+    this.mediaUrls = urls;
+    media.revoke(old);
+  }
+
+  /** The Camera (or Start → Add image): choose images, then add them. */
+  pickImages() {
+    if (!media.supported()) return this.say("NO IMAGE STORAGE IN THIS BROWSER", 3000);
+    const input = Object.assign(document.createElement("input"), { type: "file", accept: "image/*", multiple: true });
+    input.onchange = () => input.files?.length && this.addImages([...input.files]);
+    input.click();
+  }
+
+  /** Store images with the open note (opening or starting one if needed);
+      each lands beside the caret's line. */
+  async addImages(files) {
+    if (!this.editing) {
+      if (this.note) this.open();
+      else await this.newNote();
+    }
+    // Images live in the note's folder, so a brand-new note is saved first.
+    if (this.isNew && !(await this.save({ quiet: true }))) return;
+    const id = this.editingId;
+    await this.showMedia(id);
+    this.camBusy = true;
+    let added = 0;
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) continue;
+      try {
+        const { entry, url } = await media.add(id, file, this.caretLine);
+        if (this.#mediaKey !== id) break; // the note changed underneath
+        this.media.images.push(entry);
+        this.mediaUrls = { ...this.mediaUrls, [entry.id]: url };
+        added++;
+      } catch (error) {
+        console.error("Couldn't add the image:", error);
+      }
+    }
+    this.camBusy = false;
+    if (!added) return this.say("COULDN'T ADD THE IMAGE", 3000);
+    await this.#saveMedia();
+    this.say(added > 1 ? `${added} IMAGES ADDED` : "IMAGE ADDED");
+  }
+
+  async #saveMedia() {
+    const id = this.#mediaKey;
+    if (!id || id === "new" || id === "none") return;
+    try {
+      await media.saveLayout(id, $state.snapshot(this.media));
+    } catch (error) {
+      console.error("Couldn't save the image layout:", error);
+      this.say("COULDN'T SAVE THE IMAGES", 3000);
+    }
+  }
+
+  cycleEdge(step = 1) {
+    const i = media.EDGES.indexOf(this.media.edge);
+    this.media.edge = media.EDGES[(i + step + media.EDGES.length) % media.EDGES.length];
+    this.#saveMedia();
+  }
+
+  get stripEdge() {
+    return this.media.edge === "left" || this.media.edge === "right";
+  }
+
+  /** Hand the D-pad to an image (a tap on it does this too). */
+  selectImage(id) {
+    if (!this.editing || !this.media.images.some((x) => x.id === id)) return;
+    if (this.focus !== "image") this.#imageBefore = $state.snapshot(this.media);
+    this.imageSel = id;
+    this.focus = "image";
+  }
+  arrangeImages() {
+    const first = this.media.images[0];
+    if (!first) return this.say("NO IMAGES · PRESS THE CAMERA");
+    this.selectImage(first.id);
+  }
+  /** Strip: move an image to a line (one line is the unit). */
+  setImageLine(id, line) {
+    const img = this.media.images.find((x) => x.id === id);
+    if (img) img.line = Math.max(1, Math.min(this.lineCount, line));
+  }
+  /** Scrapbook: move an image to a place in the order. */
+  setImageIndex(id, to) {
+    const imgs = this.media.images;
+    const from = imgs.findIndex((x) => x.id === id);
+    if (from < 0) return;
+    const [img] = imgs.splice(from, 1);
+    imgs.splice(Math.max(0, Math.min(imgs.length, to)), 0, img);
+  }
+  /** A: keep where the images are now. */
+  placeImages() {
+    if (this.focus !== "image") return;
+    this.#saveMedia();
+    this.focus = "editor";
+    this.say("IMAGES PLACED");
+  }
+
+  askRemoveImage(id = this.imageSel) {
+    const img = this.media.images.find((x) => x.id === id);
+    if (!img) return;
+    this.confirm({
+      title: "REMOVE IMAGE?",
+      text: "It will be gone from this note. This can't be undone.",
+      yes: "REMOVE",
+      no: "KEEP",
+      onYes: async () => {
+        const i = this.media.images.indexOf(img);
+        this.media.images.splice(i, 1);
+        if (this.#imageBefore) this.#imageBefore.images = this.#imageBefore.images.filter((x) => x.id !== id);
+        URL.revokeObjectURL(this.mediaUrls[id]);
+        await media.removeFile(this.#mediaKey, img);
+        await this.#saveMedia();
+        const next = this.media.images[Math.min(i, this.media.images.length - 1)];
+        if (next) this.imageSel = next.id;
+        else this.focus = "editor";
+        this.say("IMAGE REMOVED");
+      },
+    });
+  }
+
+  #imageInput = (button) => {
+    const imgs = this.media.images;
+    const i = imgs.findIndex((x) => x.id === this.imageSel);
+    if (i < 0) return void (this.focus = "editor");
+    // Along the edge moves the image; across it picks another.
+    const strip = this.stripEdge;
+    const move = (strip ? { up: -1, down: 1 } : { left: -1, right: 1 })[button];
+    const pick = (strip ? { left: -1, right: 1 } : { up: -1, down: 1 })[button];
+    if (move && strip) this.setImageLine(this.imageSel, imgs[i].line + move);
+    if (move && !strip) this.setImageIndex(this.imageSel, i + move);
+    if (pick) this.imageSel = imgs[(i + pick + imgs.length) % imgs.length].id;
+    if (button === "a") this.placeImages();
+    if (button === "b") {
+      this.media = this.#imageBefore ?? this.media;
+      this.focus = "editor";
+    }
+    if (button === "start") this.askRemoveImage();
+  };
+
+  /** Back to writing from whatever had the D-pad (a click in the text). */
+  backToText() {
+    if (this.focus === "image") return this.placeImages();
+    if (this.focus === "bay" || this.focus === "drawer") this.focus = "editor";
+  }
 
   // --- Formatting (bottom strip, later the Format deck) ----------------
   static FORMATS = [
@@ -786,6 +1017,11 @@ export class Device {
       return true;
     }
     if (event.metaKey || event.ctrlKey || event.altKey) return false;
+    // Arranging images: Delete / Backspace removes the one under the D-pad.
+    if ((event.key === "Delete" || event.key === "Backspace") && this.focus === "image" && !this.overlay && !typing) {
+      this.press("start");
+      return true;
+    }
     const button = KEYMAP[event.key];
     if (!button) return false;
     // While typing, only Esc leaves the field; everything else is text editing.

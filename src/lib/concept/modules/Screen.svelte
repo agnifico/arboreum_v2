@@ -3,6 +3,7 @@
   import { useDevice, Device, ago } from "../device.svelte.js";
   import { treeName, TREES } from "../trees.js";
   import GardenMap from "../GardenMap.svelte";
+  import TreeGrid from "../TreeGrid.svelte";
   import NoteRows from "../NoteRows.svelte";
   import MonoEditor from "../MonoEditor.svelte";
   const device = useDevice();
@@ -20,10 +21,12 @@
   let date = $derived(`${pad2(now.getDate())}·${pad2(now.getMonth() + 1)}`);
   const fmtDate = (d) => (d ? `${pad2(d.getDate())}·${pad2(d.getMonth() + 1)}·${String(d.getFullYear()).slice(2)}` : "—");
 
-  const PAGES = ["format", "details"];
+  // With the Format deck slotted, the strip's format page steps aside.
+  let pages = $derived(device.stripPages);
+  let stripPage = $derived(pages.includes(device.stripPage) ? device.stripPage : pages[0]);
   function page(step) {
-    const i = PAGES.indexOf(device.stripPage);
-    device.stripPage = PAGES[(i + step + PAGES.length) % PAGES.length];
+    const i = pages.indexOf(stripPage);
+    device.stripPage = pages[(i + step + pages.length) % pages.length];
   }
 
   // Enter in the title moves on to the text.
@@ -107,19 +110,7 @@
           {#if device.drawerSection === "tree"}
             <div class="dr-module">
               <div class="dr-head"><span>TRM-01</span><span class="dr-virtual">VIRTUAL</span></div>
-              <div class="trees" role="radiogroup" aria-label="Trees">
-                {#each TREES as t, i}
-                  <button
-                    class="tree"
-                    class:cur={i === device.treeIndex}
-                    class:chosen={t.src === device.draftIcon}
-                    role="radio"
-                    aria-checked={t.src === device.draftIcon}
-                    aria-label={t.name}
-                    onclick={() => device.pickTree(i)}
-                  ><img src={t.src} alt="" /></button>
-                {/each}
-              </div>
+              <TreeGrid />
               <div class="dr-caption">{TREES[device.treeIndex].name.toUpperCase()}</div>
             </div>
           {:else}
@@ -139,7 +130,7 @@
 
     <!-- A/B context: overlaid, always visible -->
     <!-- (while the Map viewer has the D-pad, its own screen shows this) -->
-    <div class="ab" class:away={device.focus === "map"}>
+    <div class="ab" class:away={device.focus === "bay"}>
       <span><i class="pip a">A</i>{device.labels.a}</span>
       <span><i class="pip b">B</i>{device.labels.b}</span>
       <span><i class="pip st">≡</i>{device.labels.start}</span>
@@ -147,10 +138,10 @@
 
     <!-- Secondary strip: paged with ◀ ▶ (format · details) -->
     <div class="strip">
-      <button class="pg" aria-label="Previous strip page" onclick={() => page(-1)}>◀</button>
-      <span class="strip-label">{device.stripPage === "format" ? "FORMAT" : "DETAILS"}</span>
-      <button class="pg" aria-label="Next strip page" onclick={() => page(1)}>▶</button>
-      {#if device.stripPage === "format"}
+      <button class="pg" class:gone={pages.length < 2} aria-label="Previous strip page" onclick={() => page(-1)}>◀</button>
+      <span class="strip-label">{stripPage === "format" ? "FORMAT" : "DETAILS"}</span>
+      <button class="pg" class:gone={pages.length < 2} aria-label="Next strip page" onclick={() => page(1)}>▶</button>
+      {#if stripPage === "format"}
         <span class="keys" class:off={!device.canFormat}>
           {#each Device.FORMATS as f}
             <button
@@ -174,7 +165,7 @@
           <span class:warn={!d.plot}><i>PLOT</i>{d.plot ? d.plot.map(pad2).join(",") : "NONE"}</span>
         </span>
       {/if}
-      <span class="pages"><i class:on={device.stripPage === "format"}></i><i class:on={device.stripPage === "details"}></i></span>
+      <span class="pages">{#each pages as p}<i class:on={stripPage === p}></i>{/each}</span>
     </div>
     {#if device.overlay?.kind === "menu"}
       <div class="overlay" role="menu" aria-label={device.overlay.title}>
@@ -534,32 +525,6 @@
   .dr-virtual {
     color: var(--signal);
   }
-  .trees {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr)); /* sprites mustn't widen the grid */
-    gap: 6px;
-  }
-  .tree {
-    min-width: 0;
-    aspect-ratio: 1;
-    padding: 4px;
-    border-radius: 6px;
-    background: rgba(213, 228, 198, 0.05);
-    border: 1px solid transparent;
-  }
-  .tree img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    image-rendering: pixelated;
-  }
-  .tree.chosen {
-    background: rgba(213, 228, 198, 0.14);
-  }
-  .tree.cur {
-    border-color: var(--signal);
-    box-shadow: 0 0 0 1px var(--signal);
-  }
   .dr-caption {
     font-size: 10.5px;
     font-weight: 700;
@@ -621,6 +586,9 @@
     background: none;
     font-size: 11px;
     padding: 4px 2px;
+  }
+  .pg.gone {
+    visibility: hidden; /* keeps the label where it was */
   }
   .strip-label {
     width: 64px;

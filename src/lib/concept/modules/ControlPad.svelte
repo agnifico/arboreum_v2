@@ -6,7 +6,7 @@
   const keepFocus = (e) => e.preventDefault();
 </script>
 
-<!-- CONTROL PAD: Start, B, A in one straight row -->
+<!-- CONTROL PAD: Start, B, A in one straight row (portrait: B A, Start under) -->
 <section class="mod bone ctl" aria-label="Control pad">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
@@ -24,7 +24,9 @@
       </div>
     </div>
   </div>
-  <span class="etch ctl-label">CTL-01 · ⇄ FORMAT DECK</span>
+  <span class="etch ctl-label">
+    <span class="model">CTL-01 · </span><button class="latch" aria-label="Swap for the Format deck" onmousedown={keepFocus} onclick={() => device.swapControls()}><i>⇄</i>FORMAT DECK</button>
+  </span>
 </section>
 
 <style>
@@ -115,11 +117,13 @@
     bottom: 12px;
     text-align: center;
   }
-  :global(.portrait) .ctl-row { gap: 14px; margin-top: -10px; }
+  /* Portrait: B and A on one row, Start on its own row under them */
+  :global(.portrait) .ctl-row { flex-direction: column-reverse; gap: 10px; margin-top: -14px; }
   :global(.portrait) .start-well { padding: 7px 8px 10px; }
   :global(.portrait) .start { width: 48px; height: 20px; font-size: 7.5px; letter-spacing: 0.1em; }
   /* Wells: bottom padding = top + the key's drop (round 5px, Start 3px) */
-  :global(.portrait) .ab-pad { flex-direction: column-reverse; gap: 10px; padding: 8px 8px 13px; border-radius: 34px; }
+  :global(.portrait) .ab-pad { gap: 12px; padding: 8px 10px 13px; border-radius: 34px; }
   :global(.portrait) .round { width: 44px; height: 44px; font-size: 15px; }
-  :global(.portrait) .ctl-label { font-size: 8.5px; letter-spacing: 0.12em; }
+  :global(.portrait) .ctl-label { font-size: 8.5px; letter-spacing: 0.12em; bottom: 10px; }
+  :global(.portrait) .model { display: none; } /* the label keeps only the latch */
 </style>
