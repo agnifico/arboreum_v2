@@ -549,12 +549,12 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--phosphor-dim);
-    background: rgba(213, 228, 198, 0.05);
-    border-top: 1px solid rgba(213, 228, 198, 0.1);
+    background: rgba(213, 228, 198, 0.025);
+    border-top: 1px solid rgba(213, 228, 198, 0.07);
     overflow: hidden;
   }
   .pg {
-    color: var(--phosphor);
+    color: var(--phosphor-dim);
     background: none;
     font-size: 11px;
     padding: 4px 2px;
@@ -562,7 +562,7 @@
   .strip-label {
     width: 64px;
     text-align: center;
-    color: var(--phosphor);
+    color: var(--phosphor-dim);
   }
   .keys {
     display: flex;
@@ -574,15 +574,14 @@
     mask-image: linear-gradient(90deg, #000 85%, transparent);
   }
   .keys.off {
-    opacity: 0.4;
+    opacity: 0.45;
   }
   .key:disabled {
     cursor: default;
   }
   .key.on {
-    color: #10130f;
-    background: var(--phosphor);
-    border-color: var(--phosphor);
+    color: var(--signal);
+    border-color: rgba(255, 106, 26, 0.45);
   }
   .details {
     display: flex;
@@ -604,15 +603,23 @@
   .details .warn {
     color: #ffb3a1;
   }
+  /* Quiet by default: dim glyphs, a faint outline; active = orange text */
   .key {
     flex-shrink: 0;
     min-width: 24px;
     padding: 2px 6px;
     text-align: center;
-    border: 1px solid rgba(213, 228, 198, 0.18);
+    background: transparent; /* buttons otherwise get the browser's grey */
+    border: 1px solid rgba(213, 228, 198, 0.08);
     border-radius: 3px;
-    color: var(--phosphor);
+    color: var(--phosphor-dim);
     font-weight: 500;
+    cursor: pointer;
+    transition: color 0.1s ease, border-color 0.1s ease;
+  }
+  .key:not(:disabled):hover {
+    color: var(--phosphor);
+    border-color: rgba(213, 228, 198, 0.22);
   }
   .pages {
     margin-left: auto;
