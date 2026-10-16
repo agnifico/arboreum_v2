@@ -14,7 +14,7 @@ If that changes, a migration and a test against v2 data come with it.
 - [x] **E4** No "saved" feedback: Save silently jumps to the reading view.
 - [x] **E5** Editing a note whose tree sits at map x=0 or y=0 saves that coordinate as `null` (`mapX || null`), so the tree loses its place.
 - [x] **E6** The rotating emoji message is a focusable button that does nothing.
-- [ ] **E7** Floating-menu quote button never shows as active (checks `blockQuote` instead of `blockquote`).
+- [x] **E7** Floating-menu quote button checked `blockQuote` instead of `blockquote`. Fixed, but invisible in practice: the floating menu only shows on an empty top-level line, never inside a quote.
 - Verified OK: title and body editing; Bold, Italic, Strike, Underline, Code, Quote, ¶, lists (bullet, ordered, task), heading −/size/+, link, image, highlight, sub, sup, hard break, alignment (4), colours and clear colour, fullscreen.
 
 ## 2. Notes list

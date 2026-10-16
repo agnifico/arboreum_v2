@@ -895,7 +895,7 @@
   <button
     type="button"
     on:click={() => editor.chain().focus().toggleBlockquote().run()}
-    class:active={editor?.isActive("blockQuote")}
+    class:active={editor?.isActive("blockquote")}
     aria-label="Quote"
     title="Quote"
   >
