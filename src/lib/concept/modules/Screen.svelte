@@ -175,7 +175,7 @@
     </div>
     {#if device.overlay?.kind === "menu"}
       <div class="overlay" role="menu" aria-label={device.overlay.title}>
-        <div class="ov-title">{device.overlay.title}</div>
+        <div class="ov-title"><span>{device.overlay.title}</span>{#if device.overlay.hint}<span class="ov-hint">{device.overlay.hint}</span>{/if}</div>
         {#each device.overlay.items as item, i}
           <div class="ov-item" class:sel={i === device.overlay.index} role="menuitem">
             <span class="ov-caret">{i === device.overlay.index ? "▸" : ""}</span>{item.label}
@@ -257,6 +257,15 @@
     letter-spacing: 0.16em;
     color: var(--phosphor-dim);
     border-bottom: 1px solid rgba(213, 228, 198, 0.1);
+  }
+  .ov-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .ov-hint {
+    color: #4f6150;
+    font-weight: 500;
   }
   .ov-item {
     display: flex;

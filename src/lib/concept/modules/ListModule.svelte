@@ -13,7 +13,7 @@
       <span class="list-sort">{device.sortLabel} ▾</span>
     </div>
     <NoteRows />
-    <div class="list-foot"><i class="pip a">A</i>OPEN <i class="pip b">B</i>SORT</div>
+    <div class="list-foot"><i class="pip a">A</i>OPEN <i class="pip b">B</i>NEW</div>
     <div class="glare" aria-hidden="true"></div>
   </div>
   <!-- Physical index tabs: sort the list -->

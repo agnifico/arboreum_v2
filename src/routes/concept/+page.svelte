@@ -17,7 +17,11 @@
     device.hasListModule = view === "landscape";
     device.hasMapViewer = showBay;
   });
-  onMount(() => device.start());
+  onMount(() => {
+    const stop = device.start();
+    device.openMenu(); // the Start menu greets you; B or Ctrl/⌘ K closes it
+    return stop;
+  });
 
   function handleKeydown(event) {
     if (device.handleKey(event)) event.preventDefault();

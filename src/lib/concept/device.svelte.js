@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { normalizeBackup } from "$lib/backup.js";
 import { COLS, ROWS } from "./garden.js";
 import { TREES } from "./trees.js";
+import { WELCOME, WELCOME_ID } from "./welcome.js";
 
 const KEY = "arb-device";
 export const provideDevice = (device) => setContext(KEY, device);
@@ -36,8 +37,8 @@ export function ago(v, now = Date.now()) {
 }
 
 // Keyboard ↔ hardware. Outside the editor every key maps; inside it only Esc
-// (B) and Ctrl/⌘ S (A) do, so typing stays normal. Start is M (for menu);
-// Tab stays free for moving keyboard focus.
+// (B), Ctrl/⌘ S (save) and Ctrl/⌘ K (Start) do, so typing stays normal.
+// Start is Ctrl/⌘ K everywhere; Tab stays free for moving keyboard focus.
 export const KEYMAP = {
   ArrowUp: "up",
   ArrowDown: "down",
@@ -45,8 +46,6 @@ export const KEYMAP = {
   ArrowRight: "right",
   Enter: "a",
   Escape: "b",
-  m: "start",
-  M: "start",
 };
 
 export class Device {
@@ -282,12 +281,37 @@ export class Device {
     const sub = liveQuery(() => db.notes.toArray()).subscribe({
       next: (rows) => {
         this.raw = rows;
+        const first = !this.loaded;
         this.loaded = true;
+        if (first) this.#seedWelcome();
         if (!rows.some((n) => n.noteid === this.selectedId)) this.selectedId = this.notes[0]?.noteid ?? null;
       },
       error: (e) => console.error("Couldn't read notes:", e),
     });
     return () => sub.unsubscribe();
+  }
+
+  /** Add the welcome note once per browser (deleting it doesn't bring it back). */
+  async #seedWelcome() {
+    const FLAG = "arb-1610f-welcome";
+    try {
+      if (localStorage.getItem(FLAG)) return;
+      localStorage.setItem(FLAG, "1");
+    } catch {
+      return; // no storage: don't risk adding it on every visit
+    }
+    if (this.raw.some((n) => n.noteid === WELCOME_ID)) return;
+    // Plant it on a free plot near the middle of the map.
+    this.cursor = { x: 12, y: 7 };
+    this.#toFreePlot();
+    const now = new Date();
+    const note = { ...WELCOME, createdAt: now, updatedAt: now, mapX: this.cursor.x, mapY: this.cursor.y };
+    try {
+      await db.notes.add(note);
+      this.selectedId = WELCOME_ID;
+    } catch (error) {
+      console.error("Couldn't add the welcome note:", error);
+    }
   }
 
   setSort(key) {
@@ -355,7 +379,7 @@ export class Device {
             { label: "SAVE BACKUP", run: () => this.saveBackup() },
             { label: "LOAD BACKUP", run: () => this.loadBackup() },
           ];
-    this.overlay = { kind: "menu", title: "MENU", items, index: 0 };
+    this.overlay = { kind: "menu", title: "MENU", hint: "CTRL/⌘ K", items, index: 0 };
   }
 
   /** A yes/no box; `alt` adds a third choice on Start ({ label, run }). */
@@ -692,7 +716,7 @@ export class Device {
       }
       return true;
     }
-    // Ctrl/⌘ K is Start everywhere, including while typing (M types an "m").
+    // Ctrl/⌘ K is Start everywhere, including while typing.
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       this.press("start");
       return true;

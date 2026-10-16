@@ -56,7 +56,11 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 
 **Leaving a note always saves it:** B, opening another note, or Close note. A brand-new note with nothing in it is simply dropped. Hardware keys don't take keyboard focus when clicked, so typing carries on in the editor.
 
-On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and **M** or **Ctrl/⌘ K** is Start. Tab stays free for moving keyboard focus. Inside the editor only Esc (B), Ctrl/⌘ S (save) and Ctrl/⌘ K (Start) map, so typing stays normal.
+On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and **Ctrl/⌘ K** is Start. Tab stays free for moving keyboard focus. Inside the editor only Esc (B), Ctrl/⌘ S (save) and Ctrl/⌘ K (Start) map, so typing stays normal.
+- Why not Shift: inside a text editor Shift already means capitals and selection.
+- Why not Ctrl/⌘ M: on a Mac ⌘ M minimises the window.
+
+Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the page. The Start menu is open when the page loads.
 
 ## Look
 

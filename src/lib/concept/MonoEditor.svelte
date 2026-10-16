@@ -264,7 +264,12 @@
   .mono :global(sub) { line-height: 0; font-size: 0.75em; }
   .mono :global(blockquote) { color: #a9bb9d; font-style: italic; }
   .mono :global(blockquote p::before) { content: "> "; }
-  .mono :global(pre) { color: #9fd8c4; }
+  .mono :global(pre) { color: #9fd8c4; white-space: pre-wrap; }
+  .mono :global(pre code::before),
+  .mono :global(pre code::after) { content: none; }
+  /* Divider: a line of dashes, one grid row tall */
+  .mono :global(hr) { border: none; height: 26px; margin: 0; position: relative; }
+  .mono :global(hr::before) { content: "---"; color: #4f6150; }
 
   /* Lists: markers drawn as text, two-space indent per level */
   .mono :global(ul),
