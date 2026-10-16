@@ -106,9 +106,51 @@ Each step is small, checked in the browser, and committed on its own.
     - Accessibility and performance.
     - A console sweep, and a regression check of the main app.
 
-## Open decision: the editor engine
+## Editor (decided)
 
-Existing notes are stored as rich-text HTML, from Tiptap.
+The concept keeps the current Tiptap editor, so notes stay rich-text HTML and both the app and the concept edit the same notes. It gets a **monospace skin**: JetBrains Mono, a fixed line height, a line-number gutter and an orange block cursor.
 
-- **Recommended: keep Tiptap and give it a monospace skin.** Each block is one numbered line, and markdown markers (`#`, `**`) show through styling. Notes stay in one format, so the app and the concept edit the same notes safely.
-- **The alternative is a true plain-text code editor (CodeMirror).** It feels more like Sublime, but it needs a new dependency and an HTML ↔ markdown conversion. Converting in both directions risks losing formatting in existing notes.
+**Lists** stay real list nodes; the monospace look only changes how they are drawn:
+- Markers: bullets show as `- `, ordered items as `1. `, tasks as `[ ]` / `[x]` (clickable).
+- Lines: one item is one numbered line. Nesting is a 2-space indent (Tab / Shift+Tab).
+- Shortcuts: typing `- `, `1. ` or `[ ] ` at the start of a line still creates them.
+
+**Carries over unchanged:** bold, italic, underline, strike, text colours, highlight, links, sub/superscript, inline code, quotes. JetBrains Mono's bold and italic keep the same width, so the grid holds.
+
+**Changes in the concept:**
+- **Text size:** headings show as `#` / `##` / `###` with colour and weight instead of bigger type. The size control becomes heading levels 1–3; older H4–H6 show as `###`.
+- **Alignment:** centre, right and justify aren't offered, since they don't fit a code-style grid. Existing aligned text displays left-aligned, and the stored data isn't changed.
+- **Inline images:** replaced by edge images, below.
+- **Line numbers:** one number per block (paragraph, heading, list item). Soft-wrapped lines don't get a new number, as in Sublime.
+
+## Images (decided)
+
+There is one rule: each note chooses **one edge** for all its images. Images never sit inside or wrap around the text.
+
+| Edge | Layout |
+|---|---|
+| **Top** / **Bottom** | Scrapbook: a fluid justified grid. Each row fills the width, so portrait and landscape images sit together without awkward gaps. |
+| **Left** / **Right** | Strip: small thumbnails in a column beside the text. |
+
+How the strip works:
+- **Position:** a thumbnail's position is measured in **lines**, so the line height is the unit. It moves one line at a time along the strip, like a ruler.
+- **Captions:** the text on that line is the caption; putting text beside a thumbnail is how you write next to an image.
+- **Spacing:** thumbnails can't overlap.
+
+Input:
+- **Camera module:** adds an image (file picker; on phones it can open the camera).
+- **Start menu:** choose the edge, remove an image.
+- **Moving images:** the D-pad selects an image and moves it along the strip; A confirms, B cancels.
+
+**Default edge** for a new note: bottom (text first, scrapbook after).
+
+**Storage (proposed):**
+- **Where:** a separate `images` table (note id, image data, width/height, order, line).
+- **Size:** images are downscaled on import so IndexedDB stays small, and they're included in Export/Import.
+- **Migration:** this is a database version bump, so it ships with a migration and a test against data saved by the current version. The note's `imageEdge` is a plain field, with no index.
+- **Main app:** it keeps working, because its saves merge fields and its import keeps unknown fields.
+
+**Open questions:**
+1. When lines are added above a strip image, should it move with its line? (Recommended: yes, so captions stay next to their image.) Or should it keep a fixed line number?
+2. Is the `images` table and version bump OK?
+3. Old notes with inline images: show those images in the note's edge gallery when opened in the concept, and only convert the note if it's saved there. (Recommended.)
