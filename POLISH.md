@@ -39,7 +39,7 @@ If that changes, a migration and a test against v2 data come with it.
 
 ## 4. First run
 
-- [ ] **F1** Home empty state ("Welcome to Arboreum! Create a new note to get started.") doesn't say what Arboreum is.
+- [x] **F1** Home empty state ("Welcome to Arboreum! Create a new note to get started.") doesn't say what Arboreum is.
 - [ ] **F2** About page is one line about the tech stack, and its `100dvw` width plus margins overflows sideways.
 
 ## 5. Mobile (375px)
