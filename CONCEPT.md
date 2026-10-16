@@ -239,6 +239,7 @@ Each step is small, checked in the browser, and committed on its own.
 15. **Fixed dock choices.** Configure lets the user pick from the allowed placements (sides for the list, bay and speaker, and the bottom-row pair).
 16. **Typing posture.** When the on-screen keyboard opens, the lower modules fold into a thin strip; they come back when it closes.
 17. **Portrait behaviour.** Touch input, the list as a full screen, the drawer, thumb reach, and checks on a real phone and an iPad.
+    - Known: in portrait the gutter's line numbers drift about a line from the text on long notes, and the Map viewer's A/B strip squeezes the small map when it shows. The screen already keeps a fixed height and scrolls inside.
 
 **E · The concept page**
 
