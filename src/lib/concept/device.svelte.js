@@ -592,6 +592,11 @@ export class Device {
     } else if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
     this.focus = "map";
   }
+  /** The Map viewer's MOVE / TREE keys: press to enter, press again to leave (as B). */
+  toggleMap(mode) {
+    if (this.focus === "map" && this.mapMode === mode) return this.#mapInput("b");
+    this.enterMap(mode);
+  }
 
 
   moveCursor(dx, dy) {

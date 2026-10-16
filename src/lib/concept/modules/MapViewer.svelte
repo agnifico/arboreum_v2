@@ -68,12 +68,12 @@
   </div>
   <div class="map-btns">
     <div class="mb-wrap mb-move">
-      <button class="map-btn" class:on={focused && !treeMode} aria-label="Move this note's tree on the map" onmousedown={keepFocus} onclick={() => device.enterMap("plot")}>✥</button>
+      <button class="map-btn" class:on={focused && !treeMode} aria-label="Move this note's tree on the map" onmousedown={keepFocus} onclick={() => device.toggleMap("plot")}>✥</button>
       <span class="etch">MOVE</span>
     </div>
     <div class="mb-wrap mb-tree">
       <!-- Shows the note's tree; picks a different one -->
-      <button class="map-btn tree-btn" class:on={treeMode} aria-label="Choose this note's tree" onmousedown={keepFocus} onclick={() => device.enterMap("tree")}>
+      <button class="map-btn tree-btn" class:on={treeMode} aria-label="Choose this note's tree" onmousedown={keepFocus} onclick={() => device.toggleMap("tree")}>
         {#if device.editing && device.draftIcon}<img src={device.draftIcon} alt="" />{:else}?{/if}
       </button>
       <span class="etch">TREE</span>
