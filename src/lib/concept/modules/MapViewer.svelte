@@ -99,9 +99,16 @@
   .map-read.taken {
     color: #ffb3a1;
   }
+  /* Latched while it has the D-pad: a push-on, push-off key that stays down
+     (pressing it again goes all the way, then it pops back up) */
   .map-btn.on {
-    outline: 2px solid var(--signal);
-    outline-offset: 2px;
+    transform: translateY(3px);
+    background: radial-gradient(circle at 40% 30%, #484d4a, #2a2e2c 60%, #1f2221);
+    box-shadow: 0 2px 0 #121413, 0 3px 4px rgba(0, 0, 0, 0.2), inset 0 2px 5px rgba(0, 0, 0, 0.55);
+  }
+  .map-btn.on:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #121413, inset 0 2px 5px rgba(0, 0, 0, 0.55);
   }
   .tree-wrap {
     height: 100%;

@@ -71,7 +71,7 @@ On a computer keyboard: arrow keys are the D-pad, **Enter, Space or the letter A
 
 Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the page. The page opens straight into a note, with no menu.
 
-**The Map viewer's own keys.** MOVE and TREE each hand the D-pad to the Map viewer; pressing the same key again leaves, exactly like B. While the Map viewer has the D-pad, its own screen shows the A/B context and the main screen's strip steps aside. With the Map viewer slotted there is no tree/plot drawer at all. Leaving the editor and coming back (map, menu) puts the caret back where it was.
+**The Map viewer's own keys.** MOVE and TREE each hand the D-pad to the Map viewer; pressing the same key again leaves, exactly like B. While a key has the D-pad it stays latched down (a push-on, push-off key, not an outline), on the Map viewer and on Treemoji alike. While the Map viewer has the D-pad, its own screen shows the A/B context and the main screen's strip steps aside. With the Map viewer slotted there is no tree/plot drawer at all. Leaving the editor and coming back (map, menu) puts the caret back where it was.
 
 ## Look
 
