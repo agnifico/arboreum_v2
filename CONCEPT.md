@@ -112,6 +112,32 @@ That gives four results (fixed landscape, fluid landscape, fixed portrait, fluid
 
 **Default is Fixed:** brain off by default. Fluid and custom docks are opt-in in Configure.
 
+### Layout model v2 (proposed 17 Oct; replaces orientation and Fixed/Fluid)
+
+Agni's proposal, refined in discussion. Confirm the open questions, then fold this into the section above and the build order.
+
+**One setting: the switch threshold** (default **70%**, set in Configure).
+- Two arrangements remain, but the user no longer picks between them:
+  - **Wide:** side docks available (list on the left, bay on the right) and the bottom row below the screen.
+  - **Stacked:** everything below the screen. Side docks fold into rows under the controls; the list becomes a full screen unless the bay holds it.
+- The console is wide while the user's own wide arrangement would show at the threshold or more of its full size; below that, it's stacked. Measured against the user's arrangement, so fewer docks means a narrower console that stays wide in narrower windows. Configure shows the % and the window width it currently means ("70% · switches below ≈1,050px").
+- 0% means always wide (it just zooms smaller); 100% means stacked unless the window fits the full size. The user's call.
+- A small buffer at the line, so it doesn't flicker while resizing.
+- It replaces the Orientation switch, Fixed/Fluid (step 14) and "orientation picked once on load": the arrangement follows the window, continuously.
+
+**Customisation is the main work (step 15).** In wide, the user places modules in the allowed spots: left and right docks, and the bottom-row pair (D-pad + controls, List + something else, or only the screen and a list for a wide-screen desktop). There's no priority order: the console never drops a module, it only zooms. Configure guides better choices with notes rather than forbidding them.
+
+**What the portrait/landscape split really was.** Side docks or not, plus things that follow from less room: each module's compact look, the fit (wide zooms as a whole; stacked spans the width and the screen takes the leftover height), the list going full screen, and the speaker as a thin strip.
+
+**Needed underneath:** each module's look follows the space its own cell gets (CSS container queries), not a global `.portrait` class, so a module looks right wherever it's docked.
+
+**Unchanged:** input (touch, hover, the typing posture) is decided by the device's input, never by the arrangement.
+
+**Open questions:**
+1. **Tablets held upright** (an iPad is about 820px wide, so stacked): stacked zooms to at most 125% and leaves the mat showing at the sides. Should stacked get wider modules there (more room, not bigger keys) so it spans the width?
+2. **Stacked order:** should the order of the rows under the screen be user-settable too (today: controls, then the bay)?
+3. **The threshold's unit:** % of full size (as above), or a pixel width?
+
 ### Placement rules
 
 1. **Core trio:** camera and nameplate on top, the screen below. This never changes.
