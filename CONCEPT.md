@@ -28,7 +28,7 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 - **Mobile:** a portrait stack: camera and nameplate, then the screen, the bay (optional), the D-pad with the control pad, and the speaker (optional). On mobile the list opens full screen instead of as a module.
 - **Control pad:** Start, B and A in one straight row.
 - **Configure button:** the only thing on the page besides the console (no caption).
-  - It switches the orientation (landscape/portrait) and turns the bay, speaker and enclosure on and off.
+  - It switches the orientation (landscape/portrait) and turns the bay, speaker, enclosure and screen glare on and off. Glare is off by default.
   - Landscape: a small pill at the bottom right.
   - Portrait: a gear docked in the console's side column, under the speaker strip.
 - **Portrait arrangement** (formerly "mobile"):
@@ -115,6 +115,11 @@ Drag-and-drop docking is out for now: the rules above cover a small set of modul
 
 - **Map viewer, mobile:** give the screen a custom shape (a clip-path cut-out) with the Move and Plant buttons set into that cut-out, instead of sitting beside a plain rectangle.
 - **Wells rule (applies everywhere):** a recessed well's top padding sets the base, left/right padding is its own value, and the bottom padding equals the top plus the key's drop shadow (round keys 5px, Start 3px).
+
+## Working plan (decided)
+
+- **Desktop first:** finish and tune everything for desktop (mouse, cursor and keyboard all work as you'd expect, alongside the hardware keys) and deploy it.
+- **Mobile later,** in its own session: touch, the portrait arrangement, and the typing posture.
 
 ## Build order
 
