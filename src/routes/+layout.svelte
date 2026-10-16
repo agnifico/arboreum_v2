@@ -232,8 +232,10 @@
   .main-content {
     flex-grow: 1;
     width: 100%;
+    min-width: 0;
     display: flex;
     justify-content: center;
+    overflow-y: auto; /* long notes scroll instead of being cut off */
   }
 
   #topbar {

@@ -39,6 +39,7 @@
 
   .note-header {
     display: flex;
+    gap: 1rem;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--bg-tertiary);
@@ -51,10 +52,17 @@
     font-size: 2rem;
     color: var(--text-bright);
     margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .note-body {
     line-height: 1.7;
+    overflow-wrap: anywhere;
+  }
+
+  .note-body :global(img) {
+    max-width: 100%;
   }
 
   .not-found {
