@@ -27,7 +27,14 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
   - Bottom row: D-pad, then the control pad, then the speaker. They stay visible so the device reads at a glance.
 - **Mobile:** a portrait stack: camera and nameplate, then the screen, the bay (optional), the D-pad with the control pad, and the speaker (optional). On mobile the list opens full screen instead of as a module.
 - **Control pad:** Start, B and A in one straight row.
-- **Configure button:** sits on the page, bottom right, outside the device. It switches desktop/mobile and turns the bay, speaker and enclosure on and off.
+- **Configure button:** the only thing on the page besides the console (no caption).
+  - It switches desktop/mobile and turns the bay, speaker and enclosure on and off.
+  - Desktop: a small pill at the bottom right.
+  - Mobile: a gear docked in the console's side column, under the speaker strip.
+- **Mobile layout:**
+  - The console is shaped to the phone's own screen, and the screen gets every bit of height the other modules don't need.
+  - The map viewer has its own row, with Move and Plant on one side. The D-pad and control pad share a row; A sits above B.
+  - The speaker is a thin full-height strip down the right.
 - **Enclosure:** an optional dark frame behind the modules. It's off by default.
 - **Bay:** for now it holds the Map viewer. Desktop has its two buttons side by side; mobile puts them at opposite corners.
 
@@ -63,6 +70,11 @@ On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and Tab 
 - `src/lib/concept/materials.css`: shared materials (module bodies, screws, etched labels, glass, pips). It's scoped to the `.arb` root with `:where()`, so module styles win and nothing leaks into the main app.
 - `src/lib/concept/Configurator.svelte`: the page-level Configure panel.
 - `src/lib/concept/sample.js`: sample content, used until step 4 connects real notes.
+
+## Fine-tuning backlog (component-by-component pass)
+
+- **Map viewer, mobile:** give the screen a custom shape (a clip-path cut-out) with the Move and Plant buttons set into that cut-out, instead of sitting beside a plain rectangle.
+- **Wells rule (applies everywhere):** a recessed well's top padding sets the base, left/right padding is its own value, and the bottom padding equals the top plus the key's drop shadow (round keys 5px, Start 3px).
 
 ## Build order
 

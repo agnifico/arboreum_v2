@@ -5,6 +5,7 @@
     showBay = $bindable(true),
     showSpeaker = $bindable(true),
     showChassis = $bindable(false),
+    docked = false, // mobile: a gear docked in the console under the speaker
   } = $props();
   let panelOpen = $state(false);
 
@@ -19,7 +20,7 @@
 <svelte:window onkeydown={handleKeydown} onclick={handleWindowClick} />
 
 <!-- Page-level configurator: outside the device, so nothing on it moves -->
-<div class="config">
+<div class="config" class:docked>
   {#if panelOpen}
     <div class="config-panel" role="dialog" aria-label="Configure the device">
       <p class="cfg-h">VIEW</p>
@@ -44,49 +45,75 @@
   {/if}
   <button
     class="config-btn"
+    class:compact={docked}
     aria-expanded={panelOpen}
     aria-label="Configure the device"
+    title="Configure"
     onclick={() => (panelOpen = !panelOpen)}
   >
-    <span class="cfg-dot"></span> CONFIGURE
+    <svg class="gear" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M10.3 2h3.4l.5 2.6c.6.2 1.2.5 1.7.9l2.5-.9 1.7 2.9-2 1.7c.1.6.1 1.3 0 1.9l2 1.7-1.7 2.9-2.5-.9c-.5.4-1.1.7-1.7.9l-.5 2.6h-3.4l-.5-2.6c-.6-.2-1.2-.5-1.7-.9l-2.5.9-1.7-2.9 2-1.7c-.1-.6-.1-1.3 0-1.9l-2-1.7 1.7-2.9 2.5.9c.5-.4 1.1-.7 1.7-.9zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z" />
+    </svg>
+    {#if !docked}<span>CONFIGURE</span>{/if}
   </button>
 </div>
 
 <style>
   .config {
     position: fixed;
-    right: 20px;
-    bottom: 20px;
+    right: 16px;
+    bottom: 14px;
     z-index: 10;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 10px;
   }
+  .config.docked {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    align-items: center;
+  }
+  .docked .config-panel {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 10px);
+  }
   .config-btn {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 11px 16px;
-    border-radius: 10px;
+    gap: 7px;
+    padding: 7px 11px;
+    border-radius: 8px;
     font-family: var(--label);
     font-weight: 700;
-    font-size: 12px;
+    font-size: 10px;
     letter-spacing: 0.14em;
     color: var(--bone-hi);
     background: linear-gradient(180deg, var(--graphite-hi), var(--graphite));
-    box-shadow: 0 4px 0 var(--graphite-side), 0 10px 16px -4px rgba(40, 36, 24, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    box-shadow: 0 3px 0 var(--graphite-side), 0 8px 12px -4px rgba(40, 36, 24, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  .config-btn.compact {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
   }
   .config-btn:active {
-    transform: translateY(3px);
+    transform: translateY(2px);
     box-shadow: 0 1px 0 var(--graphite-side);
   }
-  .cfg-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--signal);
-    box-shadow: 0 0 6px var(--signal);
+  .gear {
+    width: 14px;
+    height: 14px;
+    fill: var(--signal);
+    fill-rule: evenodd;
+  }
+  .compact .gear {
+    width: 18px;
+    height: 18px;
   }
   .config-panel {
     width: 250px;

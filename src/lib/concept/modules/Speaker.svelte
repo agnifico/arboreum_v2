@@ -48,9 +48,18 @@
   .spk-model {
     margin-left: auto;
   }
-  :global(.mobile) .spk { flex-direction: row; align-items: center; padding: 0 22px; }
-  :global(.mobile) .slots { flex: 1; height: 22px; }
-  :global(.mobile) .slots i { width: 6px; }
-  :global(.mobile) .spk-foot { flex-shrink: 0; }
-  :global(.mobile) .spk-model { display: none; }
+  /* Mobile: a thin vertical strip; the grille runs its full height */
+  :global(.mobile) .spk { flex: 1; width: 22px; border-radius: 11px; flex-direction: column; align-items: center; padding: 22px 0 12px; gap: 10px; }
+  :global(.mobile) .spk .screw { display: none; }
+  :global(.mobile) .slots {
+    flex: 1;
+    width: 10px;
+    height: auto;
+    border-radius: 5px;
+    background: repeating-linear-gradient(180deg, #0b0c0b 0 4px, transparent 4px 8px);
+    box-shadow: none;
+  }
+  :global(.mobile) .slots i { display: none; }
+  :global(.mobile) .spk-foot { flex-direction: column; }
+  :global(.mobile) .spk-foot .etch-dark { display: none; }
 </style>

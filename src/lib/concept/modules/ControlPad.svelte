@@ -3,9 +3,9 @@
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="ctl-row">
-    <div class="btn-col">
-      <button class="start" aria-label="Start"></button>
-      <span class="etch">START</span>
+    <!-- Start: its function is on the key, in a well like the A/B pad -->
+    <div class="start-well">
+      <button class="start" aria-label="Start">START</button>
     </div>
     <div class="ab-pad">
       <div class="btn-col">
@@ -38,10 +38,24 @@
     align-items: center;
     gap: 9px;
   }
+  /* Bottom padding = top + the key's 3px drop, so the well looks even */
+  .start-well {
+    padding: 9px 12px 12px;
+    border-radius: 22px;
+    background: color-mix(in oklab, var(--bone), black 9%);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2), 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
   .start {
-    width: 58px;
+    display: block;
+    width: 64px;
     height: 24px;
-    border-radius: 9px;
+    border-radius: 12px;
+    font-family: var(--label);
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: #c9cec9;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5);
     background: linear-gradient(180deg, #4a4e4c, #2c2f2e);
     box-shadow: 0 3px 0 #141615, inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
@@ -89,10 +103,11 @@
     bottom: 12px;
     text-align: center;
   }
-  :global(.mobile) .ctl-row { gap: 12px; margin-top: -8px; }
-  :global(.mobile) .start { width: 42px; height: 15px; }
-  :global(.mobile) .btn-col .etch { font-size: 8.5px; }
-  :global(.mobile) .ab-pad { gap: 12px; padding: 8px 10px; }
-  :global(.mobile) .round { width: 48px; height: 48px; font-size: 16px; }
+  :global(.mobile) .ctl-row { gap: 14px; margin-top: -10px; }
+  :global(.mobile) .start-well { padding: 7px 8px 10px; }
+  :global(.mobile) .start { width: 48px; height: 20px; font-size: 7.5px; letter-spacing: 0.1em; }
+  /* Wells: bottom padding = top + the key's drop (round 5px, Start 3px) */
+  :global(.mobile) .ab-pad { flex-direction: column-reverse; gap: 10px; padding: 8px 8px 13px; border-radius: 34px; }
+  :global(.mobile) .round { width: 44px; height: 44px; font-size: 15px; }
   :global(.mobile) .ctl-label { font-size: 8.5px; letter-spacing: 0.12em; }
 </style>

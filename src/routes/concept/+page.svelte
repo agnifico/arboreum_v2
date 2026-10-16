@@ -24,7 +24,23 @@
   let natH = $state(0);
   let stageW = $state(1440); // the page's own width, so overflow can't inflate it
   let winH = $state(900);
-  let scale = $derived(natW && natH ? Math.min((stageW - 48) / natW, (winH - 140) / natH, 1.2) : 1);
+
+  // Only the console and the Configure button are on the page. On a phone the
+  // console fills the screen; elsewhere it fits with a small margin.
+  let phone = $derived(stageW <= 700);
+  // On mobile the gear docks inside the console, so no bottom band is needed.
+  let pad = $derived(
+    phone ? { x: 8, top: 8, bottom: 8 } : { x: 24, top: 20, bottom: view === "mobile" ? 20 : 64 }
+  );
+  let availW = $derived(stageW - pad.x * 2);
+  let availH = $derived(winH - pad.top - pad.bottom);
+
+  // Mobile is drawn 440 wide; its height follows the phone (or a 9:19.5
+  // phone when previewed on a desktop), and the screen takes what's left.
+  const MOBILE_W = 440;
+  let mobileH = $derived(Math.round(MOBILE_W * (phone ? availH / availW : 19.5 / 9)));
+
+  let scale = $derived(natW && natH ? Math.min(availW / natW, availH / natH, 1.2) : 1);
 
   onMount(() => {
     if (matchMedia("(max-width: 700px)").matches) view = "mobile";
@@ -33,15 +49,20 @@
   // Grid layout per view; the right column only exists if something is in it.
   let grid = $derived.by(() => {
     if (view === "mobile") {
-      const rows = ["92px", "430px", showBay && "236px", "176px", showSpeaker && "64px"].filter(Boolean);
+      // A slim side column down the right of the lower modules holds the
+      // speaker strip with the Configure gear docked under it, so the
+      // top-to-bottom space goes to the screen.
+      const cols = "110px 90px 168px 30px";
+      // Short phones give the lower modules a little less, so the screen keeps its share.
+      const short = mobileH < 860;
+      const rows = ["80px", "1fr", showBay && (short ? "160px" : "190px"), short ? "150px" : "160px"].filter(Boolean);
       const areas = [
-        '"cam plate plate"',
-        '"scr scr scr"',
-        showBay && '"bay bay bay"',
-        '"dpad dpad ctl"',
-        showSpeaker && '"spk spk spk"',
+        '"cam plate plate plate"',
+        '"scr scr scr scr"',
+        showBay && '"bay bay bay side"',
+        '"dpad dpad ctl side"',
       ].filter(Boolean);
-      return `grid-template-columns: 110px 96px 206px; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`;
+      return `width: ${MOBILE_W}px; height: ${mobileH}px; grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`;
     }
     const right = showBay || showSpeaker;
     const cols = ["150px", "110px", "400px", "420px", right && "300px"].filter(Boolean);
@@ -71,12 +92,11 @@
   />
 </svelte:head>
 
-<main class="stage arb" bind:clientWidth={stageW}>
-  <header class="caption">
-    <span class="cap-title">ARBOREUM <span class="code-id">1610F</span></span>
-    <span class="cap-sub">Look test 01 · {view === "desktop" ? "desktop / landscape" : "mobile / portrait"} · static</span>
-  </header>
-
+<main
+  class="stage arb"
+  bind:clientWidth={stageW}
+  style="padding: {pad.top}px {pad.x}px {pad.bottom}px;"
+>
   <div class="fit" style="width:{natW * scale}px; height:{natH * scale}px;">
     <div
       class="device {view}"
@@ -97,11 +117,20 @@
       {#if showBay}<MapViewer />{/if}
       <DPad />
       <ControlPad />
-      {#if showSpeaker}<Speaker slots={view === "mobile" ? 22 : 11} />{/if}
+      {#if view === "mobile"}
+        <div class="side">
+          {#if showSpeaker}<Speaker />{/if}
+          <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis docked />
+        </div>
+      {:else if showSpeaker}
+        <Speaker />
+      {/if}
     </div>
   </div>
 
-  <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis />
+  {#if view === "desktop"}
+    <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis />
+  {/if}
 </main>
 
 <style>
@@ -131,8 +160,7 @@
     --mono: "JetBrains Mono", ui-monospace, monospace;
 
     min-height: 100dvh;
-    box-sizing: border-box;
-    padding: 24px 24px 84px; /* bottom: room for the Configure button */
+    box-sizing: border-box; /* padding set inline: room for the Configure button */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -145,26 +173,6 @@
     font-family: var(--label);
     color: var(--graphite);
     overflow-x: clip;
-  }
-  .caption {
-    align-self: stretch;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 16px;
-    align-items: baseline;
-    letter-spacing: 0.08em;
-  }
-  .cap-title {
-    font-weight: 700;
-    font-size: 15px;
-  }
-  .code-id {
-    font-family: var(--mono);
-  }
-  .cap-sub {
-    font-size: 12px;
-    color: #6d6a62;
-    text-transform: uppercase;
   }
   .fit {
     position: relative;
@@ -188,6 +196,14 @@
       0 12px 0 #0f1110,
       0 12px 0 1px rgba(0, 0, 0, 0.4),
       0 40px 60px -18px rgba(30, 28, 20, 0.55);
+  }
+  .side {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
   }
   .c-tl { top: 9px; left: 9px; }
   .c-tr { top: 9px; right: 9px; }

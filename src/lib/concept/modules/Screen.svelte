@@ -65,6 +65,8 @@
   }
   .glass {
     height: 100%;
+    display: flex;
+    flex-direction: column;
   }
   .status {
     display: flex;
@@ -86,7 +88,12 @@
     opacity: 0.4;
     margin: 0 4px;
   }
+  /* Text stops where the bottom strip (40px) begins */
   .code {
+    flex: 1;
+    min-height: 0;
+    margin-bottom: 40px;
+    overflow: hidden;
     padding: 14px 120px 14px 0;
     font-size: 15px;
     line-height: 26px;
