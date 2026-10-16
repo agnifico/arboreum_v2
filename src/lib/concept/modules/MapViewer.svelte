@@ -25,7 +25,12 @@
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="map-glass">
     <div class="map-grid">
-      <GardenMap cursor={view} plots={device.plots} blink={device.focus === "map"} />
+      <GardenMap
+        cursor={view}
+        plots={device.plots}
+        blink={device.focus === "map"}
+        onpick={device.editing ? (t) => { device.cursor = t; device.focus = "map"; } : null}
+      />
     </div>
     <div class="map-read" class:taken={readout.endsWith("TAKEN")}>{readout}</div>
   </div>

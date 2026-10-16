@@ -6,6 +6,7 @@ import { db } from "$lib/db.js";
 import { v4 as uuidv4 } from "uuid";
 import { normalizeBackup } from "$lib/backup.js";
 import { COLS, ROWS } from "./garden.js";
+import { TREES } from "./trees.js";
 
 const KEY = "arb-device";
 export const provideDevice = (device) => setContext(KEY, device);
@@ -90,6 +91,9 @@ export class Device {
   hasMapViewer = $state(true);
   /** Map cursor, shared by the Map viewer and the drawer's plot picker. */
   cursor = $state({ x: 12, y: 7 });
+  /** The screen's slide-out drawer: which section, and the tree under the D-pad. */
+  drawerSection = $state("tree"); // "tree" | "plot"
+  treeIndex = $state(0);
   /** Formatting under the caret (for lit format keys) and the word count. */
   active = $state({});
   words = $state(0);
@@ -174,6 +178,62 @@ export class Device {
     return [!this.draftIcon && "tree", !this.draftPlot && "plot"].filter(Boolean);
   }
 
+  /** What the drawer stands in for: modules that aren't slotted. The tree
+      always lives here until the Treemoji module exists (build step 11). */
+  get drawerSections() {
+    return ["tree", !this.hasMapViewer && "plot"].filter(Boolean);
+  }
+
+  /** The red "!": tap it to go where the missing thing is handled. */
+  resolveMissing() {
+    const m = this.missing;
+    if (!m.length) return;
+    if (m.includes("plot") && this.hasMapViewer && !m.includes("tree")) return this.enterMap();
+    this.openDrawer(m.find((x) => this.drawerSections.includes(x)) ?? "tree");
+  }
+
+  openDrawer(section = "tree") {
+    if (!this.editing) return;
+    this.drawerSection = this.drawerSections.includes(section) ? section : "tree";
+    const i = TREES.findIndex((t) => t.src === this.draftIcon);
+    this.treeIndex = i < 0 ? 0 : i;
+    if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
+    this.focus = "drawer";
+  }
+
+  closeDrawer() {
+    this.focus = "editor";
+  }
+
+  pickTree(i = this.treeIndex) {
+    this.treeIndex = i;
+    this.draftIcon = TREES[i].src;
+    this.say(TREES[i].name.toUpperCase());
+    // Go on to the plot if it's also missing and handled here; else done.
+    if (!this.draftPlot && this.drawerSections.includes("plot")) this.drawerSection = "plot";
+    else this.closeDrawer();
+  }
+
+  #drawerInput = (button) => {
+    const sections = this.drawerSections;
+    if (button === "b") return this.closeDrawer();
+    if (button === "start" && sections.length > 1) {
+      this.drawerSection = this.drawerSection === "tree" ? "plot" : "tree";
+      return;
+    }
+    if (this.drawerSection === "plot") {
+      const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[button];
+      if (d) this.moveCursor(...d);
+      if (button === "a") this.plant();
+      return;
+    }
+    const COLS_T = 4;
+    const n = TREES.length;
+    const step = { left: -1, right: 1, up: -COLS_T, down: COLS_T }[button];
+    if (step) this.treeIndex = Math.max(0, Math.min(n - 1, this.treeIndex + step));
+    if (button === "a") this.pickTree();
+  };
+
   get sortLabel() {
     return SORTS.find((x) => x.key === this.sort).label;
   }
@@ -206,10 +266,12 @@ export class Device {
     const o = this.overlay;
     if (o?.kind === "menu") return { a: "SELECT", b: "CLOSE", start: "CLOSE" };
     if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—" };
-    if (this.focus === "map") {
+    if (this.focus === "map" || (this.focus === "drawer" && this.drawerSection === "plot")) {
       const at = this.atCursor;
-      return { a: at && !at.mine ? "TAKEN" : "PLANT", b: "BACK", start: "—" };
+      const other = this.focus === "drawer" ? "TREE" : "—";
+      return { a: at && !at.mine ? "TAKEN" : "PLANT", b: this.focus === "drawer" ? "CLOSE" : "BACK", start: other };
     }
+    if (this.focus === "drawer") return { a: "PICK", b: "CLOSE", start: this.drawerSections.length > 1 ? "PLOT" : "—" };
     if (this.focus === "editor") return { a: "SAVE", b: "LIST", start: "MENU" };
     return { a: "OPEN", b: "SORT", start: "MENU" };
   }
@@ -219,6 +281,7 @@ export class Device {
     if (this.overlay?.kind === "menu") return this.#menuInput(button);
     if (this.overlay?.kind === "confirm") return this.#confirmInput(button);
     if (this.focus === "map") return this.#mapInput(button);
+    if (this.focus === "drawer") return this.#drawerInput(button);
     if (this.focus === "editor") return this.#editorInput(button);
     return this.#listInput(button);
   }
@@ -242,6 +305,7 @@ export class Device {
       this.focus === "editor"
         ? [
             { label: "SAVE", run: () => this.save() },
+            { label: this.hasMapViewer ? "CHOOSE TREE" : "TREE & PLOT", run: () => this.openDrawer() },
             { label: "NEW NOTE", run: () => this.newNote() },
             { label: "DELETE NOTE", run: () => this.askDelete() },
             { label: "BACK TO LIST", run: () => this.leave() },
@@ -484,7 +548,7 @@ export class Device {
       words: this.words,
       made: n?.createdAt ? new Date(n.createdAt) : null,
       saved: n?.updatedAt ?? n?.createdAt ?? null,
-      status: !this.editing ? "PREVIEW" : this.dirty ? "UNSAVED" : "SAVED",
+      status: !this.editing ? "PREVIEW" : this.dirty ? "UNSAVED" : this.isNew ? "NEW" : "SAVED",
       tree: this.editing ? this.draftIcon : (n?.icon ?? null),
       plot,
     };
@@ -569,6 +633,11 @@ export class Device {
         this.light("a");
         this.save();
       }
+      return true;
+    }
+    // Ctrl/⌘ K is Start everywhere, including while typing (M types an "m").
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      this.press("start");
       return true;
     }
     if (event.metaKey || event.ctrlKey || event.altKey) return false;

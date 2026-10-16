@@ -11,7 +11,16 @@
     cols = 12,
     rows = 9,
     blink = true,
+    onpick = null, // ({ x, y }) when a tile is tapped
   } = $props();
+
+  function tap(e) {
+    if (!onpick) return;
+    const r = canvas.getBoundingClientRect();
+    const x = Math.floor(((e.clientX - r.left) / r.width) * cols) + cam.x;
+    const y = Math.floor(((e.clientY - r.top) / r.height) * rows) + cam.y;
+    onpick({ x, y });
+  }
 
   let canvas = $state();
   let ready = $state(false);
@@ -92,7 +101,9 @@
   width={cols * T}
   height={rows * T}
   style="aspect-ratio: {cols} / {rows};"
+  class:tappable={!!onpick}
   aria-hidden="true"
+  onclick={tap}
 ></canvas>
 
 <style>
@@ -102,5 +113,8 @@
     height: auto;
     image-rendering: pixelated;
     border-radius: 3px;
+  }
+  .tappable {
+    cursor: crosshair;
   }
 </style>

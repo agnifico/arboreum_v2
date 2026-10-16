@@ -1,7 +1,8 @@
 <script>
   import { onMount } from "svelte";
   import { useDevice, Device, ago } from "../device.svelte.js";
-  import { treeName } from "../trees.js";
+  import { treeName, TREES } from "../trees.js";
+  import GardenMap from "../GardenMap.svelte";
   import NoteRows from "../NoteRows.svelte";
   import MonoEditor from "../MonoEditor.svelte";
   const device = useDevice();
@@ -32,7 +33,12 @@
       device.editorApi?.focus();
     }
   }
-  let { missing, drawerLabel } = $props();
+  // The red "!" and the drawer only concern an open note.
+  let alertText = $derived(device.missing.map((m) => (m === "tree" ? "NO TREE" : "NO PLOT")).join(" · "));
+  let drawerLabel = $derived(device.drawerSections.map((x) => x.toUpperCase()).join(" · "));
+  let drawerWarn = $derived(device.missing.some((m) => device.drawerSections.includes(m)));
+  let drawerOpen = $derived(device.focus === "drawer");
+  const pad2s = (n) => String(n).padStart(2, "0");
 </script>
 
 <!-- SCREEN -->
@@ -50,7 +56,7 @@
           <span>▣ <b>{device.note?.title ?? "—"}</b> <span class="mode">· PREVIEW</span></span>
         {/if}
       {/if}
-      <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}{#if device.dirty}<span class="dot-unsaved">●</span> UNSAVED{:else if device.editing}<span class="dot-saved">●</span> SAVED{/if}{/if}<span class="wide-only"> <span class="sep">│</span> {clock} <span class="sep">│</span> {date}</span></span>
+      <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}{#if device.dirty}<span class="dot-unsaved">●</span> UNSAVED{:else if device.isNew}<span class="dot-new">●</span> NEW{:else if device.editing}<span class="dot-saved">●</span> SAVED{/if}{/if}<span class="wide-only"> <span class="sep">│</span> {clock} <span class="sep">│</span> {date}</span></span>
     </div>
 
     {#if showList}
@@ -61,14 +67,63 @@
       <MonoEditor />
     </div>
 
-    <!-- Missing-module alert + drawer handle (about the open note, so not on the list) -->
-    {#if !showList}
-    <div class="alert">
-      <span class="bang">!</span>
-      <span>{missing}</span>
-      <span class="alert-arrow">▸</span>
-    </div>
-    <div class="drawer-tab" aria-hidden="true">{drawerLabel}</div>
+    <!-- Missing modules: the red "!" says what's missing; the drawer stands in
+         for the modules that aren't slotted, laid out like them -->
+    {#if device.editing && !showList}
+      {#if alertText && !drawerOpen}
+        <button class="alert" onclick={() => device.resolveMissing()} aria-label="Missing: {alertText}">
+          <span class="bang">!</span>
+          <span>{alertText}</span>
+          <span class="alert-arrow">▸</span>
+        </button>
+      {/if}
+      <button
+        class="drawer-tab"
+        class:warn={drawerWarn}
+        class:open={drawerOpen}
+        aria-expanded={drawerOpen}
+        onclick={() => (drawerOpen ? device.closeDrawer() : device.openDrawer())}
+      >{drawerLabel}</button>
+      {#if drawerOpen}
+        <div class="drawer" role="dialog" aria-label="{drawerLabel} (virtual module)">
+          {#if device.drawerSections.length > 1}
+            <div class="dr-tabs">
+              {#each device.drawerSections as sec}
+                <button class:on={device.drawerSection === sec} onclick={() => (device.drawerSection = sec)}>{sec.toUpperCase()}</button>
+              {/each}
+            </div>
+          {/if}
+          {#if device.drawerSection === "tree"}
+            <div class="dr-module">
+              <div class="dr-head"><span>TRM-01</span><span class="dr-virtual">VIRTUAL</span></div>
+              <div class="trees" role="radiogroup" aria-label="Trees">
+                {#each TREES as t, i}
+                  <button
+                    class="tree"
+                    class:cur={i === device.treeIndex}
+                    class:chosen={t.src === device.draftIcon}
+                    role="radio"
+                    aria-checked={t.src === device.draftIcon}
+                    aria-label={t.name}
+                    onclick={() => device.pickTree(i)}
+                  ><img src={t.src} alt="" /></button>
+                {/each}
+              </div>
+              <div class="dr-caption">{TREES[device.treeIndex].name.toUpperCase()}</div>
+            </div>
+          {:else}
+            {@const at = device.atCursor}
+            <div class="dr-module">
+              <div class="dr-head"><span>MAP-01</span><span class="dr-virtual">VIRTUAL</span></div>
+              <GardenMap cursor={device.cursor} plots={device.plots} rows={7} onpick={(t) => (device.cursor = t)} />
+              <div class="dr-caption" class:taken={at && !at.mine}>
+                PLOT {pad2s(device.cursor.x)},{pad2s(device.cursor.y)} · {!at ? "FREE" : at.mine ? "YOURS" : "TAKEN"}
+              </div>
+              <button class="dr-plant" onclick={() => device.plant()}>✎ PLANT HERE</button>
+            </div>
+          {/if}
+        </div>
+      {/if}
     {/if}
 
     <!-- A/B context: overlaid, always visible -->
@@ -261,6 +316,9 @@
   .title-in::placeholder {
     color: var(--phosphor-dim);
   }
+  .dot-new {
+    color: var(--phosphor-dim);
+  }
   .dot-saved {
     color: #6fae5a;
   }
@@ -319,6 +377,11 @@
     box-shadow: 0 0 10px rgba(229, 50, 59, 0.6);
     animation: pulse 1.6s ease-in-out infinite;
   }
+  .alert {
+    font-family: inherit;
+    cursor: pointer;
+    z-index: 2;
+  }
   .alert-arrow {
     color: var(--alert);
   }
@@ -327,14 +390,131 @@
     right: 0;
     top: 50%;
     transform: translateY(-50%);
+    z-index: 3;
     writing-mode: vertical-rl;
     padding: 12px 4px;
+    font-family: inherit;
     font-size: 9px;
     letter-spacing: 0.2em;
+    color: var(--phosphor);
+    background: rgba(213, 228, 198, 0.1);
+    border-left: 1px solid rgba(213, 228, 198, 0.3);
+    border-radius: 4px 0 0 4px;
+    cursor: pointer;
+  }
+  .drawer-tab.warn {
     color: #ffd9d9;
     background: rgba(229, 50, 59, 0.25);
-    border-left: 1px solid rgba(229, 50, 59, 0.6);
-    border-radius: 4px 0 0 4px;
+    border-left-color: rgba(229, 50, 59, 0.6);
+  }
+  .drawer-tab.open {
+    right: min(44%, 300px);
+  }
+  /* The drawer: a virtual stand-in for an unslotted module */
+  .drawer {
+    position: absolute;
+    top: 38px;
+    right: 0;
+    bottom: 40px;
+    z-index: 2;
+    width: min(44%, 300px);
+    box-sizing: border-box;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #0a0f0c;
+    border-left: 1px solid rgba(213, 228, 198, 0.22);
+    box-shadow: -14px 0 24px rgba(0, 0, 0, 0.5);
+    animation: slide-in 0.16s ease-out;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  @keyframes slide-in {
+    from { transform: translateX(30px); opacity: 0; }
+  }
+  .dr-tabs {
+    display: flex;
+    gap: 6px;
+  }
+  .dr-tabs button,
+  .dr-plant {
+    flex: 1;
+    padding: 5px 0;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--phosphor-dim);
+    border: 1px solid rgba(213, 228, 198, 0.18);
+    border-radius: 4px;
+    background: none;
+  }
+  .dr-tabs button.on {
+    color: #10130f;
+    background: var(--phosphor);
+  }
+  /* Laid out like the real module: a bordered panel with its model number */
+  .dr-module {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px dashed rgba(213, 228, 198, 0.3);
+    border-radius: 8px;
+  }
+  .dr-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--phosphor-dim);
+  }
+  .dr-virtual {
+    color: var(--signal);
+  }
+  .trees {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)); /* sprites mustn't widen the grid */
+    gap: 6px;
+  }
+  .tree {
+    min-width: 0;
+    aspect-ratio: 1;
+    padding: 4px;
+    border-radius: 6px;
+    background: rgba(213, 228, 198, 0.05);
+    border: 1px solid transparent;
+  }
+  .tree img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+  .tree.chosen {
+    background: rgba(213, 228, 198, 0.14);
+  }
+  .tree.cur {
+    border-color: var(--signal);
+    box-shadow: 0 0 0 1px var(--signal);
+  }
+  .dr-caption {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--phosphor);
+    text-align: center;
+  }
+  .dr-caption.taken {
+    color: #ffb3a1;
+  }
+  .dr-plant {
+    flex: none;
+    color: #fff3ea;
+    background: var(--signal);
+    border-color: var(--signal);
   }
   .ab {
     position: absolute;
@@ -450,6 +630,8 @@
     background: var(--phosphor);
   }
   :global(.portrait) .screen { padding: 22px 18px 26px; }
+  :global(.portrait) .drawer { width: 74%; }
+  :global(.portrait) .drawer-tab.open { right: 74%; }
   :global(.portrait) .status { padding: 9px 12px; font-size: 11px; }
   :global(.portrait) .wide-only { display: none; }
   :global(.portrait) .code { padding: 10px 14px 10px 0; font-size: 13px; line-height: 22px; }

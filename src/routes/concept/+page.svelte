@@ -89,9 +89,6 @@
     return `grid-template-columns: ${cols.join(" ")}; grid-template-rows: 112px 440px 182px; grid-template-areas: ${areas.join(" ")};`;
   });
 
-  // Without the Map viewer there's no plot either; the screen says what's missing.
-  let missing = $derived(showBay ? "NO TREE" : "NO TREE · NO PLOT");
-  let drawerLabel = $derived(showBay ? "TREE" : "TREE · PLOT");
 </script>
 
 <svelte:window
@@ -132,7 +129,7 @@
       <Camera />
       <Nameplate />
       {#if view === "landscape"}<ListModule />{/if}
-      <Screen {missing} {drawerLabel} />
+      <Screen />
       {#if showBay}<MapViewer />{/if}
       <DPad />
       <ControlPad />

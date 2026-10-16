@@ -53,7 +53,7 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 | Map viewer | cursor | plant here | cancel | — |
 | Confirm | — | yes | no | — |
 
-On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and **M** is Start. Tab stays free for moving keyboard focus. Inside the editor only Esc (B) and Ctrl/⌘ S (A) map, so typing stays normal.
+On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and **M** or **Ctrl/⌘ K** is Start. Tab stays free for moving keyboard focus. Inside the editor only Esc (B), Ctrl/⌘ S (save) and Ctrl/⌘ K (Start) map, so typing stays normal.
 
 ## Look
 
@@ -140,7 +140,7 @@ Each step is small, checked in the browser, and committed on its own.
 
 **C · Modules that know about each other**
 
-9. **Missing modules.** What's slotted decides the red **!** and the right-hand drawer (tree or plot picker), laid out like the missing module.
+9. ✅ **Missing modules.** What's slotted decides the red **!** and the right-hand drawer (tree or plot picker), laid out like the missing module.
 10. ✅ **Map viewer.** Real note positions, a cursor, and Move/Plant, using the same map data as the app.
 11. **Treemoji and bay swapping.**
     - Treemoji: the tree picker plus the emoji buddy.
