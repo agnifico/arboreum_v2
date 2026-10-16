@@ -50,7 +50,7 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 
 - **A/B context strip:** overlaid at the bottom right and always visible. It says what A and B do right now.
 - **Secondary strip:** along the bottom, paged with ◀ ▶. One page holds formatting keys; the other holds details (words, date, status, tree, plot).
-- **Missing module:** the context strip shows a red **!** pointing to the missing step, such as choosing a tree or a plot. A drawer then slides out from the right of the screen, laid out like the missing module.
+- **Missing module:** a red **!** sits on whatever resolves the missing step (a tree or a plot). For a job the drawer stands in for, it's on the drawer's handle; for a job a slotted module does, an alert chip points at the bay ("! NO TREE ▸"). Both sit in the screen's status line, so nothing covers the text. The drawer slides out from the right, under its handle, laid out like the missing module.
 
 ## Inputs
 
@@ -197,7 +197,7 @@ One pass over menus, context, focus and highlight across the whole device: list,
 ## Fine-tuning backlog (component-by-component pass)
 
 - **Map viewer, mobile:** give the screen a custom shape (a clip-path cut-out) with the Move and Plant buttons set into that cut-out, instead of sitting beside a plain rectangle.
-- **Drawer tab:** opaque, with a firmer edge and a shadow, so it stays findable over long text. *Done.*
+- **Drawer tab:** now a chip at the right of the status line (tree sprite, PLOT, the red ! when its job is missing), not a tab over the text. *Done.*
 - **Wells rule (applies everywhere):** a recessed well's top padding sets the base, left/right padding is its own value, and the bottom padding equals the top plus the key's drop shadow (round keys 5px, Start 3px).
 
 ## Working plan (decided)

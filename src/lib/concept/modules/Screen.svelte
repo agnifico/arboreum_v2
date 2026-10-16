@@ -37,7 +37,9 @@
     }
   }
   // The red "!" and the drawer only concern an open note.
-  let alertText = $derived(device.missing.map((m) => (m === "tree" ? "NO TREE" : "NO PLOT")).join(" · "));
+  // The alert covers only what a slotted module resolves; the drawer's handle
+  // carries the "!" for its own jobs.
+  let alertText = $derived(device.missing.filter((m) => !device.drawerSections.includes(m)).map((m) => (m === "tree" ? "NO TREE" : "NO PLOT")).join(" · "));
   let drawerLabel = $derived(device.drawerSections.map((x) => x.toUpperCase()).join(" · "));
   let drawerWarn = $derived(device.missing.some((m) => device.drawerSections.includes(m)));
   let drawerOpen = $derived(device.focus === "drawer");
@@ -59,7 +61,40 @@
           <span>▣ <b>{device.note?.title ?? "—"}</b> <span class="mode">· PREVIEW</span></span>
         {/if}
       {/if}
-      <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}{#if device.dirty}<span class="dot-unsaved">●</span> UNSAVED{:else if device.isNew}<span class="dot-new">●</span> NEW{:else if device.editing}<span class="dot-saved">●</span> SAVED{/if}{/if}<span class="wide-only"> <span class="sep">│</span> {clock} <span class="sep">│</span> {date}</span></span>
+      <div class="status-end">
+        <!-- Missing modules: the red "!" sits on whatever resolves it. The
+             drawer's handle carries it for the jobs the drawer stands in for
+             (laid out like the missing module); this alert points at the bay
+             for the jobs a slotted module does. -->
+        {#if device.editing && !showList}
+          {#if alertText && !drawerOpen}
+            <button class="alert" onclick={() => device.resolveMissing()} aria-label="Missing: {alertText}">
+              <span class="bang">!</span>
+              <span class="alert-text">{alertText}</span>
+              <span class="alert-arrow">▸</span>
+            </button>
+          {/if}
+          {#if device.drawerSections.length}
+            <button
+              class="drawer-tab"
+              class:warn={drawerWarn}
+              class:open={drawerOpen}
+              aria-expanded={drawerOpen}
+              aria-label="{drawerLabel}{device.drawerSections.includes('tree') ? `: ${device.draftIcon ? treeName(device.draftIcon) : 'no tree yet'}` : ''}{drawerWarn ? ' (missing)' : ''}"
+              onclick={() => (drawerOpen ? device.closeDrawer() : device.openDrawer())}
+            >
+              {#if drawerWarn}<span class="bang">!</span>{/if}
+              {#each device.drawerSections as sec}
+                {#if sec === "tree"}
+                  {#if device.draftIcon}<img class="tab-tree" src={device.draftIcon} alt="" />{:else}<span class="tab-none">?</span>{/if}
+                {:else}<span class="tab-text">{sec.toUpperCase()}</span>{/if}
+              {/each}
+              <span class="tab-arrow">{drawerOpen ? "▸" : "◂"}</span>
+            </button>
+          {/if}
+        {/if}
+        <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}{#if device.dirty}<span class="dot-unsaved">●</span> UNSAVED{:else if device.isNew}<span class="dot-new">●</span> NEW{:else if device.editing}<span class="dot-saved">●</span> SAVED{/if}{/if}<span class="wide-only"> <span class="sep">│</span> {clock} <span class="sep">│</span> {date}</span></span>
+      </div>
     </div>
 
     {#if showList}
@@ -70,32 +105,9 @@
       <MonoEditor />
     </div>
 
-    <!-- Missing modules: the red "!" says what's missing; the drawer stands in
-         for the modules that aren't slotted, laid out like them -->
+    <!-- The drawer stands in for the modules that aren't slotted, laid out
+         like them; it slides out from the right, under its handle -->
     {#if device.editing && !showList}
-      {#if alertText && !drawerOpen}
-        <button class="alert" onclick={() => device.resolveMissing()} aria-label="Missing: {alertText}">
-          <span class="bang">!</span>
-          <span>{alertText}</span>
-          <span class="alert-arrow">▸</span>
-        </button>
-      {/if}
-      {#if device.drawerSections.length}
-      <button
-        class="drawer-tab"
-        class:warn={drawerWarn}
-        class:open={drawerOpen}
-        aria-expanded={drawerOpen}
-        aria-label="{drawerLabel}: {device.draftIcon ? treeName(device.draftIcon) : 'no tree yet'}"
-        onclick={() => (drawerOpen ? device.closeDrawer() : device.openDrawer())}
-      >
-        {#each device.drawerSections as sec}
-          {#if sec === "tree"}
-            {#if device.draftIcon}<img class="tab-tree" src={device.draftIcon} alt="" />{:else}<span class="tab-none">?</span>{/if}
-          {:else}<span class="tab-text">{sec.toUpperCase()}</span>{/if}
-        {/each}
-      </button>
-      {/if}
       {#if drawerOpen}
         <div class="drawer" role="dialog" aria-label="{drawerLabel} (virtual module)">
           {#if device.drawerSections.length > 1}
@@ -210,12 +222,21 @@
   }
   .status {
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: 10px;
     padding: 10px 18px;
     font-size: 12px;
     letter-spacing: 0.04em;
     color: var(--phosphor-dim);
     border-bottom: 1px solid rgba(213, 228, 198, 0.08);
+  }
+  .status-end {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    white-space: nowrap;
   }
   .status b {
     font-size: 14px;
@@ -369,15 +390,14 @@
     font-size: 15px;
     line-height: 26px;
   }
+  /* Chips in the status line: kept short so the bar doesn't grow */
   .alert {
-    position: absolute;
-    right: 18px;
-    top: 52px;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 5px 10px 5px 5px;
-    font-size: 11px;
+    margin: -4px 0;
+    padding: 2px 8px 2px 2px;
+    font-size: 10.5px;
     font-weight: 700;
     letter-spacing: 0.08em;
     color: #ffd9d9;
@@ -388,62 +408,53 @@
   .bang {
     display: inline-grid;
     place-items: center;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     border-radius: 3px;
     background: var(--alert);
     color: #fff;
     font-family: var(--label);
     font-weight: 700;
-    font-size: 13px;
+    font-size: 12px;
     box-shadow: 0 0 10px rgba(229, 50, 59, 0.6);
     animation: pulse 1.6s ease-in-out infinite;
   }
   .alert {
     font-family: inherit;
     cursor: pointer;
-    z-index: 2;
   }
   .alert-arrow {
     color: var(--alert);
   }
-  .drawer-tab {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 3;
-    writing-mode: vertical-rl;
-    padding: 12px 4px;
-    font-family: inherit;
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    color: var(--phosphor);
-    background: #223026; /* opaque: it has to stay findable over long text */
-    border: 1px solid rgba(213, 228, 198, 0.45);
-    border-right: none;
-    border-radius: 4px 0 0 4px;
-    box-shadow: -4px 0 10px rgba(0, 0, 0, 0.5);
-    cursor: pointer;
-  }
+  /* The drawer's handle: a chip at the right of the status line, over the
+     edge the drawer slides out from */
   .drawer-tab {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    writing-mode: horizontal-tb; /* only the words run vertically */
+    gap: 6px;
+    margin: -4px 0;
+    padding: 2px 6px;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--phosphor);
+    background: #223026;
+    border: 1px solid rgba(213, 228, 198, 0.45);
+    border-radius: 4px;
+    cursor: pointer;
   }
-  .tab-text {
-    writing-mode: vertical-rl;
+  .tab-arrow {
+    font-size: 9px;
+    color: var(--phosphor-dim);
   }
   .tab-tree {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     object-fit: contain;
     image-rendering: pixelated;
   }
   .tab-none {
-    writing-mode: horizontal-tb;
     font-size: 12px;
     font-weight: 700;
   }
@@ -461,7 +472,12 @@
     border-color: rgba(229, 50, 59, 0.75);
   }
   .drawer-tab.open {
-    right: min(44%, 300px);
+    color: #10130f;
+    background: var(--phosphor);
+    border-color: var(--phosphor);
+  }
+  .drawer-tab.open .tab-arrow {
+    color: inherit;
   }
   /* The drawer: a virtual stand-in for an unslotted module */
   .drawer {
@@ -671,12 +687,12 @@
   }
   :global(.portrait) .screen { padding: 22px 18px 26px; }
   :global(.portrait) .drawer { width: 74%; }
-  :global(.portrait) .drawer-tab.open { right: 74%; }
   :global(.portrait) .status { padding: 9px 12px; font-size: 11px; }
   :global(.portrait) .wide-only { display: none; }
   :global(.portrait) .code { padding: 10px 14px 10px 0; font-size: 13px; line-height: 22px; }
-  :global(.portrait) .alert { top: 44px; right: 10px; padding: 4px 8px 4px 4px; font-size: 10px; }
-  :global(.portrait) .bang { width: 16px; height: 16px; font-size: 11px; }
+  :global(.portrait) .status-end { gap: 6px; }
+  :global(.portrait) .alert-text { display: none; } /* the "!" and its arrow say enough; the name is in its label */
+  :global(.portrait) .alert { padding-right: 6px; }
   :global(.portrait) .ab { right: 10px; bottom: 50px; gap: 10px; padding: 6px 9px; font-size: 10px; }
   :global(.portrait) .strip { padding: 0 10px; gap: 6px; font-size: 10px; }
   :global(.portrait) .strip-label { width: 50px; }
