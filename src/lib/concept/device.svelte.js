@@ -8,6 +8,7 @@ import { normalizeBackup } from "$lib/backup.js";
 import { COLS, ROWS } from "./garden.js";
 import { TREES } from "./trees.js";
 import { WELCOME, WELCOME_ID } from "./welcome.js";
+import * as media from "./media.js";
 
 const KEY = "arb-device";
 export const provideDevice = (device) => setContext(KEY, device);
@@ -60,8 +61,8 @@ export class Device {
   /** Keys currently lit, so keyboard presses show on the hardware too. */
   lit = $state(Object.fromEntries(BUTTONS.map((b) => [b, false])));
   /** Which part of the device has the D-pad: "list", "editor", "bay" (the
-      module in the bay: Map viewer or Treemoji) or "drawer" (the screen's
-      slide-out). */
+      module in the bay: Map viewer or Treemoji), "drawer" (the screen's
+      slide-out) or "image" (arranging the note's images). */
   focus = $state("list");
   /** Notes as stored (the app's IndexedDB), kept live. */
   raw = $state.raw([]);
@@ -127,6 +128,20 @@ export class Device {
   swapControls() {
     this.controls = this.controls === "pad" ? "deck" : "pad";
   }
+
+  // --- Images (the Camera) ---
+  /** The shown note's images: its layout ({ edge, images }) and a URL each. */
+  media = $state(media.emptyLayout());
+  mediaUrls = $state({});
+  #mediaKey = null; // whose images are loaded
+  /** The image under the D-pad (focus "image"), and the layout B goes back to. */
+  imageSel = $state(null);
+  #imageBefore = null;
+  /** The Camera's LED: on while an image is coming in. */
+  camBusy = $state(false);
+  /** Set by the editor: the line (block) the caret is on, and how many there are. */
+  caretLine = 1;
+  lineCount = 1;
 
   #timers = {};
   #msgTimer;
@@ -394,6 +409,7 @@ export class Device {
     const o = this.overlay;
     if (o?.kind === "menu") return { a: "SELECT", b: "CLOSE", start: "CLOSE" };
     if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—" };
+    if (this.focus === "image") return { a: "DONE", b: "CANCEL", start: "REMOVE" };
     if (this.focus === "bay" && this.bayMode === "tree") return { a: "PICK", b: "BACK", start: "—" };
     if (this.focus === "bay" || (this.focus === "drawer" && this.drawerSection === "plot")) {
       const at = this.atCursor;
@@ -410,6 +426,7 @@ export class Device {
     if (this.overlay?.kind === "menu") return this.#menuInput(button);
     if (this.overlay?.kind === "confirm") return this.#confirmInput(button);
     if (this.focus === "bay") return this.#bayInput(button);
+    if (this.focus === "image") return this.#imageInput(button);
     if (this.focus === "drawer") return this.#drawerInput(button);
     if (this.focus === "editor") return this.#editorInput(button);
     return this.#listInput(button);
@@ -438,6 +455,9 @@ export class Device {
       !e && has && { label: "OPEN NOTE", run: () => this.open() },
       { label: "NEW NOTE", run: () => this.newNote() },
       e && { label: "CHOOSE TREE", run: () => this.chooseTree() },
+      e && { label: "ADD IMAGE", run: () => this.pickImages() },
+      e && this.media.images.length && { label: () => `IMAGE EDGE ◂ ${this.media.edge.toUpperCase()} ▸`, run: () => this.cycleEdge(), cycle: (d) => this.cycleEdge(d) },
+      e && this.media.images.length && { label: "ARRANGE IMAGES", run: () => this.arrangeImages() },
       // Left/right rotate the sort without closing the menu.
       { label: () => `SORT ◂ ${this.sortLabel} ▸`, run: () => this.cycleSort(), cycle: (d) => this.cycleSort(d) },
       (e || has) && { label: "DELETE NOTE", run: () => this.askDelete() },
@@ -505,6 +525,7 @@ export class Device {
       return this.say("COULDN'T DELETE", 3000);
     }
     this.raw = this.raw.filter((n) => n.noteid !== stored.noteid);
+    media.dropNote(stored.noteid); // its images go with it
     // Only leave the editor if the deleted note is the one that's open.
     if (this.editingId === stored.noteid) {
       this.isNew = false;
@@ -697,6 +718,162 @@ export class Device {
   };
 
 
+  // --- Images: the Camera adds them; one edge per note -----------------
+  /** Load the images for the note on screen (the editor calls this). */
+  async showMedia(key) {
+    if (key === this.#mediaKey) return;
+    // A new note's first save gives it a real id: still the same note.
+    if (this.#mediaKey === "new" && key === this.editingId) return void (this.#mediaKey = key);
+    this.#mediaKey = key;
+    const { layout, urls } = await media.load(key === "new" || key === "none" ? null : key);
+    if (this.#mediaKey !== key) return media.revoke(urls); // moved on meanwhile
+    const old = this.mediaUrls;
+    this.media = layout;
+    this.mediaUrls = urls;
+    media.revoke(old);
+  }
+
+  /** The Camera (or Start → Add image): choose images, then add them. */
+  pickImages() {
+    if (!media.supported()) return this.say("NO IMAGE STORAGE IN THIS BROWSER", 3000);
+    const input = Object.assign(document.createElement("input"), { type: "file", accept: "image/*", multiple: true });
+    input.onchange = () => input.files?.length && this.addImages([...input.files]);
+    input.click();
+  }
+
+  /** Store images with the open note (opening or starting one if needed);
+      each lands beside the caret's line. */
+  async addImages(files) {
+    if (!this.editing) {
+      if (this.note) this.open();
+      else await this.newNote();
+    }
+    // Images live in the note's folder, so a brand-new note is saved first.
+    if (this.isNew && !(await this.save({ quiet: true }))) return;
+    const id = this.editingId;
+    await this.showMedia(id);
+    this.camBusy = true;
+    let added = 0;
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) continue;
+      try {
+        const { entry, url } = await media.add(id, file, this.caretLine);
+        if (this.#mediaKey !== id) break; // the note changed underneath
+        this.media.images.push(entry);
+        this.mediaUrls = { ...this.mediaUrls, [entry.id]: url };
+        added++;
+      } catch (error) {
+        console.error("Couldn't add the image:", error);
+      }
+    }
+    this.camBusy = false;
+    if (!added) return this.say("COULDN'T ADD THE IMAGE", 3000);
+    await this.#saveMedia();
+    this.say(added > 1 ? `${added} IMAGES ADDED` : "IMAGE ADDED");
+  }
+
+  async #saveMedia() {
+    const id = this.#mediaKey;
+    if (!id || id === "new" || id === "none") return;
+    try {
+      await media.saveLayout(id, $state.snapshot(this.media));
+    } catch (error) {
+      console.error("Couldn't save the image layout:", error);
+      this.say("COULDN'T SAVE THE IMAGES", 3000);
+    }
+  }
+
+  cycleEdge(step = 1) {
+    const i = media.EDGES.indexOf(this.media.edge);
+    this.media.edge = media.EDGES[(i + step + media.EDGES.length) % media.EDGES.length];
+    this.#saveMedia();
+  }
+
+  get stripEdge() {
+    return this.media.edge === "left" || this.media.edge === "right";
+  }
+
+  /** Hand the D-pad to an image (a tap on it does this too). */
+  selectImage(id) {
+    if (!this.editing || !this.media.images.some((x) => x.id === id)) return;
+    if (this.focus !== "image") this.#imageBefore = $state.snapshot(this.media);
+    this.imageSel = id;
+    this.focus = "image";
+  }
+  arrangeImages() {
+    const first = this.media.images[0];
+    if (!first) return this.say("NO IMAGES · PRESS THE CAMERA");
+    this.selectImage(first.id);
+  }
+  /** Strip: move an image to a line (one line is the unit). */
+  setImageLine(id, line) {
+    const img = this.media.images.find((x) => x.id === id);
+    if (img) img.line = Math.max(1, Math.min(this.lineCount, line));
+  }
+  /** Scrapbook: move an image to a place in the order. */
+  setImageIndex(id, to) {
+    const imgs = this.media.images;
+    const from = imgs.findIndex((x) => x.id === id);
+    if (from < 0) return;
+    const [img] = imgs.splice(from, 1);
+    imgs.splice(Math.max(0, Math.min(imgs.length, to)), 0, img);
+  }
+  /** A: keep where the images are now. */
+  placeImages() {
+    if (this.focus !== "image") return;
+    this.#saveMedia();
+    this.focus = "editor";
+    this.say("IMAGES PLACED");
+  }
+
+  askRemoveImage(id = this.imageSel) {
+    const img = this.media.images.find((x) => x.id === id);
+    if (!img) return;
+    this.confirm({
+      title: "REMOVE IMAGE?",
+      text: "It will be gone from this note. This can't be undone.",
+      yes: "REMOVE",
+      no: "KEEP",
+      onYes: async () => {
+        const i = this.media.images.indexOf(img);
+        this.media.images.splice(i, 1);
+        if (this.#imageBefore) this.#imageBefore.images = this.#imageBefore.images.filter((x) => x.id !== id);
+        URL.revokeObjectURL(this.mediaUrls[id]);
+        await media.removeFile(this.#mediaKey, img);
+        await this.#saveMedia();
+        const next = this.media.images[Math.min(i, this.media.images.length - 1)];
+        if (next) this.imageSel = next.id;
+        else this.focus = "editor";
+        this.say("IMAGE REMOVED");
+      },
+    });
+  }
+
+  #imageInput = (button) => {
+    const imgs = this.media.images;
+    const i = imgs.findIndex((x) => x.id === this.imageSel);
+    if (i < 0) return void (this.focus = "editor");
+    // Along the edge moves the image; across it picks another.
+    const strip = this.stripEdge;
+    const move = (strip ? { up: -1, down: 1 } : { left: -1, right: 1 })[button];
+    const pick = (strip ? { left: -1, right: 1 } : { up: -1, down: 1 })[button];
+    if (move && strip) this.setImageLine(this.imageSel, imgs[i].line + move);
+    if (move && !strip) this.setImageIndex(this.imageSel, i + move);
+    if (pick) this.imageSel = imgs[(i + pick + imgs.length) % imgs.length].id;
+    if (button === "a") this.placeImages();
+    if (button === "b") {
+      this.media = this.#imageBefore ?? this.media;
+      this.focus = "editor";
+    }
+    if (button === "start") this.askRemoveImage();
+  };
+
+  /** Back to writing from whatever had the D-pad (a click in the text). */
+  backToText() {
+    if (this.focus === "image") return this.placeImages();
+    if (this.focus === "bay" || this.focus === "drawer") this.focus = "editor";
+  }
+
   // --- Formatting (bottom strip, later the Format deck) ----------------
   static FORMATS = [
     { key: "bold", label: "B", run: (c) => c.toggleBold() },
@@ -840,6 +1017,11 @@ export class Device {
       return true;
     }
     if (event.metaKey || event.ctrlKey || event.altKey) return false;
+    // Arranging images: Delete / Backspace removes the one under the D-pad.
+    if ((event.key === "Delete" || event.key === "Backspace") && this.focus === "image" && !this.overlay && !typing) {
+      this.press("start");
+      return true;
+    }
     const button = KEYMAP[event.key];
     if (!button) return false;
     // While typing, only Esc leaves the field; everything else is text editing.

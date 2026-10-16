@@ -1,10 +1,17 @@
-<!-- CAMERA: doubles as the media button -->
+<script>
+  import { useDevice } from "../device.svelte.js";
+  const device = useDevice();
+  // Hardware keys don't take keyboard focus on click, so typing carries on.
+  const keepFocus = (e) => e.preventDefault();
+</script>
+
+<!-- CAMERA: doubles as the media button (adds images to the open note) -->
 <section class="mod alu cam" aria-label="Camera module">
   <span class="screw s-tl"></span><span class="screw s-br"></span>
-  <button class="lens" aria-label="Camera: add an image">
+  <button class="lens" aria-label="Camera: add an image" onmousedown={keepFocus} onclick={() => device.pickImages()}>
     <span class="lens-glass"></span>
   </button>
-  <span class="cam-led"></span>
+  <span class="cam-led" class:on={device.camBusy}></span>
   <span class="etch cam-label">CAM · MEDIA</span>
 </section>
 
@@ -52,6 +59,10 @@
     border-radius: 50%;
     background: #3a3e3c;
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.6);
+  }
+  .cam-led.on {
+    background: var(--signal);
+    box-shadow: 0 0 8px var(--signal);
   }
   .cam-label {
     position: absolute;

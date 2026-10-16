@@ -11,7 +11,7 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 
 | Module | What it is | Notes |
 |---|---|---|
-| **Camera** | Top-left. The media button: adds an image to the note. | |
+| **Camera** | Top-left. The media button: adds an image to the note. | Its LED lights while an image comes in. |
 | **Nameplate** | Fixed hardware title bar reading ARBOREUM 1610F. | Branding only, not customisable. Model numbers are hexadecimal: 1610F is `0x1610F`. |
 | **Screen** | Where writing happens. The notes list is a full screen here too, not a drawer. | |
 | **Bay** | Swappable slot: **Map viewer**, **Treemoji** or **List**. | Picked in Configure; the old module ejects and the new one slides in. Whatever is slotted does its job; the drawer covers the rest. |
@@ -88,6 +88,7 @@ Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the pa
 - `src/lib/concept/Configurator.svelte`: the page-level Configure panel.
 - `src/lib/concept/device.svelte.js`: the shared device state (input, screens, notes, saving, map).
 - `src/lib/concept/garden.js`, `GardenMap.svelte`: the garden map (same tiles as the classic app) and its pixel window.
+- `src/lib/concept/media.js`, `opfs-writer.js`, `NoteImages.svelte`: a note's images (storage, the writer worker, the edge layouts).
 - `src/lib/concept/MonoEditor.svelte`, `NoteRows.svelte`, `TreeGrid.svelte`, `trees.js`: the editor, the list rows, the tree grid (Map viewer, Treemoji and drawer share it), the tree catalogue.
 
 ## Layout system (decided)
@@ -239,7 +240,13 @@ Each step is small, checked in the browser, and committed on its own.
     - Bone keycaps on a dark deck: marks on top (B, I, U, S, HL, code), line kinds below (H1–H3, bullets, numbers, tasks, quote). A key stays down with its LED lit while that format is under the caret.
     - Swapped by the orange ⇄ latch in either module's label, or in Configure (CONTROLS, then CONTROL PAD · FORMAT DECK). The control slot slides down and up.
     - With the deck slotted, the screen strip's FORMAT page steps aside (the strip was the deck's virtual stand-in) and only DETAILS shows. A, B and Start stay on the keyboard.
-13. **Camera.** Image upload into the note.
+13. ✅ **Camera.** Image upload into the note.
+    - Three routes in: the Camera (file picker; on phones it offers the camera), pasting or dropping image files into the text, and Start → ADD IMAGE. A brand-new note is saved first, since images live in its folder. Each image lands beside the caret's line.
+    - Storage as decided (OPFS, `notes/<noteid>/` with `layout.json`), written through a small worker: the sync access handle is the one write path every browser has had since Safari 15.2 (the simpler `createWritable` only arrived in Safari 26). Downscaled to 1600px on import; deleting a note deletes its folder.
+    - Edges: top/bottom scrapbook (justified rows), left/right strip (positioned by line; a thumbnail that would overlap is pushed down, its line kept). The left strip sits outside the line numbers.
+    - Arranging: tap an image, or Start → ARRANGE IMAGES. Along the edge the D-pad moves it (strip: a line at a time; scrapbook: its place in the order), across it picks another; A done, B cancel, Start (or Delete) removes, with a confirm. Dragging with the mouse moves it too and places it on release.
+    - Images and their layout save straight away, like hardware actions; they aren't part of the note's unsaved draft.
+    - Not yet: the link dot (thumbnail joined to its line), "Save to a folder on my computer", and images in backups.
 
 **D · Layout modes and touch**
 

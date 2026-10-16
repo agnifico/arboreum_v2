@@ -25,7 +25,7 @@
     </div>
   </div>
   <span class="etch ctl-label">
-    CTL-01 · <button class="latch" aria-label="Swap for the Format deck" onmousedown={keepFocus} onclick={() => device.swapControls()}><i>⇄</i>FORMAT DECK</button>
+    <span class="model">CTL-01 · </span><button class="latch" aria-label="Swap for the Format deck" onmousedown={keepFocus} onclick={() => device.swapControls()}><i>⇄</i>FORMAT DECK</button>
   </span>
 </section>
 
@@ -124,5 +124,6 @@
   /* Wells: bottom padding = top + the key's drop (round 5px, Start 3px) */
   :global(.portrait) .ab-pad { gap: 12px; padding: 8px 10px 13px; border-radius: 34px; }
   :global(.portrait) .round { width: 44px; height: 44px; font-size: 15px; }
-  :global(.portrait) .ctl-label { font-size: 8.5px; letter-spacing: 0.12em; }
+  :global(.portrait) .ctl-label { font-size: 8.5px; letter-spacing: 0.12em; bottom: 10px; }
+  :global(.portrait) .model { display: none; } /* the label keeps only the latch */
 </style>

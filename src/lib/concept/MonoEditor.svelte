@@ -19,6 +19,7 @@
   import TextAlign from "@tiptap/extension-text-align";
   import Image from "@tiptap/extension-image";
   import { useDevice } from "./device.svelte.js";
+  import NoteImages from "./NoteImages.svelte";
 
   const device = useDevice();
 
@@ -30,13 +31,30 @@
   let openedByClick = false; // keep the caret where the click put it
   let resume = null; // { from, to }: the caret when the map or a menu took the D-pad
 
+  // Images at the note's edge: sizes follow the screen's width.
+  let hostW = $state(800);
+  let narrow = $derived(hostW < 500);
+  let thumb = $derived(narrow ? 56 : 92);
+  let edge = $derived(device.media.images.length ? device.media.edge : null);
+
   // Desktop basics: clicking the text while previewing opens it right there.
   function clickToEdit(e) {
     if (!editor || editor.isEditable || device.overlay || e.button !== 0) return;
+    if (e.target.closest?.(".nimg")) return; // images handle their own taps
     openedByClick = true;
-    if (device.note) device.open();
+    // Already in the note (the map, the drawer or the images had the D-pad):
+    // just come back to the text.
+    if (device.editing) device.backToText();
+    else if (device.note) device.open();
     else device.newNote();
     editor.setEditable(true); // now, so this same click places the caret
+  }
+
+  function takeImages(files) {
+    const images = [...(files ?? [])].filter((f) => f.type.startsWith("image/"));
+    if (!images.length) return false;
+    device.addImages(images);
+    return true;
   }
 
   // --- Gutter: one number per textblock, measured from the DOM ---------
@@ -58,6 +76,10 @@
     const hostTop = host.getBoundingClientRect().top - host.scrollTop;
     const at = editor.view.domAtPos(editor.state.selection.from).node;
     const curEl = (at.nodeType === 1 ? at : at.parentElement)?.closest("p, h1, h2, h3, h4, h5, h6, pre");
+    // New images land beside the caret's line.
+    device.lineCount = Math.max(1, blocks.length);
+    const ci = [...blocks].indexOf(curEl);
+    if (ci >= 0) device.caretLine = ci + 1;
     gutter = [...blocks].map((el, i) => {
       const r = el.getBoundingClientRect();
       // Numbers take their line's height, so they line up with taller headings.
@@ -80,6 +102,7 @@
     editor.view.updateState(EditorState.create({ doc, plugins }));
     device.html = editor.getHTML();
     device.setBaseline(device.html);
+    device.showMedia(key);
     report();
     requestAnimationFrame(measure);
   }
@@ -139,6 +162,11 @@
       ],
       editable: false,
       content: "",
+      // Pasted or dropped image files go to the note's edge, like the Camera.
+      editorProps: {
+        handlePaste: (_, e) => takeImages(e.clipboardData?.files),
+        handleDrop: (_, e) => takeImages(e.dataTransfer?.files),
+      },
       onUpdate: () => {
         device.html = editor.getHTML();
       },
@@ -168,6 +196,7 @@
     load(key, device.note?.text ?? "");
     const ro = new ResizeObserver(() => measure());
     ro.observe(host);
+    ro.observe(mount); // text reflows (e.g. a strip narrows it)
     return () => ro.disconnect();
   });
 
@@ -178,14 +207,26 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="host" bind:this={host} onscroll={measure} onmousedowncapture={clickToEdit}>
+<div
+  class="host"
+  class:strip-l={edge === "left"}
+  class:strip-r={edge === "right"}
+  style="--thumb:{thumb}px; --gut:{narrow ? 34 : 54}px"
+  bind:this={host}
+  bind:clientWidth={hostW}
+  onscroll={measure}
+  onmousedowncapture={clickToEdit}
+>
   <div class="gutter" aria-hidden="true">
     {#each gutter as g}
       {#if g.current}<span class="curline" style="top:{g.top}px; height:{g.height}px"></span>{/if}
       <span class="num" class:cur={g.current} style="top:{g.top}px; line-height:{g.lh}px">{g.n}</span>
     {/each}
   </div>
+  {#if edge === "top"}<div class="book-wrap"><NoteImages mode="book" rowHeight={narrow ? 72 : 120} onmeasure={measure} /></div>{/if}
   <div class="mono" class:markup={device.showMarkup} class:editing={device.focus === "editor"} bind:this={mount}></div>
+  {#if edge === "bottom"}<div class="book-wrap"><NoteImages mode="book" rowHeight={narrow ? 72 : 120} onmeasure={measure} /></div>{/if}
+  {#if edge === "left" || edge === "right"}<NoteImages mode="strip" side={edge} {gutter} {thumb} />{/if}
 </div>
 
 <style>
@@ -196,6 +237,20 @@
     overflow-y: auto;
     scrollbar-width: none;
     padding: 14px 120px 14px 0;
+  }
+  /* Images: a scrapbook lines up with the text; a strip takes a column */
+  .book-wrap {
+    margin-left: var(--gut);
+  }
+  /* Left strip: outside the line numbers, so they stay beside their text */
+  .host.strip-l .mono {
+    margin-left: calc(var(--gut) + var(--thumb) + 14px);
+  }
+  .host.strip-l .gutter {
+    left: calc(var(--thumb) + 14px);
+  }
+  :global(.device) .host.strip-r {
+    padding-right: calc(var(--thumb) + 24px);
   }
   .gutter {
     position: absolute;
