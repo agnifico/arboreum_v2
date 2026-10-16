@@ -185,7 +185,7 @@
     {:else if device.overlay?.kind === "confirm"}
       <div class="overlay confirm" role="alertdialog" aria-label={device.overlay.title}>
         <div class="ov-title">{device.overlay.title}</div>
-        <p class="ov-text">{device.overlay.text}</p>
+        <p class="ov-text">{#if device.overlay.icon}<img class="ov-icon" src={device.overlay.icon} alt="" />{/if}{device.overlay.text}</p>
         <div class="ov-keys">
           <span><i class="pip a">A</i>{device.overlay.yes}</span>
           <span><i class="pip b">B</i>{device.overlay.no}</span>
@@ -289,6 +289,14 @@
     margin: 4px 18px 12px;
     line-height: 1.5;
     color: var(--phosphor);
+  }
+  .ov-icon {
+    float: left;
+    width: 28px;
+    height: 28px;
+    margin: 0 10px 0 0;
+    object-fit: contain;
+    image-rendering: pixelated;
   }
   .ov-keys {
     display: flex;

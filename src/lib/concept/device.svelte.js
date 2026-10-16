@@ -393,8 +393,8 @@ export class Device {
   }
 
   /** A yes/no box; `alt` adds a third choice on Start ({ label, run }). */
-  confirm({ title, text, yes, no, onYes = () => {}, onNo = () => {}, alt = null }) {
-    this.overlay = { kind: "confirm", title, text, yes, no, onYes, onNo, alt };
+  confirm({ title, text, yes, no, onYes = () => {}, onNo = () => {}, alt = null, icon = null }) {
+    this.overlay = { kind: "confirm", title, text, yes, no, onYes, onNo, alt, icon };
   }
 
   /** Save the open note (creates it on first save). Returns true on success. */
@@ -438,8 +438,8 @@ export class Device {
     }
   }
 
-  async deleteNote() {
-    const stored = this.stored;
+  async deleteNote(target = this.stored) {
+    const stored = target && this.raw.find((n) => n.noteid === target.noteid);
     if (!stored) return;
     const i = this.index;
     try {
@@ -449,12 +449,15 @@ export class Device {
       return this.say("COULDN'T DELETE", 3000);
     }
     this.raw = this.raw.filter((n) => n.noteid !== stored.noteid);
-    this.isNew = false;
-    this.editingId = null;
-    this.focus = "list";
-    this.index = Math.min(i, this.notes.length - 1);
-    this.editorApi?.reload();
-    this.say("DELETED");
+    // Only leave the editor if the deleted note is the one that's open.
+    if (this.editingId === stored.noteid) {
+      this.isNew = false;
+      this.editingId = null;
+      this.focus = "list";
+      this.editorApi?.reload();
+    }
+    if (this.selectedId === stored.noteid) this.index = Math.min(i, this.notes.length - 1);
+    this.say(`DELETED “${stored.title?.trim() || "untitled"}”`);
   }
 
   /** Download every note as a JSON backup (same format as the classic app). */
@@ -652,16 +655,30 @@ export class Device {
     this.focus = "list";
     this.editorApi?.reload();
   }
+  /** Ask before deleting; the target is fixed now, so switching notes while
+      the box is open can't change what gets deleted. */
   askDelete() {
-    const title = this.note?.title ?? "this note";
+    const target = this.stored;
+    if (!target) {
+      // An unsaved new note: there's nothing stored to delete, just drop it.
+      if (this.isNew) {
+        this.setBaseline(this.html);
+        this.#toList();
+        this.say("NEW NOTE DISCARDED");
+      }
+      return;
+    }
+    const title = target.title?.trim() || "untitled";
     this.confirm({
       title: "DELETE NOTE?",
       text: `“${title}” and its tree will be gone. This can't be undone.`,
+      icon: target.icon || "/Tree2.png",
       yes: "DELETE",
       no: "KEEP",
-      onYes: () => this.deleteNote(),
+      onYes: () => this.deleteNote(target),
     });
   }
+
 
   // --- Input per screen -----------------------------------------------
 
