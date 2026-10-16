@@ -29,7 +29,7 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 - **Control pad:** Start, B and A in one straight row.
 - **Configure button:** the only thing on the page besides the console (no caption).
   - Modules: list (landscape), D-pad, control pad, bay, speaker. Screen: show markup, screen glare (off by default). Body: enclosure.
-  - It also switches the orientation (landscape/portrait).
+  - It also overrides the orientation (Auto / Landscape / Portrait; Auto follows the window's shape).
   - Turning modules off follows the placement rules: no List module means the list opens full screen; a lone control module takes the bottom row; no controls means the screen takes the height.
   - Landscape: a small pill at the bottom right.
   - Portrait: a gear docked in the console's side column, under the speaker strip. Without the speaker there's no side column; the gear docks at the nameplate's left end and its panel opens downward.
@@ -92,51 +92,19 @@ Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the pa
 - `src/lib/concept/media.js`, `opfs-writer.js`, `NoteImages.svelte`: a note's images (storage, the writer worker, the edge layouts).
 - `src/lib/concept/MonoEditor.svelte`, `NoteRows.svelte`, `TreeGrid.svelte`, `trees.js`: the editor, the list rows, the tree grid (Map viewer, Treemoji and drawer share it), the tree catalogue.
 
-## Layout system (decided)
+## Layout system (decided 17 Oct: the screen is the only thing that stretches)
 
-The layout splits into three separate things:
+Simplified from an earlier Fixed/Fluid plan and a "v2" proposal (a switch threshold, dock customisation, container queries). All of that is dropped. The whole model is three points:
 
-1. **Arrangement:** where the modules sit. There are two hand-crafted arrangements, **landscape** and **portrait**, and both follow the placement rules below.
-2. **Fit:** how an arrangement meets the window.
-   - **Fixed:** the arrangement keeps its designed proportions and zooms as a whole, centred on the mat, like a product photo. Portrait is the exception in height: it's designed 440 wide and always spans the width (a phone's visible height varies with the browser's bars), and its screen row takes the height that's left, down to a 720px console.
-   - **Fluid:** always fills the window exactly; the screen is the elastic module.
-3. **Mode:** Fixed or Fluid.
+1. **Two arrangements, picked by the window's shape.** Taller than wide gives **portrait**, otherwise **landscape**. It follows the window live (rotating a phone or tablet switches it), with a small buffer at the line so it doesn't flicker while resizing. The orientation switch in Configure stays as an override (Auto / Landscape / Portrait).
+2. **One fit rule.** If the window is smaller than the design, the console zooms down as a whole. If it's bigger, the **screen** takes the extra space, in width and height. Every other module is hardware and keeps its size; keys never grow.
+3. **Neighbours ride along.** Modules that share the screen's row or column get a longer body because the grid stretches them, with their keys centred at normal size. Nothing is redesigned per size.
 
-That gives four results (fixed landscape, fluid landscape, fixed portrait, fluid portrait) from only **two designs**.
+What that gives: desktop gets a big screen; a portrait phone gets an edge-to-edge screen; an upright iPad fills its width instead of leaving the mat at the sides.
 
-| | Fixed (default) | Fluid |
-|---|---|---|
-| Orientation | Picked once from the screen's shape on first load (taller than wide → portrait), then kept. Can be changed in Configure. | Follows the shape of the space continuously, with a buffer so it doesn't flicker at the switch point. |
-| Fit | Uniform zoom to fit, never cut off or scrolled. | Fills the window; other modules keep their size within limits, and the screen takes the rest. |
-| Dock choices | The user picks from the allowed placements. | Automatic, from the same rules. |
+**No settings added.** If a very large monitor makes the screen feel like an app rather than an object, a cap (one number) can come later.
 
-**Default is Fixed:** brain off by default. Fluid and custom docks are opt-in in Configure.
-
-### Layout model v2 (proposed 17 Oct; replaces orientation and Fixed/Fluid)
-
-Agni's proposal, refined in discussion. Confirm the open questions, then fold this into the section above and the build order.
-
-**One setting: the switch threshold** (default **70%**, set in Configure).
-- Two arrangements remain, but the user no longer picks between them:
-  - **Wide:** side docks available (list on the left, bay on the right) and the bottom row below the screen.
-  - **Stacked:** everything below the screen. Side docks fold into rows under the controls; the list becomes a full screen unless the bay holds it.
-- The console is wide while the user's own wide arrangement would show at the threshold or more of its full size; below that, it's stacked. Measured against the user's arrangement, so fewer docks means a narrower console that stays wide in narrower windows. Configure shows the % and the window width it currently means ("70% · switches below ≈1,050px").
-- 0% means always wide (it just zooms smaller); 100% means stacked unless the window fits the full size. The user's call.
-- A small buffer at the line, so it doesn't flicker while resizing.
-- It replaces the Orientation switch, Fixed/Fluid (step 14) and "orientation picked once on load": the arrangement follows the window, continuously.
-
-**Customisation is the main work (step 15).** In wide, the user places modules in the allowed spots: left and right docks, and the bottom-row pair (D-pad + controls, List + something else, or only the screen and a list for a wide-screen desktop). There's no priority order: the console never drops a module, it only zooms. Configure guides better choices with notes rather than forbidding them.
-
-**What the portrait/landscape split really was.** Side docks or not, plus things that follow from less room: each module's compact look, the fit (wide zooms as a whole; stacked spans the width and the screen takes the leftover height), the list going full screen, and the speaker as a thin strip.
-
-**Needed underneath:** each module's look follows the space its own cell gets (CSS container queries), not a global `.portrait` class, so a module looks right wherever it's docked.
-
-**Unchanged:** input (touch, hover, the typing posture) is decided by the device's input, never by the arrangement.
-
-**Open questions:**
-1. **Tablets held upright** (an iPad is about 820px wide, so stacked): stacked zooms to at most 125% and leaves the mat showing at the sides. Should stacked get wider modules there (more room, not bigger keys) so it spans the width?
-2. **Stacked order:** should the order of the rows under the screen be user-settable too (today: controls, then the bay)?
-3. **The threshold's unit:** % of full size (as above), or a pixel width?
+**Not handled:** a phone turned sideways. It shows landscape zoomed small; it also needs a different answer for the keyboard, so it's parked under "Ideas for later".
 
 ### Placement rules
 
@@ -222,6 +190,7 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 - **Select key, Gboard-style.** A Select button: hold it and move with the D-pad to select a block of text (the usual tap-and-drag selection stays). Needs the input bus to know when a key is held, not just pressed.
 - **Mini A/B on the Format deck (open question).** A small A, B, Start (and Select) on the deck would make D-pad + deck a complete console, and a natural typing posture on phones; the control pad would become the big-buttons choice. To settle: whether the strip's FORMAT page stays while the deck is in (today it steps aside, as the deck's virtual stand-in), and how the keys fit in portrait (three rows, or a small A/B column).
+- **Phone turned sideways.** Today it's landscape zoomed small. A real answer is probably a handheld arrangement (D-pad left, screen centre, A/B right), and it has to work with the on-screen keyboard taking most of the height. Rare; not now.
 - **D-pad without controls.** Today the D-pad can be on with no control slot filled; it means little without A/B. Decide whether Configure should prevent it.
 
 ## Fine-tuning backlog (component-by-component pass)
@@ -285,8 +254,8 @@ Each step is small, checked in the browser, and committed on its own.
 
 **D · Layout modes and touch**
 
-14. **Fluid fit.** The console fills the window, the screen is elastic, and orientation follows the space with a buffer.
-15. **Fixed dock choices.** Configure lets the user pick from the allowed placements (sides for the list, bay and speaker, and the bottom-row pair).
+14. **The screen stretches.** Above the design size the screen takes the extra width and height (landscape and portrait); below it the console zooms down as now. Then a look at each module in a stretched cell.
+15. **Orientation follows the window.** Taller than wide gives portrait, with a buffer at the line; Configure's switch becomes Auto / Landscape / Portrait.
 16. **Typing posture.** When the on-screen keyboard opens, the lower modules fold into a thin strip; they come back when it closes.
     - **The keyboard on demand (found in phone testing):** focusing the editor shouldn't raise the phone's keyboard. The editor gets `inputmode="none"` (caret and selection still work, no keyboard), and a keyboard key (⌨) raises it by switching to `inputmode="text"`, then lowers it again. Where Chrome's VirtualKeyboard API exists (Android), use `virtualkeyboardpolicy="manual"` with `navigator.virtualKeyboard.show()` / `hide()`; iOS may need a blur and refocus for the switch to take. Tapping the text moves the caret without raising the keyboard.
 17. **Portrait behaviour.** Touch input, the list as a full screen, the drawer, thumb reach, and checks on a real phone and an iPad.
