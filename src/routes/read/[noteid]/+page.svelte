@@ -15,6 +15,12 @@
       {@html note.text}
     </div>
   </div>
+{:else if data.missing}
+  <div class="not-found">
+    <p class="not-found-title">This note isn't here anymore.</p>
+    <p>It may have been deleted, or the link is out of date.</p>
+    <Button variant="primary" href="/">Back to your notes</Button>
+  </div>
 {:else}
   <p>Loading note...</p>
 {/if}
@@ -49,6 +55,26 @@
 
   .note-body {
     line-height: 1.7;
+  }
+
+  .not-found {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin: 4rem auto 0;
+    padding: 0 1.5rem;
+    max-width: 32rem;
+    font-family: "Fira Code", monospace;
+    color: var(--text-main);
+  }
+  .not-found p {
+    margin: 0;
+  }
+  .not-found-title {
+    font-family: "Silkscreen";
+    font-size: 1.2rem;
+    color: var(--neon-green);
   }
 
   .note-body :global(p) {

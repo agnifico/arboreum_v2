@@ -5,6 +5,8 @@
   import SortControl from "$lib/components/controls/SortControl.svelte";
   import Modal from "$lib/components/Modal.svelte";
   import Button from "$lib/components/controls/Button.svelte";
+  import { goto } from "$app/navigation";
+  import { page } from "$app/state";
 
   let { notes = [] } = $props();
   let to_del = $state([]);
@@ -60,9 +62,22 @@
     showDeleteConfirm = true;
   }
 
+  // Is the page we're on showing (or editing) one of these notes?
+  function isShowingAny(noteids) {
+    const { pathname, searchParams } = page.url;
+    const current = pathname.startsWith("/read/")
+      ? decodeURIComponent(pathname.slice("/read/".length))
+      : pathname === "/newleaf"
+        ? searchParams.get("noteid")
+        : null;
+    return current !== null && noteids.includes(current);
+  }
+
   async function executeDelete() {
     const idsToDelete = to_del.map((n) => n.id);
+    const leaveCurrent = isShowingAny(to_del.map((n) => n.noteid));
     await db.notes.bulkDelete(idsToDelete);
+    if (leaveCurrent) await goto("/", { replaceState: true });
     to_del = [];
     select_switch = false;
     showDeleteConfirm = false;
