@@ -294,7 +294,7 @@
 
   async function saveNote() {
     const noteData = {
-      title: _title,
+      title: _title.trim(),
       text: editor.getHTML(),
       icon: treemoji,
       createdAt: note?.createdAt || new Date(),

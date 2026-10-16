@@ -8,7 +8,7 @@
 {#if note}
   <div class="note-view-container">
     <div class="note-header">
-      <h1 class="note-title">{note.title || 'Untitled Note'}</h1>
+      <h1 class="note-title">{note.title?.trim() || 'Untitled'}</h1>
       <Button variant="primary" href={`/newleaf?noteid=${note.noteid}`}>Edit</Button>
     </div>
     <div class="note-body">
