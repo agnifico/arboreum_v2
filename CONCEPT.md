@@ -18,6 +18,18 @@ It lives at `/concept` inside the working app. It reads the same notes in the br
 | **D-pad** | Moves through the list and the text. | |
 | **Control pad** | **A**, **B**, **Start**. | Swaps with the **Format deck**: physical keys for bold, italic, headings, lists and so on. |
 
+## Structure (decided after look test 00)
+
+- **No chassis.** Every module is its own free-standing body, and the blocks together form the console. There are no release tabs.
+- **Desktop:** a wide console.
+  - Top row: camera, then the nameplate.
+  - Middle row: List module on the left, then the screen, then the bay on the right.
+  - Bottom row: D-pad, then the control pad, then the speaker. They stay visible so the device reads at a glance.
+- **Mobile:** a portrait stack: camera and nameplate, then the screen, the bay (optional), the D-pad with the control pad, and the speaker (optional). On mobile the list opens full screen instead of as a module.
+- **Control pad:** Start, B and A in one straight row.
+- **Configure button:** sits on the page, bottom right, outside the device. It switches desktop/mobile and turns the bay and speaker on and off.
+- **Bay:** for now it holds the Map viewer. Desktop has its two buttons side by side; mobile puts them at opposite corners.
+
 ## Screen strips
 
 - **A/B context strip:** overlaid at the bottom right and always visible. It says what A and B do right now.
