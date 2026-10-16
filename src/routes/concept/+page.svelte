@@ -74,6 +74,10 @@
     if (innerWidth < innerHeight) view = "portrait";
   });
 
+  // With no speaker under it (or no bottom row), the bay has the whole right
+  // column, and the Map viewer zooms in to use it.
+  let tallBay = $derived(view === "landscape" && showBay && (!showSpeaker || !(showDpad || showCtl)));
+
   // Grid layout per view; the right column only exists if something is in it.
   // Grid layout per view, from the placement rules (CONCEPT.md): controls
   // sit below the screen; a side holds at most one dock; with no controls
@@ -158,7 +162,7 @@
       <Nameplate />
       {#if view === "landscape" && showList}<ListModule />{/if}
       <Screen />
-      {#if showBay}<MapViewer />{/if}
+      {#if showBay}<MapViewer tall={tallBay} />{/if}
       {#if showDpad}<DPad />{/if}
       {#if showCtl}<ControlPad />{/if}
       {#if view === "portrait"}
