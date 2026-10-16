@@ -114,7 +114,7 @@
     }
   }
 
-  let editor;
+  let editor = $state.raw(null);
 
   // The stored record this editor writes to; null until a new note is first saved.
   let savedNote = $state.raw(note);
@@ -810,7 +810,7 @@
                       showColorPalette = false;
                     }}
                     class:active={activeColor === color.hex}
-                  />
+                  ></button>
                 {/each}
                 <button
                   class="color-swatch"
@@ -882,7 +882,7 @@
       </div>
     </div>
 
-    <div bind:this={element} class="xy" />
+    <div bind:this={element} class="xy"></div>
   </div>
 </div>
 

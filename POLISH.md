@@ -66,7 +66,7 @@ If that changes, a migration and a test against v2 data come with it.
 - [ ] **C1** Browser console: zero errors or warnings in every flow audited (home, about, create, edit, read, sort, select, delete, import, export, map toggle, new tab). Re-checked after each fix.
   - [x] Found while testing touch: leaving the editor mid-selection logged a tippy.js "hide() on destroyed instance" warning. Fixed.
 - [x] **C2** Build warning: `export const ssr = false` in `+layout.svelte` is ignored (dead line).
-- [ ] **C3** Compiler warnings in touched files (a11y, `editor` not `$state`, self-closing tags).
+- [x] **C3** Compiler warnings in touched files (`editor` not `$state`, self-closing tags, `<svelte:component>`, a11y). What remains: Garden a11y (map is out of scope) and Svelte 4 → 5 syntax deprecations (see Questions).
 
 ## Questions for Agni
 
