@@ -62,6 +62,14 @@
   let leftList = $derived(showList && !(showBay && bayModule === "list"));
   let showDpad = $state(true);
   let showCtl = $state(true);
+  // The D-pad follows the control slot: on with the control pad, off with the
+  // Format deck or no controls. A manual toggle holds until the slot changes.
+  let lastSlot = null;
+  $effect(() => {
+    const slot = showCtl ? device.controls : "none";
+    if (lastSlot !== null && slot !== lastSlot) showDpad = slot === "pad";
+    lastSlot = slot;
+  });
 
   let stageW = $state(1440); // the page's own width, so overflow can't inflate it
   let winH = $state(900);

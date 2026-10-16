@@ -116,6 +116,7 @@ What that gives: desktop gets a big screen; a portrait phone gets an edge-to-edg
 2. **Controls** always sit below the screen.
 3. **Beside the screen** (landscape only), at most one dock per side: the **list on the left**, the **bay (map viewer) on the right**.
 4. **The bottom row is a pair:** either **D-pad + A/B**, or **List + something else**. A/B never appears without the D-pad.
+   - **The D-pad follows the control slot:** whenever the slot changes (latch or Configure), the D-pad turns on for the control pad and off for the Format deck or no controls. A manual toggle in Configure holds until the slot changes again. (This settles the old "D-pad without controls" question.)
    - **Portrait sizes:** the controls row is 144px with a slightly smaller D-pad (160px when the Format deck's three rows sit beside it). The control pad stacks B A over Start only when its cell is narrow; with room (an upright tablet, or no D-pad) Start, B and A are one row again. It decides from its own width (a container query).
    - **Split:** D-pad + control pad share the row half and half. D-pad + Format deck: the deck takes two thirds (it matters more there). In portrait the deck beside the D-pad has three rows of wide keys; without the D-pad it spans the row in two rows of thumb-sized keys.
 5. **No controls row:** the screen goes full screen (touch and keyboard only).
@@ -196,7 +197,6 @@ One pass over menus, context, focus and highlight across the whole device: list,
 - **Select key, Gboard-style.** A Select button: hold it and move with the D-pad to select a block of text (the usual tap-and-drag selection stays). Needs the input bus to know when a key is held, not just pressed.
 - **Mini A/B on the Format deck (open question).** A small A, B, Start (and Select) on the deck would make D-pad + deck a complete console, and a natural typing posture on phones; the control pad would become the big-buttons choice. To settle: whether the strip's FORMAT page stays while the deck is in (today it steps aside, as the deck's virtual stand-in), and how the keys fit in portrait (three rows, or a small A/B column).
 - **Phone turned sideways.** Today it's landscape zoomed small. A real answer is probably a handheld arrangement (D-pad left, screen centre, A/B right), and it has to work with the on-screen keyboard taking most of the height. Rare; not now.
-- **D-pad without controls.** Today the D-pad can be on with no control slot filled; it means little without A/B. Decide whether Configure should prevent it.
 
 ## Fine-tuning backlog (component-by-component pass)
 
