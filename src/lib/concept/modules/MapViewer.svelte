@@ -15,7 +15,7 @@
     const at = device.plots.find((p) => p.x === view.x && p.y === view.y);
     const where = `PLOT ${pad2(view.x)},${pad2(view.y)}`;
     if (!device.editing) return where;
-    return `${where} · ${!at ? "FREE" : at.mine ? "YOURS" : "TAKEN"}`;
+    return `${where} · ${!at ? "FREE" : at.ghost ? "PLANTS ON SAVE" : at.mine ? "YOURS" : "TAKEN"}`;
   });
 </script>
 

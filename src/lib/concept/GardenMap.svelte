@@ -69,7 +69,10 @@
       const y = p.y - cam.y;
       if (!img || x < 0 || y < 0 || x >= cols || y >= rows) continue;
       // Trees stand on their tile and stick up a little, like the classic map.
+      // A ghost is where the open note will be planted on save.
+      ctx.globalAlpha = p.ghost ? 0.5 : 1;
       ctx.drawImage(img, x * T - 2, y * T - 6, T + 4, T + 4);
+      ctx.globalAlpha = 1;
     }
     if (cursor && (on || !blink)) {
       const x = (cursor.x - cam.x) * T;

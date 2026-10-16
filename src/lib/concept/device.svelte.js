@@ -156,14 +156,35 @@ export class Device {
     this.baseline = { title: this.draftTitle, html, icon: this.draftIcon, plot: this.draftPlot };
   }
 
-  /** Every planted note's tree, for the maps. The open note uses its draft. */
-  get plots() {
+  /** Other notes' trees (everything except the open note). */
+  get otherPlots() {
     const out = [];
     for (const n of this.raw) {
       if (this.editing && n.noteid === this.editingId) continue;
       if (n.mapX != null && n.mapY != null) out.push({ x: n.mapX, y: n.mapY, icon: n.icon || "/Tree2.png", title: n.title?.trim() || "untitled" });
     }
-    if (this.editing && this.draftPlot) out.push({ x: this.draftPlot[0], y: this.draftPlot[1], icon: this.draftIcon || "/Tree2.png", mine: true, title: this.draftTitle || "untitled" });
+    return out;
+  }
+
+  #taken(x, y) {
+    return this.otherPlots.some((p) => p.x === x && p.y === y);
+  }
+
+  /** Where the open note will grow: its plot, or (with the Map viewer
+      slotted) the free plot under the cursor, which saving plants. */
+  get pendingPlot() {
+    if (!this.editing) return null;
+    if (this.draftPlot) return this.draftPlot;
+    if (this.hasMapViewer && !this.#taken(this.cursor.x, this.cursor.y)) return [this.cursor.x, this.cursor.y];
+    return null;
+  }
+
+  /** Every tree for the maps; the open note shows at its pending plot
+      (as a ghost until it's actually planted or saved). */
+  get plots() {
+    const out = this.otherPlots;
+    const p = this.pendingPlot;
+    if (p) out.push({ x: p[0], y: p[1], icon: this.draftIcon || "/Tree2.png", mine: true, ghost: !this.draftPlot, title: this.draftTitle || "untitled" });
     return out;
   }
 
@@ -172,10 +193,28 @@ export class Device {
     return this.plots.find((p) => p.x === this.cursor.x && p.y === this.cursor.y) ?? null;
   }
 
+  /** Move the cursor off a taken plot to the nearest free one. */
+  #toFreePlot() {
+    const { x: cx, y: cy } = this.cursor;
+    if (!this.#taken(cx, cy)) return;
+    for (let r = 1; r < Math.max(COLS, ROWS); r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          const x = cx + dx, y = cy + dy;
+          if (x >= 0 && y >= 0 && x < COLS && y < ROWS && !this.#taken(x, y)) {
+            this.cursor = { x, y };
+            return;
+          }
+        }
+      }
+    }
+  }
+
   /** What still needs doing for the open note (drives the red "!"). */
   get missing() {
     if (!this.editing) return [];
-    return [!this.draftIcon && "tree", !this.draftPlot && "plot"].filter(Boolean);
+    return [!this.draftIcon && "tree", !this.pendingPlot && "plot"].filter(Boolean);
   }
 
   /** What the drawer stands in for: modules that aren't slotted. The tree
@@ -328,12 +367,13 @@ export class Device {
     if (!this.editing) return false;
     const html = this.editorApi?.getHTML() ?? this.html;
     const title = this.draftTitle.trim();
+    const plot = this.pendingPlot;
     const data = {
       title,
       text: html,
       icon: this.draftIcon || "/Tree2.png",
-      mapX: this.draftPlot ? this.draftPlot[0] : null,
-      mapY: this.draftPlot ? this.draftPlot[1] : null,
+      mapX: plot ? plot[0] : null,
+      mapY: plot ? plot[1] : null,
       updatedAt: new Date(),
     };
     try {
@@ -352,6 +392,7 @@ export class Device {
       }
       this.draftTitle = title;
       this.draftIcon = data.icon;
+      this.draftPlot = plot;
       this.setBaseline(html);
       this.say("SAVED ✓");
       return true;
@@ -441,6 +482,7 @@ export class Device {
     this.draftIcon = n?.icon ?? null;
     this.draftPlot = n?.mapX != null && n?.mapY != null ? [n.mapX, n.mapY] : null;
     if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
+    else this.#toFreePlot();
     this.setBaseline(this.html);
     this.focus = "editor";
   }
@@ -452,6 +494,7 @@ export class Device {
       this.draftTitle = "";
       this.draftIcon = null;
       this.draftPlot = null;
+      this.#toFreePlot();
       this.focus = "editor";
     };
     if (this.dirty) return this.#askBeforeLeaving(go);
@@ -543,7 +586,7 @@ export class Device {
   /** What the details page shows for the note on screen. */
   get details() {
     const n = this.editing ? this.stored : this.note;
-    const plot = this.editing ? this.draftPlot : n && n.mapX != null && n.mapY != null ? [n.mapX, n.mapY] : null;
+    const plot = this.editing ? this.pendingPlot : n && n.mapX != null && n.mapY != null ? [n.mapX, n.mapY] : null;
     return {
       words: this.words,
       made: n?.createdAt ? new Date(n.createdAt) : null,
