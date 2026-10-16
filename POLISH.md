@@ -19,7 +19,7 @@ If that changes, a migration and a test against v2 data come with it.
 
 ## 2. Notes list
 
-- [ ] **L1** Titles are cut to 6 characters ("Test n..") whatever the space.
+- [x] **L1** Titles are cut to 6 characters ("Test n..") whatever the space.
 - [ ] **L2** In Select mode, clicking a note also opens it; Enter on a focused note opens it instead of selecting it.
 - [ ] **L3** Delete confirmation is empty: it doesn't say what or how many, there's no "can't be undone", and Delete looks like a normal green action.
 - [ ] **L4** After closing any dialog with Esc, × or a backdrop click, it won't open again (`Modal` mutates a non-bindable `show`), so the second delete attempt silently does nothing.

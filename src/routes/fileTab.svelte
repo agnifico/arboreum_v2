@@ -2,13 +2,12 @@
   let { note, disabled = true, bg } = $props();
 
   let isSelected = $derived(bg.includes(note.id));
+  let title = $derived(note.title?.trim() || "Untitled");
 </script>
 
-<a class="file" href="/read/{note.noteid}" class:selected={isSelected}>
+<a class="file" href="/read/{note.noteid}" class:selected={isSelected} title={title}>
   <div class="xp">
-    <p>
-      {note.title.length > 10 ? note.title.slice(0, 6).trim() + ".." : note.title}
-    </p>
+    <p>{title}</p>
     <div class="right-box">
       <img src={note.icon} alt="Saved File" class="icon" />
     </div>
@@ -20,6 +19,7 @@
     color: inherit;
     text-decoration: none;
     width: 100%;
+    box-sizing: border-box;
     /* height: 30px; */
     display: flex;
     align-items: center;
@@ -29,7 +29,11 @@
   p {
     position: relative;
     text-align: left;
-    width: fit-content;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     padding: 0rem 0rem;
     margin-block: auto;
     z-index: 0;
@@ -44,7 +48,9 @@
 
   .xp {
     height: 100%;
-    min-width: 15rem;
+    width: 100%;
+    min-width: 0;
+    gap: 0.5rem;
     position: relative;
     display: flex;
     align-items: flex-start;
@@ -56,7 +62,7 @@
     z-index: 0;
     position: relative;
     display: flex;
-    min-width: 15rem;
+    min-width: 0;
     align-items: flex-start;
     cursor: pointer;
     
@@ -92,6 +98,7 @@
   }
 
   .right-box {
+    flex-shrink: 0;
     height: 100%;
     width: fit-content;
     margin-left: auto;
