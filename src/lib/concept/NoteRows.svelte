@@ -13,7 +13,10 @@
   });
 
   // Touch/mouse: tap selects, tapping the selected row again opens it.
+  // While a note is open, tapping another opens it straight away (the open
+  // one is saved first).
   function tap(i) {
+    if (device.editing) return device.switchTo(i);
     if (i === device.index) device.press("a");
     else device.index = i;
   }

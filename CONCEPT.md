@@ -48,10 +48,13 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 
 | Screen | D-pad | A | B | Start |
 |---|---|---|---|---|
-| List | move | open | sort | menu (new, save, backup, swap) |
-| Editor | cursor | save | back to list | menu |
-| Map viewer | cursor | plant here | cancel | — |
-| Confirm | — | yes | no | — |
+| List | move | open | new note | menu (new, sort, backup) |
+| Editor | cursor | save | new note (the open note is saved and closed first) | menu (save, tree, new, delete, close) |
+| Map viewer | cursor | plant here | back | — |
+| Drawer | move | pick / plant | close | switch tree ↔ plot |
+| Confirm | — | yes | no | third choice, if any |
+
+**Leaving a note always saves it:** B, opening another note, or Close note. A brand-new note with nothing in it is simply dropped. Hardware keys don't take keyboard focus when clicked, so typing carries on in the editor.
 
 On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and **M** or **Ctrl/⌘ K** is Start. Tab stays free for moving keyboard focus. Inside the editor only Esc (B), Ctrl/⌘ S (save) and Ctrl/⌘ K (Start) map, so typing stays normal.
 

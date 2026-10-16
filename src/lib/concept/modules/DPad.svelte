@@ -1,6 +1,9 @@
 <script>
   import { useDevice } from "../device.svelte.js";
   const device = useDevice();
+  // Hardware keys don't take keyboard focus on click, so typing carries on
+  // in the editor (keyboard users can still Tab to them).
+  const keepFocus = (e) => e.preventDefault();
 </script>
 
 <!-- D-PAD -->
@@ -8,10 +11,10 @@
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="dpad">
-    <button class="arm up" class:lit={device.lit.up} aria-label="Up" onclick={() => device.press("up")}><span>▲</span></button>
-    <button class="arm right" class:lit={device.lit.right} aria-label="Right" onclick={() => device.press("right")}><span>▶</span></button>
-    <button class="arm down" class:lit={device.lit.down} aria-label="Down" onclick={() => device.press("down")}><span>▼</span></button>
-    <button class="arm left" class:lit={device.lit.left} aria-label="Left" onclick={() => device.press("left")}><span>◀</span></button>
+    <button class="arm up" class:lit={device.lit.up} aria-label="Up" onmousedown={keepFocus} onclick={() => device.press("up")}><span>▲</span></button>
+    <button class="arm right" class:lit={device.lit.right} aria-label="Right" onmousedown={keepFocus} onclick={() => device.press("right")}><span>▶</span></button>
+    <button class="arm down" class:lit={device.lit.down} aria-label="Down" onmousedown={keepFocus} onclick={() => device.press("down")}><span>▼</span></button>
+    <button class="arm left" class:lit={device.lit.left} aria-label="Left" onmousedown={keepFocus} onclick={() => device.press("left")}><span>◀</span></button>
     <span class="hub"></span>
   </div>
   <span class="etch dpad-label">NAV-01</span>

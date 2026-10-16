@@ -311,8 +311,8 @@ export class Device {
       return { a: at && !at.mine ? "TAKEN" : "PLANT", b: this.focus === "drawer" ? "CLOSE" : "BACK", start: other };
     }
     if (this.focus === "drawer") return { a: "PICK", b: "CLOSE", start: this.drawerSections.length > 1 ? "PLOT" : "—" };
-    if (this.focus === "editor") return { a: "SAVE", b: "LIST", start: "MENU" };
-    return { a: "OPEN", b: "SORT", start: "MENU" };
+    if (this.focus === "editor") return { a: "SAVE", b: "NEW", start: "MENU" };
+    return { a: "OPEN", b: "NEW", start: "MENU" };
   }
 
   press(button) {
@@ -347,10 +347,11 @@ export class Device {
             { label: this.hasMapViewer ? "CHOOSE TREE" : "TREE & PLOT", run: () => this.openDrawer() },
             { label: "NEW NOTE", run: () => this.newNote() },
             { label: "DELETE NOTE", run: () => this.askDelete() },
-            { label: "BACK TO LIST", run: () => this.leave() },
+            { label: "CLOSE NOTE", run: () => this.leave() },
           ]
         : [
             { label: "NEW NOTE", run: () => this.newNote() },
+            { label: `SORT · ${this.sortLabel} ▸`, run: () => this.cycleSort() },
             { label: "SAVE BACKUP", run: () => this.saveBackup() },
             { label: "LOAD BACKUP", run: () => this.loadBackup() },
           ];
@@ -363,7 +364,7 @@ export class Device {
   }
 
   /** Save the open note (creates it on first save). Returns true on success. */
-  async save() {
+  async save({ quiet = false } = {}) {
     if (!this.editing) return false;
     const html = this.editorApi?.getHTML() ?? this.html;
     const title = this.draftTitle.trim();
@@ -394,7 +395,7 @@ export class Device {
       this.draftIcon = data.icon;
       this.draftPlot = plot;
       this.setBaseline(html);
-      this.say("SAVED ✓");
+      if (!quiet) this.say("SAVED ✓");
       return true;
     } catch (error) {
       console.error("Couldn't save the note:", error);
@@ -487,41 +488,54 @@ export class Device {
     this.focus = "editor";
   }
 
-  newNote() {
-    const go = () => {
-      this.isNew = true;
-      this.editingId = "new";
-      this.draftTitle = "";
-      this.draftIcon = null;
-      this.draftPlot = null;
-      this.#toFreePlot();
-      this.focus = "editor";
-    };
-    if (this.dirty) return this.#askBeforeLeaving(go);
-    go();
+  /** Is the open note a brand-new one with nothing in it yet? */
+  isBlank() {
+    return this.isNew && !this.draftTitle.trim() && /^(<p><\/p>)?$/.test(this.html) && !this.draftIcon && !this.draftPlot;
   }
 
-  /** Back to the list; asks first if there are unsaved changes. */
-  leave() {
-    if (!this.dirty) return this.#toList();
-    this.#askBeforeLeaving(() => this.#toList());
+  /** Close the open note, saving it if it changed (a blank new note is just
+      dropped). Leaving a note always keeps your work. */
+  async closeCurrent() {
+    if (!this.editing) return { ok: true, saved: false };
+    const title = this.draftTitle.trim() || "untitled";
+    if (!this.dirty || this.isBlank()) return { ok: true, saved: false };
+    const ok = await this.save({ quiet: true });
+    return { ok, saved: ok, title };
   }
 
-  #askBeforeLeaving(then) {
-    this.confirm({
-      title: "UNSAVED CHANGES",
-      text: this.isNew ? "This note hasn't been saved yet." : "You've changed this note since it was saved.",
-      yes: "SAVE",
-      no: "DISCARD",
-      alt: { label: "KEEP EDITING", run: () => {} },
-      onYes: async () => {
-        if (await this.save()) then();
-      },
-      onNo: () => {
-        this.setBaseline(this.html);
-        then();
-      },
-    });
+  /** B: save and close the open note, then start a new one. */
+  async newNote() {
+    const closed = await this.closeCurrent();
+    if (!closed.ok) return;
+    this.isNew = true;
+    this.editingId = "new";
+    this.draftTitle = "";
+    this.draftIcon = null;
+    this.draftPlot = null;
+    this.#toFreePlot();
+    this.focus = "editor";
+    this.editorApi?.reload();
+    this.say(closed.saved ? `SAVED “${closed.title}” · NEW NOTE` : "NEW NOTE", 2400);
+  }
+
+  /** Save and close the open note, back to the list. */
+  async leave() {
+    const closed = await this.closeCurrent();
+    if (!closed.ok) return;
+    this.#toList();
+    if (closed.saved) this.say(`SAVED “${closed.title}”`);
+  }
+
+  /** Open another note from the list while editing: the current one is saved first. */
+  async switchTo(i) {
+    const target = this.notes[i]?.noteid;
+    if (!target || target === this.editingId) return;
+    const closed = await this.closeCurrent();
+    if (!closed.ok) return;
+    this.#toList();
+    this.selectedId = target;
+    this.open();
+    if (closed.saved) this.say(`SAVED “${closed.title}”`);
   }
 
   // --- Map: plant the open note's tree ----------------------------------
@@ -653,14 +667,14 @@ export class Device {
     if (button === "left" && n) this.index = Math.max(0, this.index - 5);
     if (button === "right" && n) this.index = Math.min(n - 1, this.index + 5);
     if (button === "a" && n) this.open();
-    if (button === "b") this.cycleSort();
+    if (button === "b") this.newNote();
     if (button === "start") this.openMenu();
   };
 
   #editorInput = (button) => {
     if (["up", "down", "left", "right"].includes(button)) this.editorApi?.move(button);
     if (button === "a") this.save();
-    if (button === "b") this.leave();
+    if (button === "b") this.newNote();
     if (button === "start") this.openMenu();
   };
 

@@ -2,6 +2,9 @@
   import { useDevice } from "../device.svelte.js";
   import GardenMap from "../GardenMap.svelte";
   const device = useDevice();
+  // Hardware keys don't take keyboard focus on click, so typing carries on
+  // in the editor (keyboard users can still Tab to them).
+  const keepFocus = (e) => e.preventDefault();
   const pad2 = (n) => String(n).padStart(2, "0");
 
   // While browsing the list, the map centres on the selected note's tree.
@@ -36,11 +39,11 @@
   </div>
   <div class="map-btns">
     <div class="mb-wrap mb-move">
-      <button class="map-btn" class:on={device.focus === "map"} aria-label="Move the map cursor" onclick={() => device.enterMap()}>✥</button>
+      <button class="map-btn" class:on={device.focus === "map"} aria-label="Move the map cursor" onmousedown={keepFocus} onclick={() => device.enterMap()}>✥</button>
       <span class="etch">MOVE</span>
     </div>
     <div class="mb-wrap mb-plant">
-      <button class="map-btn plant" aria-label="Plant here" onclick={() => device.plant()}>✎</button>
+      <button class="map-btn plant" aria-label="Plant here" onmousedown={keepFocus} onclick={() => device.plant()}>✎</button>
       <span class="etch">PLANT</span>
     </div>
   </div>

@@ -1,6 +1,9 @@
 <script>
   import { useDevice } from "../device.svelte.js";
   const device = useDevice();
+  // Hardware keys don't take keyboard focus on click, so typing carries on
+  // in the editor (keyboard users can still Tab to them).
+  const keepFocus = (e) => e.preventDefault();
 </script>
 
 <!-- CONTROL PAD: Start, B, A in one straight row -->
@@ -10,14 +13,14 @@
   <div class="ctl-row">
     <!-- Start: its function is on the key, in a well like the A/B pad -->
     <div class="start-well">
-      <button class="start" class:lit={device.lit.start} aria-label="Start: {device.labels.start}" onclick={() => device.press("start")}>START</button>
+      <button class="start" class:lit={device.lit.start} aria-label="Start: {device.labels.start}" onmousedown={keepFocus} onclick={() => device.press("start")}>START</button>
     </div>
     <div class="ab-pad">
       <div class="btn-col">
-        <button class="round b" class:lit={device.lit.b} aria-label="B: {device.labels.b}" onclick={() => device.press("b")}>B</button>
+        <button class="round b" class:lit={device.lit.b} aria-label="B: {device.labels.b}" onmousedown={keepFocus} onclick={() => device.press("b")}>B</button>
       </div>
       <div class="btn-col">
-        <button class="round a" class:lit={device.lit.a} aria-label="A: {device.labels.a}" onclick={() => device.press("a")}>A</button>
+        <button class="round a" class:lit={device.lit.a} aria-label="A: {device.labels.a}" onmousedown={keepFocus} onclick={() => device.press("a")}>A</button>
       </div>
     </div>
   </div>
