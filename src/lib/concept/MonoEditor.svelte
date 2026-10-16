@@ -66,7 +66,7 @@
   }
 
   $effect(() => {
-    const editing = device.focus === "editor";
+    const editing = device.editing;
     const key = editing ? device.editingId : (device.note?.noteid ?? "none");
     // Saving a new note turns "new" into its real id: same content, no reload.
     if (editing && loadedKey === "new" && key !== "new") {

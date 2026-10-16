@@ -69,7 +69,9 @@ On a computer keyboard: arrow keys are the D-pad, Enter is A, Esc is B, and **M*
 - `src/lib/concept/modules/*.svelte`: one component per module (Camera, Nameplate, ListModule, Screen, MapViewer, DPad, ControlPad, Speaker). Mobile tweaks sit beside each module's own styles.
 - `src/lib/concept/materials.css`: shared materials (module bodies, screws, etched labels, glass, pips). It's scoped to the `.arb` root with `:where()`, so module styles win and nothing leaks into the main app.
 - `src/lib/concept/Configurator.svelte`: the page-level Configure panel.
-- `src/lib/concept/sample.js`: sample content, used until step 4 connects real notes.
+- `src/lib/concept/device.svelte.js`: the shared device state (input, screens, notes, saving, map).
+- `src/lib/concept/garden.js`, `GardenMap.svelte`: the garden map (same tiles as the classic app) and its pixel window.
+- `src/lib/concept/MonoEditor.svelte`, `NoteRows.svelte`, `trees.js`: the editor, the list rows, the tree catalogue.
 
 ## Layout system (decided)
 
@@ -139,7 +141,7 @@ Each step is small, checked in the browser, and committed on its own.
 **C · Modules that know about each other**
 
 9. **Missing modules.** What's slotted decides the red **!** and the right-hand drawer (tree or plot picker), laid out like the missing module.
-10. **Map viewer.** Real note positions, a cursor, and Move/Plant, using the same map data as the app.
+10. ✅ **Map viewer.** Real note positions, a cursor, and Move/Plant, using the same map data as the app.
 11. **Treemoji and bay swapping.**
     - Treemoji: the tree picker plus the emoji buddy.
     - The bay swaps between Map, Treemoji and List, with slide-in/eject motion.

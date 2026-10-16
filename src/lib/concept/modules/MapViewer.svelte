@@ -1,31 +1,41 @@
 <script>
-  import { mapRows, plantedTrees, mapCursor } from "../sample.js";
+  import { useDevice } from "../device.svelte.js";
+  import GardenMap from "../GardenMap.svelte";
+  const device = useDevice();
+  const pad2 = (n) => String(n).padStart(2, "0");
+
+  // While browsing the list, the map centres on the selected note's tree.
+  let view = $derived.by(() => {
+    if (device.editing) return device.cursor;
+    const n = device.note;
+    return n && n.mapX != null && n.mapY != null ? { x: n.mapX, y: n.mapY } : null;
+  });
+  let readout = $derived.by(() => {
+    if (!view) return "NOT PLANTED";
+    const at = device.plots.find((p) => p.x === view.x && p.y === view.y);
+    const where = `PLOT ${pad2(view.x)},${pad2(view.y)}`;
+    if (!device.editing) return where;
+    return `${where} · ${!at ? "FREE" : at.mine ? "YOURS" : "TAKEN"}`;
+  });
 </script>
 
 <!-- BAY: Map viewer -->
-<section class="mod alu bay" aria-label="Map viewer module">
+<section class="mod alu bay" class:focused={device.focus === "map"} aria-label="Map viewer module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="map-glass">
     <div class="map-grid">
-      {#each mapRows as row, y}
-        {#each row.split("") as t, x}
-          <i class="tile {t}" class:cur={x === mapCursor.x && y === mapCursor.y}></i>
-        {/each}
-      {/each}
-      {#each plantedTrees as tr}
-        <img class="map-tree" src={tr.src} alt="" style="left:{(tr.x / 12) * 100}%; top:{(tr.y / 9) * 100}%;" />
-      {/each}
+      <GardenMap cursor={view} plots={device.plots} blink={device.focus === "map"} />
     </div>
-    <div class="map-read">PLOT {String(mapCursor.x).padStart(2, "0")},{String(mapCursor.y).padStart(2, "0")} · FREE</div>
+    <div class="map-read" class:taken={readout.endsWith("TAKEN")}>{readout}</div>
   </div>
   <div class="map-btns">
     <div class="mb-wrap mb-move">
-      <button class="map-btn" aria-label="Move cursor">✥</button>
+      <button class="map-btn" class:on={device.focus === "map"} aria-label="Move the map cursor" onclick={() => device.enterMap()}>✥</button>
       <span class="etch">MOVE</span>
     </div>
     <div class="mb-wrap mb-plant">
-      <button class="map-btn plant" aria-label="Plant here">✎</button>
+      <button class="map-btn plant" aria-label="Plant here" onclick={() => device.plant()}>✎</button>
       <span class="etch">PLANT</span>
     </div>
   </div>
@@ -47,33 +57,17 @@
   }
   .map-grid {
     position: relative;
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
     aspect-ratio: 12 / 9;
     border-radius: 3px;
     overflow: hidden;
     image-rendering: pixelated;
   }
-  .tile { display: block; }
-  .tile.w { background: #5fb8cc; box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.12); }
-  .tile.s { background: #e3d39a; }
-  .tile.g { background: #9fd37b; }
-  .tile.d { background: #84bc62; }
-  .tile.cur {
-    position: relative;
-    z-index: 2;
-    outline: 2px solid var(--signal);
-    outline-offset: -1px;
-    animation: blink 1.1s steps(1) infinite;
+  .map-read.taken {
+    color: #ffb3a1;
   }
-  .map-tree {
-    position: absolute;
-    width: calc(100% / 12);
-    aspect-ratio: 1;
-    object-fit: contain;
-    transform: translateY(-20%);
-    image-rendering: pixelated;
-    z-index: 1;
+  .map-btn.on {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
   }
   .map-read {
     margin-top: 8px;
@@ -131,7 +125,4 @@
   :global(.portrait) .mb-wrap { gap: 6px; }
   :global(.portrait) .map-btn { width: 40px; height: 40px; border-radius: 10px; font-size: 16px; }
   :global(.portrait) .bay-label { display: none; }
-  @keyframes blink {
-    50% { opacity: 0; }
-  }
 </style>

@@ -15,6 +15,7 @@
   const device = provideDevice(new Device());
   $effect(() => {
     device.hasListModule = view === "landscape";
+    device.hasMapViewer = showBay;
   });
   onMount(() => device.start());
 

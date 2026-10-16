@@ -44,13 +44,13 @@
       {#if showList}
         <span>▣ <b>NOTES</b> <span class="mode">· {device.notes.length}</span></span>
       {:else}
-        {#if device.focus === "editor"}
+        {#if device.editing}
           <span class="title-wrap">▣ <input class="title-in" bind:value={device.draftTitle} placeholder="untitled" aria-label="Title" onkeydown={titleKey} /></span>
         {:else}
           <span>▣ <b>{device.note?.title ?? "—"}</b> <span class="mode">· PREVIEW</span></span>
         {/if}
       {/if}
-      <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}{#if device.dirty}<span class="dot-unsaved">●</span> UNSAVED{:else if device.focus === "editor"}<span class="dot-saved">●</span> SAVED{/if}{/if}<span class="wide-only"> <span class="sep">│</span> {clock} <span class="sep">│</span> {date}</span></span>
+      <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}{#if device.dirty}<span class="dot-unsaved">●</span> UNSAVED{:else if device.editing}<span class="dot-saved">●</span> SAVED{/if}{/if}<span class="wide-only"> <span class="sep">│</span> {clock} <span class="sep">│</span> {date}</span></span>
     </div>
 
     {#if showList}

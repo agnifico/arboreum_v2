@@ -5,6 +5,7 @@ import { liveQuery } from "dexie";
 import { db } from "$lib/db.js";
 import { v4 as uuidv4 } from "uuid";
 import { normalizeBackup } from "$lib/backup.js";
+import { COLS, ROWS } from "./garden.js";
 
 const KEY = "arb-device";
 export const provideDevice = (device) => setContext(KEY, device);
@@ -50,7 +51,8 @@ export const KEYMAP = {
 export class Device {
   /** Keys currently lit, so keyboard presses show on the hardware too. */
   lit = $state(Object.fromEntries(BUTTONS.map((b) => [b, false])));
-  /** Which part of the device has the D-pad: the notes list or the editor. */
+  /** Which part of the device has the D-pad: "list", "editor", "map" (the
+      Map viewer) or "drawer" (the screen's slide-out). */
   focus = $state("list");
   /** Notes as stored (the app's IndexedDB), kept live. */
   raw = $state.raw([]);
@@ -80,7 +82,14 @@ export class Device {
   draftTitle = $state("");
   /** The editor's current HTML and what it was when loaded or last saved. */
   html = $state("");
-  baseline = $state.raw({ title: "", html: "" });
+  /** The note's tree and plot, part of the draft until saved. */
+  draftIcon = $state(null);
+  draftPlot = $state(null); // [x, y] or null
+  baseline = $state.raw({ title: "", html: "", icon: null, plot: null });
+  /** Which modules are slotted (set by the page from Configure). */
+  hasMapViewer = $state(true);
+  /** Map cursor, shared by the Map viewer and the drawer's plot picker. */
+  cursor = $state({ x: 12, y: 7 });
   /** Formatting under the caret (for lit format keys) and the word count. */
   active = $state({});
   words = $state(0);
@@ -117,19 +126,52 @@ export class Device {
     return this.notes[this.index];
   }
 
+  /** A note is open (the editor, map or drawer may have the D-pad). */
+  get editing() {
+    return this.editingId != null;
+  }
+
   /** The note as stored (raw title, not the display "untitled"). */
   get stored() {
-    const id = this.focus === "editor" ? this.editingId : this.selectedId;
+    const id = this.editing ? this.editingId : this.selectedId;
     return this.raw.find((n) => n.noteid === id);
   }
 
   get dirty() {
-    if (this.focus !== "editor") return false;
-    return this.draftTitle !== this.baseline.title || this.html !== this.baseline.html;
+    if (!this.editing) return false;
+    const b = this.baseline;
+    return (
+      this.draftTitle !== b.title ||
+      this.html !== b.html ||
+      this.draftIcon !== b.icon ||
+      String(this.draftPlot) !== String(b.plot)
+    );
   }
 
   setBaseline(html) {
-    this.baseline = { title: this.draftTitle, html };
+    this.baseline = { title: this.draftTitle, html, icon: this.draftIcon, plot: this.draftPlot };
+  }
+
+  /** Every planted note's tree, for the maps. The open note uses its draft. */
+  get plots() {
+    const out = [];
+    for (const n of this.raw) {
+      if (this.editing && n.noteid === this.editingId) continue;
+      if (n.mapX != null && n.mapY != null) out.push({ x: n.mapX, y: n.mapY, icon: n.icon || "/Tree2.png", title: n.title?.trim() || "untitled" });
+    }
+    if (this.editing && this.draftPlot) out.push({ x: this.draftPlot[0], y: this.draftPlot[1], icon: this.draftIcon || "/Tree2.png", mine: true, title: this.draftTitle || "untitled" });
+    return out;
+  }
+
+  /** Who (if anyone) is planted at the cursor. */
+  get atCursor() {
+    return this.plots.find((p) => p.x === this.cursor.x && p.y === this.cursor.y) ?? null;
+  }
+
+  /** What still needs doing for the open note (drives the red "!"). */
+  get missing() {
+    if (!this.editing) return [];
+    return [!this.draftIcon && "tree", !this.draftPlot && "plot"].filter(Boolean);
   }
 
   get sortLabel() {
@@ -164,6 +206,10 @@ export class Device {
     const o = this.overlay;
     if (o?.kind === "menu") return { a: "SELECT", b: "CLOSE", start: "CLOSE" };
     if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—" };
+    if (this.focus === "map") {
+      const at = this.atCursor;
+      return { a: at && !at.mine ? "TAKEN" : "PLANT", b: "BACK", start: "—" };
+    }
     if (this.focus === "editor") return { a: "SAVE", b: "LIST", start: "MENU" };
     return { a: "OPEN", b: "SORT", start: "MENU" };
   }
@@ -172,6 +218,7 @@ export class Device {
     this.light(button);
     if (this.overlay?.kind === "menu") return this.#menuInput(button);
     if (this.overlay?.kind === "confirm") return this.#confirmInput(button);
+    if (this.focus === "map") return this.#mapInput(button);
     if (this.focus === "editor") return this.#editorInput(button);
     return this.#listInput(button);
   }
@@ -214,13 +261,20 @@ export class Device {
 
   /** Save the open note (creates it on first save). Returns true on success. */
   async save() {
-    if (this.focus !== "editor") return false;
+    if (!this.editing) return false;
     const html = this.editorApi?.getHTML() ?? this.html;
     const title = this.draftTitle.trim();
-    const data = { title, text: html, updatedAt: new Date() };
+    const data = {
+      title,
+      text: html,
+      icon: this.draftIcon || "/Tree2.png",
+      mapX: this.draftPlot ? this.draftPlot[0] : null,
+      mapY: this.draftPlot ? this.draftPlot[1] : null,
+      updatedAt: new Date(),
+    };
     try {
       if (this.isNew) {
-        const note = { noteid: uuidv4(), icon: "/Tree2.png", createdAt: new Date(), mapX: null, mapY: null, ...data };
+        const note = { noteid: uuidv4(), createdAt: new Date(), ...data };
         note.id = await db.notes.add(note);
         // Show it straight away, unless the live query got there first.
         if (!this.raw.some((n) => n.noteid === note.noteid)) this.raw = [...this.raw, note];
@@ -233,7 +287,8 @@ export class Device {
         this.raw = this.raw.map((n) => (n.noteid === stored.noteid ? { ...n, ...data } : n));
       }
       this.draftTitle = title;
-      this.baseline = { title, html };
+      this.draftIcon = data.icon;
+      this.setBaseline(html);
       this.say("SAVED ✓");
       return true;
     } catch (error) {
@@ -317,8 +372,12 @@ export class Device {
     if (!this.note) return;
     this.isNew = false;
     this.editingId = this.note.noteid;
-    this.draftTitle = this.raw.find((n) => n.noteid === this.editingId)?.title ?? "";
-    this.baseline = { title: this.draftTitle, html: this.html };
+    const n = this.raw.find((x) => x.noteid === this.editingId);
+    this.draftTitle = n?.title ?? "";
+    this.draftIcon = n?.icon ?? null;
+    this.draftPlot = n?.mapX != null && n?.mapY != null ? [n.mapX, n.mapY] : null;
+    if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
+    this.setBaseline(this.html);
     this.focus = "editor";
   }
 
@@ -327,6 +386,8 @@ export class Device {
       this.isNew = true;
       this.editingId = "new";
       this.draftTitle = "";
+      this.draftIcon = null;
+      this.draftPlot = null;
       this.focus = "editor";
     };
     if (this.dirty) return this.#askBeforeLeaving(go);
@@ -350,11 +411,43 @@ export class Device {
         if (await this.save()) then();
       },
       onNo: () => {
-        this.baseline = { title: this.draftTitle, html: this.html };
+        this.setBaseline(this.html);
         then();
       },
     });
   }
+
+  // --- Map: plant the open note's tree ----------------------------------
+  /** Hand the D-pad to the map (Map viewer or the drawer's plot picker). */
+  enterMap() {
+    if (!this.editing) return this.say("OPEN A NOTE TO PLANT");
+    if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
+    this.focus = "map";
+  }
+
+  moveCursor(dx, dy) {
+    this.cursor = {
+      x: Math.max(0, Math.min(COLS - 1, this.cursor.x + dx)),
+      y: Math.max(0, Math.min(ROWS - 1, this.cursor.y + dy)),
+    };
+  }
+
+  /** Plant here, if the plot is free. Part of the draft until A saves. */
+  plant() {
+    if (!this.editing) return this.say("OPEN A NOTE TO PLANT");
+    const at = this.atCursor;
+    if (at && !at.mine) return this.say(`TAKEN · ${at.title}`, 2200);
+    this.draftPlot = [this.cursor.x, this.cursor.y];
+    this.focus = "editor";
+    this.say(`PLANTED · ${String(this.cursor.x).padStart(2, "0")},${String(this.cursor.y).padStart(2, "0")}`);
+  }
+
+  #mapInput = (button) => {
+    const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[button];
+    if (d) this.moveCursor(...d);
+    if (button === "a") this.plant();
+    if (button === "b") this.focus = "editor";
+  };
 
   // --- Formatting (bottom strip, later the Format deck) ----------------
   static FORMATS = [
@@ -385,14 +478,15 @@ export class Device {
 
   /** What the details page shows for the note on screen. */
   get details() {
-    const n = this.focus === "editor" ? this.stored : this.note;
+    const n = this.editing ? this.stored : this.note;
+    const plot = this.editing ? this.draftPlot : n && n.mapX != null && n.mapY != null ? [n.mapX, n.mapY] : null;
     return {
       words: this.words,
       made: n?.createdAt ? new Date(n.createdAt) : null,
       saved: n?.updatedAt ?? n?.createdAt ?? null,
-      status: this.focus !== "editor" ? "PREVIEW" : this.dirty ? "UNSAVED" : "SAVED",
-      tree: n?.icon ?? null,
-      plot: n && n.mapX != null && n.mapY != null ? [n.mapX, n.mapY] : null,
+      status: !this.editing ? "PREVIEW" : this.dirty ? "UNSAVED" : "SAVED",
+      tree: this.editing ? this.draftIcon : (n?.icon ?? null),
+      plot,
     };
   }
 
@@ -471,7 +565,7 @@ export class Device {
     const typing = t?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t?.tagName ?? "");
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
       // Always "save", never "press A" (which could pick a menu item).
-      if (this.focus === "editor" && !this.overlay) {
+      if (this.editing && !this.overlay) {
         this.light("a");
         this.save();
       }
