@@ -7,22 +7,33 @@
     active = false,
     type = "button",
     class: extraClass = "",
+    // title, aria-label, aria-pressed, etc. are passed straight through
+    ...rest
   } = $props();
-
-  const Tag = href ? "a" : "button";
 </script>
 
-<svelte:element
-  this={Tag}
-  {href}
-  {target}
-  type={Tag === "button" ? type : undefined}
-  class={`btn btn-${variant} ${extraClass}`}
-  class:active
-  on:click={onClick}
->
-  <slot />
-</svelte:element>
+{#if href}
+  <a
+    {href}
+    {target}
+    class={`btn btn-${variant} ${extraClass}`}
+    class:active
+    on:click={onClick}
+    {...rest}
+  >
+    <slot />
+  </a>
+{:else}
+  <button
+    {type}
+    class={`btn btn-${variant} ${extraClass}`}
+    class:active
+    on:click={onClick}
+    {...rest}
+  >
+    <slot />
+  </button>
+{/if}
 
 <style>
   /* All styling is now handled by global classes in app.css */
