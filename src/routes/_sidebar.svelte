@@ -17,22 +17,21 @@
   let sortBy = $state("updatedAt");
   let sortDir = $state("desc");
 
-  let sortedNotes = $derived(() => {
+  // Dates may be Date objects (saved here) or ISO strings (older imports).
+  const time = (v) => (v ? new Date(v).getTime() || 0 : 0);
+
+  let sortedNotes = $derived.by(() => {
     if (!Array.isArray(notes)) return [];
 
     const sorted = [...notes].sort((a, b) => {
-      let valA, valB;
       if (sortBy === "title") {
-        valA = a.title?.toLowerCase() || "";
-        valB = b.title?.toLowerCase() || "";
-      } else {
-        // 'createdAt' or 'updatedAt'
-        valA = a[sortBy] || a.createdAt;
-        valB = b[sortBy] || b.createdAt;
+        return (a.title?.trim() || "").localeCompare(b.title?.trim() || "", undefined, {
+          sensitivity: "base",
+          numeric: true,
+        });
       }
-      if (valA < valB) return -1;
-      if (valA > valB) return 1;
-      return 0;
+      // 'createdAt' or 'updatedAt' (never-edited notes fall back to createdAt)
+      return time(a[sortBy] ?? a.createdAt) - time(b[sortBy] ?? b.createdAt);
     });
 
     if (sortDir === "desc") {
@@ -117,8 +116,8 @@
     {/if}
   </div>
   <div class="notes">
-    {#if sortedNotes()}
-      {#each sortedNotes() as i (i.id)}
+    {#if sortedNotes}
+      {#each sortedNotes as i (i.id)}
         <FileIcon
           note={i}
           selectMode={select_switch}

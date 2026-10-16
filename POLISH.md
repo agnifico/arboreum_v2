@@ -24,7 +24,7 @@ If that changes, a migration and a test against v2 data come with it.
 - [x] **L3** Delete confirmation is empty: it doesn't say what or how many, there's no "can't be undone", and Delete looks like a normal green action.
 - [x] **L4** After closing any dialog with Esc, × or a backdrop click, it won't open again (`Modal` mutates a non-bindable `show`), so the second delete attempt silently does nothing.
 - [x] **L5** Deleting the note you're viewing leaves its stale page up; reloading, or opening any unknown `/read/<id>`, shows SvelteKit's raw "404 Not found".
-- [ ] **L6** Sort compares raw values: imported notes carry string dates, and mixed with new notes' `Date`s, "Last saved" and "Created" order breaks.
+- [x] **L6** Sort compares raw values: imported notes carry string dates, and mixed with new notes' `Date`s, "Last saved" and "Created" order breaks.
 - [ ] **L7** With zero notes the list is a blank panel.
 - Verified OK: sort by Last saved, Created, A–Z, both directions, with clean data.
 
