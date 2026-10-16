@@ -81,6 +81,11 @@ export class Device {
   /** The editor's current HTML and what it was when loaded or last saved. */
   html = $state("");
   baseline = $state.raw({ title: "", html: "" });
+  /** Formatting under the caret (for lit format keys) and the word count. */
+  active = $state({});
+  words = $state(0);
+  /** Bottom strip page: "format" or "details". */
+  stripPage = $state("format");
 
   #timers = {};
   #msgTimer;
@@ -349,6 +354,46 @@ export class Device {
         then();
       },
     });
+  }
+
+  // --- Formatting (bottom strip, later the Format deck) ----------------
+  static FORMATS = [
+    { key: "bold", label: "B", run: (c) => c.toggleBold() },
+    { key: "italic", label: "I", run: (c) => c.toggleItalic() },
+    { key: "underline", label: "U", run: (c) => c.toggleUnderline() },
+    { key: "strike", label: "S", run: (c) => c.toggleStrike() },
+    { key: "highlight", label: "HL", run: (c) => c.toggleHighlight() },
+    { key: "h1", label: "H1", run: (c) => c.toggleHeading({ level: 1 }) },
+    { key: "h2", label: "H2", run: (c) => c.toggleHeading({ level: 2 }) },
+    { key: "h3", label: "H3", run: (c) => c.toggleHeading({ level: 3 }) },
+    { key: "bulletList", label: "•", run: (c) => c.toggleBulletList() },
+    { key: "orderedList", label: "1.", run: (c) => c.toggleOrderedList() },
+    { key: "taskList", label: "☐", run: (c) => c.toggleTaskList() },
+    { key: "blockquote", label: "❝", run: (c) => c.toggleBlockquote() },
+    { key: "code", label: "</>", run: (c) => c.toggleCode() },
+  ];
+
+  get canFormat() {
+    return this.focus === "editor" && !this.overlay && !!this.editorApi;
+  }
+
+  format(key) {
+    if (!this.canFormat) return;
+    const f = Device.FORMATS.find((x) => x.key === key);
+    f.run(this.editorApi.commands()).run();
+  }
+
+  /** What the details page shows for the note on screen. */
+  get details() {
+    const n = this.focus === "editor" ? this.stored : this.note;
+    return {
+      words: this.words,
+      made: n?.createdAt ? new Date(n.createdAt) : null,
+      saved: n?.updatedAt ?? n?.createdAt ?? null,
+      status: this.focus !== "editor" ? "PREVIEW" : this.dirty ? "UNSAVED" : "SAVED",
+      tree: n?.icon ?? null,
+      plot: n && n.mapX != null && n.mapY != null ? [n.mapX, n.mapY] : null,
+    };
   }
 
   #toList() {

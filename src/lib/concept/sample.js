@@ -1,7 +1,5 @@
 // Placeholder content for modules not yet wired to real data (see CONCEPT.md, build order).
 
-export const formatKeys = ["B", "I", "U", "S", "H1", "H2", "•", "1.", "☐", "❝", "</>"];
-
 // A tiny pixel map for the Map viewer: w water, s sand, g grass, d dark grass.
 export const mapRows = [
   "wwwwwwwwwwww",

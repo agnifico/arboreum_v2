@@ -28,6 +28,18 @@
   let loadedKey = null; // which note (or "new") is in the editor
 
   // --- Gutter: one number per textblock, measured from the DOM ---------
+  function report() {
+    if (!editor) return;
+    const a = {};
+    for (const f of [["bold"], ["italic"], ["underline"], ["strike"], ["highlight"], ["bulletList"], ["orderedList"], ["taskList"], ["blockquote"], ["code"]]) a[f[0]] = editor.isActive(f[0]);
+    for (const l of [1, 2, 3]) a[`h${l}`] = editor.isActive("heading", { level: l });
+    device.active = a;
+    // Separate blocks with a space, so "three" + "four" isn't one word.
+    const doc = editor.state.doc;
+    const text = doc.textBetween(0, doc.content.size, " ", " ").trim();
+    device.words = text ? text.split(/\s+/).length : 0;
+  }
+
   function measure() {
     if (!editor || !host) return;
     const blocks = editor.view.dom.querySelectorAll("p, h1, h2, h3, h4, h5, h6, pre");
@@ -49,6 +61,7 @@
     editor.commands.setContent(html || "", false);
     device.html = editor.getHTML();
     device.setBaseline(device.html);
+    report();
     requestAnimationFrame(measure);
   }
 
@@ -98,7 +111,10 @@
       onUpdate: () => {
         device.html = editor.getHTML();
       },
-      onTransaction: () => measure(),
+      onTransaction: () => {
+        measure();
+        report();
+      },
     });
     // The device moves the caret with the on-screen D-pad through this.
     device.editorApi = {

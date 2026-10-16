@@ -132,7 +132,7 @@ Each step is small, checked in the browser, and committed on its own.
 7. ✅ **Saving and the Start menu.**
    - Save, unsaved state and the status line.
    - Start menu: new, save, delete (with confirm), backup.
-8. **Secondary strip.** Two pages, switched with ◀ ▶:
+8. ✅ **Secondary strip.** Two pages, switched with ◀ ▶:
    - Format: the keys run editor commands.
    - Details: words, dates, status, tree, plot.
 

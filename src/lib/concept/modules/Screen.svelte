@@ -1,11 +1,29 @@
 <script>
-  import { formatKeys } from "../sample.js";
-  import { useDevice } from "../device.svelte.js";
+  import { onMount } from "svelte";
+  import { useDevice, Device, ago } from "../device.svelte.js";
+  import { treeName } from "../trees.js";
   import NoteRows from "../NoteRows.svelte";
   import MonoEditor from "../MonoEditor.svelte";
   const device = useDevice();
   // Portrait has no List module, so the list takes over the screen.
   let showList = $derived(device.focus === "list" && !device.hasListModule);
+
+  // Status-line clock
+  let now = $state(new Date());
+  onMount(() => {
+    const t = setInterval(() => (now = new Date()), 15000);
+    return () => clearInterval(t);
+  });
+  const pad2 = (n) => String(n).padStart(2, "0");
+  let clock = $derived(`${pad2(now.getHours())}:${pad2(now.getMinutes())}`);
+  let date = $derived(`${pad2(now.getDate())}·${pad2(now.getMonth() + 1)}`);
+  const fmtDate = (d) => (d ? `${pad2(d.getDate())}·${pad2(d.getMonth() + 1)}·${String(d.getFullYear()).slice(2)}` : "—");
+
+  const PAGES = ["format", "details"];
+  function page(step) {
+    const i = PAGES.indexOf(device.stripPage);
+    device.stripPage = PAGES[(i + step + PAGES.length) % PAGES.length];
+  }
 
   // Enter in the title moves on to the text.
   function titleKey(e) {
@@ -32,7 +50,7 @@
           <span>▣ <b>{device.note?.title ?? "—"}</b> <span class="mode">· PREVIEW</span></span>
         {/if}
       {/if}
-      <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}{#if device.dirty}<span class="dot-unsaved">●</span> UNSAVED{:else if device.focus === "editor"}<span class="dot-saved">●</span> SAVED{/if}{/if}<span class="wide-only"> <span class="sep">│</span> 11:42 <span class="sep">│</span> 16·10</span></span>
+      <span class="status-r" aria-live="polite">{#if device.message}<span class="msg">{device.message}</span>{:else}{#if device.dirty}<span class="dot-unsaved">●</span> UNSAVED{:else if device.focus === "editor"}<span class="dot-saved">●</span> SAVED{/if}{/if}<span class="wide-only"> <span class="sep">│</span> {clock} <span class="sep">│</span> {date}</span></span>
     </div>
 
     {#if showList}
@@ -62,13 +80,34 @@
 
     <!-- Secondary strip: paged with ◀ ▶ (format · details) -->
     <div class="strip">
-      <span class="pg">◀</span>
-      <span class="strip-label">FORMAT</span>
-      <span class="pg">▶</span>
-      <span class="keys">
-        {#each formatKeys as k}<span class="key">{k}</span>{/each}
-      </span>
-      <span class="pages"><i class="on"></i><i></i></span>
+      <button class="pg" aria-label="Previous strip page" onclick={() => page(-1)}>◀</button>
+      <span class="strip-label">{device.stripPage === "format" ? "FORMAT" : "DETAILS"}</span>
+      <button class="pg" aria-label="Next strip page" onclick={() => page(1)}>▶</button>
+      {#if device.stripPage === "format"}
+        <span class="keys" class:off={!device.canFormat}>
+          {#each Device.FORMATS as f}
+            <button
+              class="key"
+              class:on={device.canFormat && device.active[f.key]}
+              aria-pressed={device.canFormat && !!device.active[f.key]}
+              aria-label={f.key}
+              disabled={!device.canFormat}
+              onmousedown={(e) => e.preventDefault()}
+              onclick={() => device.format(f.key)}>{f.label}</button>
+          {/each}
+        </span>
+      {:else}
+        {@const d = device.details}
+        <span class="details">
+          <span><i>WORDS</i>{d.words}</span>
+          <span><i>MADE</i>{fmtDate(d.made)}</span>
+          <span><i>SAVED</i>{d.saved ? ago(d.saved) : "—"}</span>
+          <span class:warn={d.status === "UNSAVED"}><i>STATUS</i>{d.status}</span>
+          <span><i>TREE</i>{d.tree ? treeName(d.tree) : "NONE"}</span>
+          <span class:warn={!d.plot}><i>PLOT</i>{d.plot ? d.plot.map(pad2).join(",") : "NONE"}</span>
+        </span>
+      {/if}
+      <span class="pages"><i class:on={device.stripPage === "format"}></i><i class:on={device.stripPage === "details"}></i></span>
     </div>
     {#if device.overlay?.kind === "menu"}
       <div class="overlay" role="menu" aria-label={device.overlay.title}>
@@ -336,6 +375,9 @@
   }
   .pg {
     color: var(--phosphor);
+    background: none;
+    font-size: 11px;
+    padding: 4px 2px;
   }
   .strip-label {
     width: 64px;
@@ -347,8 +389,40 @@
     gap: 6px;
     margin-left: 10px;
     min-width: 0;
-    overflow: hidden;
+    overflow-x: auto;
+    scrollbar-width: none;
     mask-image: linear-gradient(90deg, #000 85%, transparent);
+  }
+  .keys.off {
+    opacity: 0.4;
+  }
+  .key:disabled {
+    cursor: default;
+  }
+  .key.on {
+    color: #10130f;
+    background: var(--phosphor);
+    border-color: var(--phosphor);
+  }
+  .details {
+    display: flex;
+    gap: 16px;
+    margin-left: 10px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--phosphor);
+    font-weight: 500;
+    mask-image: linear-gradient(90deg, #000 88%, transparent);
+  }
+  .details i {
+    font-style: normal;
+    color: var(--phosphor-dim);
+    margin-right: 6px;
+    font-weight: 700;
+  }
+  .details .warn {
+    color: #ffb3a1;
   }
   .key {
     flex-shrink: 0;
