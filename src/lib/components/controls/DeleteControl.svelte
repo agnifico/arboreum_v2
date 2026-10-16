@@ -4,11 +4,23 @@
 </script>
 
 <div class="delete-control" class:active>
-  <button type="button" class="toggle" on:click={onToggle}>
+  <button
+    type="button"
+    class="toggle"
+    on:click={onToggle}
+    aria-pressed={active}
+    title={active ? "Stop selecting" : "Select notes to delete"}
+  >
     {active ? "Unselect" : "Select"}
   </button>
-  <button type="button" class="confirm" on:click={onDelete}>
-    <img src="{base}/delete.svg" alt="Confirm Delete" />
+  <button
+    type="button"
+    class="confirm"
+    on:click={onDelete}
+    aria-label="Delete selected notes"
+    title="Delete selected notes"
+  >
+    <img src="{base}/delete.svg" alt="" />
   </button>
 </div>
 

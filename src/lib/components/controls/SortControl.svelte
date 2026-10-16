@@ -25,7 +25,14 @@
 <div class="sort-control-wrapper">
   <div class="sort-control">
     <div class="dropdown-container">
-      <button class="dropdown-trigger" on:click={() => showDropdown = !showDropdown}>
+      <button
+        class="dropdown-trigger"
+        on:click={() => showDropdown = !showDropdown}
+        aria-label={`Sort by: ${options.find(o => o.key === value)?.label}`}
+        aria-haspopup="true"
+        aria-expanded={showDropdown}
+        title="Sort by"
+      >
         {options.find(o => o.key === value)?.label}
       </button>
       {#if showDropdown}
@@ -39,7 +46,12 @@
       {/if}
     </div>
     <!-- <div class="separator"></div> -->
-    <button class="direction-toggle" on:click={toggleDirection}>
+    <button
+      class="direction-toggle"
+      on:click={toggleDirection}
+      aria-label={direction === 'asc' ? 'Ascending order' : 'Descending order'}
+      title="Reverse the order"
+    >
       {#if direction === 'asc'}
         <span class="arrow">▲</span>
       {:else}
@@ -101,13 +113,6 @@
     background-color: rgba(255,255,255,0.05);
     background-color: var(--dry-sage);
     color: var(--charcoal);
-  }
-
-  .separator {
-    width: 1px;
-    height: 60%;
-    background-color: var(--hunter-green);
-    align-self: center;
   }
 
   .arrow {

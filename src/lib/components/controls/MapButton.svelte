@@ -2,11 +2,19 @@
   import { base } from '$app/paths';
   let {
     onClick = () => {},
-    active = false
+    active = false,
+    class: extraClass = ""
   } = $props();
 </script>
 
-<button type="button" class="map-btn" on:click={onClick} class:active>
+<button
+  type="button"
+  class="map-btn {extraClass}"
+  on:click={onClick}
+  class:active
+  aria-pressed={active}
+  title={active ? "Hide the map" : "Show the map of your trees"}
+>
   <img src="{base}/map.svg" alt="Map" />
 </button>
 

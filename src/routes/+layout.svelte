@@ -172,11 +172,16 @@
 
         <!-- Mobile Popover -->
         <div class="mobile-only">
-          <div on:click|stopPropagation={() => showMoreMenu = !showMoreMenu}>
-            <Button variant="ghost">
-              ...
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            onClick={(e) => { e.stopPropagation(); showMoreMenu = !showMoreMenu; }}
+            aria-label="More: import, export, about"
+            title="More"
+            aria-haspopup="true"
+            aria-expanded={showMoreMenu}
+          >
+            ...
+          </Button>
           {#if showMoreMenu}
             <div class="popover">
               <Button variant="ghost" onClick={handleImport} title="Import from file">
@@ -197,19 +202,33 @@
 
         <div class="separator"></div>
 
-        <Button variant="ghost" active={sidebar_switch} onClick={toggleSidebar} class="top-bar-btn">
+        <Button
+          variant="ghost"
+          active={sidebar_switch}
+          onClick={toggleSidebar}
+          class="top-bar-btn"
+          aria-label="Sidebar"
+          aria-pressed={sidebar_switch}
+          title="Show or hide your notes"
+        >
           <span class="desktop-only">Sidebar</span>
           <span class="mobile-only">☰</span>
         </Button>
         <MapButton active={$isMapVisible} onClick={toggleMap} class="top-bar-btn" />
         <form action="/newleaf">
-          <Button variant="primary" type="submit" class="top-bar-btn">
+          <Button variant="primary" type="submit" class="top-bar-btn" aria-label="Create New" title="Create a new note">
             <span class="desktop-only">Create New</span>
             <span class="mobile-only">+</span>
           </Button>
         </form>
         <form action="/newleaf" target="_blank" class="desktop-only-form">
-          <Button variant="primary" type="submit" class="top-bar-btn">⇗</Button>
+          <Button
+            variant="primary"
+            type="submit"
+            class="top-bar-btn"
+            aria-label="Create New in a new tab"
+            title="Create a new note in a new tab"
+          >⇗</Button>
         </form>
       </div>
     </div>
@@ -219,7 +238,7 @@
       <button class="scrim" on:click={toggleSidebar} aria-label="Close notes list"></button>
       <Sidebar notes={$notes} />
     {:else if !$isFullscreen}
-      <button class="greenline" on:click={toggleSidebar}></button>
+      <button class="greenline" on:click={toggleSidebar} aria-label="Show your notes" title="Show your notes"></button>
     {/if}
     <div class="main-content">
       {@render children()}
