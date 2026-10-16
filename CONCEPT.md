@@ -28,7 +28,9 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 - **Mobile:** a portrait stack: camera and nameplate, then the screen, the bay (optional), the D-pad with the control pad, and the speaker (optional). On mobile the list opens full screen instead of as a module.
 - **Control pad:** Start, B and A in one straight row.
 - **Configure button:** the only thing on the page besides the console (no caption).
-  - It switches the orientation (landscape/portrait) and turns the bay, speaker, enclosure and screen glare on and off. Glare is off by default.
+  - Modules: list (landscape), D-pad, control pad, bay, speaker. Screen: show markup, screen glare (off by default). Body: enclosure.
+  - It also switches the orientation (landscape/portrait).
+  - Turning modules off follows the placement rules: no List module means the list opens full screen; a lone control module takes the bottom row; no controls means the screen takes the height.
   - Landscape: a small pill at the bottom right.
   - Portrait: a gear docked in the console's side column, under the speaker strip.
 - **Portrait arrangement** (formerly "mobile"):
@@ -110,6 +112,50 @@ That gives four results (fixed landscape, fluid landscape, fixed portrait, fluid
 6. **Portrait:** side docks move below the screen, above the controls row. The list becomes a full screen rather than a module. The speaker is filler and takes a thin edge strip.
 
 Drag-and-drop docking is out for now: the rules above cover a small set of modules (up to about 15) without per-device tuning.
+
+## Principle: concept never beats usability
+
+Everything works three ways on desktop:
+- **Hardware keys** (on-screen D-pad, A, B, Start);
+- **the keyboard;**
+- **the mouse:** click anything you can see.
+
+Persistent everyday features (for example selecting several notes and deleting them) stay, even if they don't map neatly onto the hardware.
+
+## Interaction consistency pass (next big pass)
+
+One pass over menus, context, focus and highlight across the whole device: list, editor, map, drawer, menus and confirms. Collected from testing (16 Oct):
+
+**Open vs closed must be obvious.** Whether a note is open for editing or just being browsed needs a clear visual state; the proposal is that the screen's background shifts and the status shows EDITING or PREVIEW. Today Close note only moves the caret away.
+
+**Mouse everywhere on desktop:**
+- menu items and confirm choices are clickable;
+- the A/B chips in a confirm are clickable;
+- the drawer is clickable too.
+
+**Keyboard parity:** in a menu or confirm the letter keys **A** and **B** also act as A and B, since nothing is being typed there. Today only Enter and Esc do.
+
+**Focus and highlight moving between modules:** one rule for how the cursor, highlight and focus move between the list, the editor, the Map viewer and the drawer.
+
+**Multi-select and delete in the list.** Either bring back a Select switch, or give the list context a Select mode: Start → Select, then the D-pad moves, A toggles, B exits, and Start deletes n.
+
+**One overflow rule for strips.** Format keys and details both overflow on the right. Use one rule for both: content fades at the edge and scrolls; when the D-pad moves along a strip, the item under the cursor scrolls into view.
+
+**Undo granularity.** One formatting action should be one undo step. *Fixed already:* undo right after opening a note emptied it, so each note now starts with a fresh undo history.
+
+**Marks at word level.** Treat the word as the unit. With the caret just before or after a bold, italic or underlined word, its key lights up, as it already does at the start of a line. Spaces carry no marks.
+
+**D-pad hold-to-repeat.** Holding a D-pad arm repeats: a short delay, then the repeat speeds up the longer it's held. It applies to the caret, the list and the map cursor. Physical keyboard arrows keep the system's own repeat.
+
+**Delete confirm names the note and shows its tree.** *Done*, and the delete is locked to that note even if you switch notes while the box is open.
+
+## Visual pass
+
+**Screen colour theme.** A cohesive palette for every kind of text on the screen. A candidate base is Everforest, a soft green-earth editor theme that suits the moss palette.
+
+**Spell check.** Off by default, with a Configure toggle. When it's on, the squiggles get soft pastel colours where the browser allows (`::spelling-error` / `::grammar-error` in Chromium and Safari).
+
+**D-pad feel:** more tuning.
 
 ## Fine-tuning backlog (component-by-component pass)
 
