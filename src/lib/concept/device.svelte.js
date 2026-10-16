@@ -45,8 +45,16 @@ export const KEYMAP = {
   ArrowLeft: "left",
   ArrowRight: "right",
   Enter: "a",
+  " ": "a",
+  a: "a",
+  A: "a",
   Escape: "b",
+  b: "b",
+  B: "b",
 };
+// Space and the letters A / B are only A and B where nothing is typed: the
+// list, the map, the drawer and the menus (never while writing a note).
+const LOOSE_KEYS = new Set([" ", "a", "A", "b", "B"]);
 
 export class Device {
   /** Keys currently lit, so keyboard presses show on the hardware too. */
@@ -583,13 +591,14 @@ export class Device {
 
   // --- Map: plant the open note's tree ----------------------------------
   /** Hand the D-pad to the map (Map viewer or the drawer's plot picker). */
-  enterMap(mode = "plot") {
+  enterMap(mode = "plot", at = null) {
     if (!this.editing) return this.say("OPEN A NOTE FIRST");
     this.mapMode = mode;
     if (mode === "tree") {
       const t = TREES.findIndex((x) => x.src === this.draftIcon);
       this.treeIndex = t < 0 ? 0 : t;
-    } else if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
+    } else if (at) this.cursor = at; // a tapped tile: the cursor goes where you pointed
+    else if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
     this.focus = "map";
   }
   /** The Map viewer's MOVE / TREE keys: press to enter, press again to leave (as B). */
@@ -617,7 +626,11 @@ export class Device {
   }
 
   #mapInput = (button) => {
-    if (button === "b") return void (this.focus = "editor");
+    if (button === "b") {
+      // Back, not "move here": the cursor returns to the tree's plot.
+      if (this.mapMode === "plot" && this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
+      return void (this.focus = "editor");
+    }
     if (this.mapMode === "tree") {
       const step = { left: -1, right: 1, up: -4, down: 4 }[button]; // 4 trees a row
       if (step) this.treeIndex = Math.max(0, Math.min(TREES.length - 1, this.treeIndex + step));
@@ -776,7 +789,8 @@ export class Device {
     const button = KEYMAP[event.key];
     if (!button) return false;
     // While typing, only Esc leaves the field; everything else is text editing.
-    if (typing && button !== "b") return false;
+    if (typing && event.key !== "Escape") return false;
+    if (LOOSE_KEYS.has(event.key) && this.focus === "editor" && !this.overlay) return false;
     // Keys on page controls (e.g. Configure) keep their normal behaviour.
     if (!typing && t?.closest?.(".config")) return false;
     this.press(button);

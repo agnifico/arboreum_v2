@@ -28,6 +28,7 @@
   let gutter = $state([]); // [{ n, top, height, current }]
   let loadedKey = null; // which note (or "new") is in the editor
   let openedByClick = false; // keep the caret where the click put it
+  let resume = null; // { from, to }: the caret when the map or a menu took the D-pad
 
   // Desktop basics: clicking the text while previewing opens it right there.
   function clickToEdit(e) {
@@ -71,6 +72,7 @@
   function load(key, html) {
     if (!editor || key === loadedKey) return;
     loadedKey = key;
+    resume = null; // a different note: start fresh
     editor.commands.setContent(html || "", false);
     // Each note starts with a fresh undo history: undo can't empty a note you
     // just opened, or replay another note's steps onto this one.
@@ -100,9 +102,18 @@
     untrack(() => {
       if (!editor) return;
       editor.setEditable(editable);
-      // A click already placed the caret; otherwise start at the end (or top for new).
-      if (editable && !openedByClick) editor.commands.focus(device.isNew ? "start" : device.caretAt);
-      else if (!editable) editor.commands.blur();
+      // A click already placed the caret; coming back (from the map or a
+      // menu) it returns where it was; opening a note it starts at the end
+      // (or the top for a new one).
+      if (editable && !openedByClick && resume) {
+        const max = editor.state.doc.content.size;
+        editor.chain().setTextSelection({ from: Math.min(resume.from, max), to: Math.min(resume.to, max) }).focus().run();
+      } else if (editable && !openedByClick) editor.commands.focus(device.isNew ? "start" : device.caretAt);
+      else if (!editable) {
+        const { from, to } = editor.state.selection;
+        resume = loadedKey ? { from, to } : null;
+        editor.commands.blur();
+      }
       device.caretAt = "end";
       openedByClick = false;
       measure();
