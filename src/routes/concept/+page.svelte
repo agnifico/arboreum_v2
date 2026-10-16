@@ -49,8 +49,11 @@
   let orient = $state("auto"); // Configure: auto | landscape | portrait
   let shape = $state(null); // the window's shape, for auto
   let view = $derived(orient === "auto" ? (shape ?? "landscape") : orient); // landscape | portrait (arrangements, not devices)
-  let showBay = $state(true);
-  let bayModule = $state("map"); // what's in the bay: map | treemoji | list
+  // Each arrangement keeps its own bay (CONCEPT.md, "Layout system"): portrait
+  // starts without one, so the screen gets the room, and brought back it holds the List.
+  let bays = $state({ landscape: { show: true, module: "map" }, portrait: { show: false, module: "list" } });
+  let showBay = $derived(bays[view].show);
+  let bayModule = $derived(bays[view].module); // what's in the bay: map | treemoji | list
   let showSpeaker = $state(true);
   let showChassis = $state(false); // optional enclosure behind the modules
   let showGlare = $state(false); // reflections on the screens
@@ -238,7 +241,7 @@
              the speaker) at the nameplate's left end -->
         <div class={showSpeaker ? "side" : "plate-dock"}>
           {#if showSpeaker}<Speaker />{/if}
-          <Configurator {view} bind:orient bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl docked drop={!showSpeaker} />
+          <Configurator {view} bind:orient bind:showBay={() => showBay, (v) => (bays[view].show = v)} bind:bayModule={() => bayModule, (v) => (bays[view].module = v)} bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl docked drop={!showSpeaker} />
         </div>
       {:else if showSpeaker && (showDpad || showCtl || !showBay)}
         <!-- (with no controls row the right column has room for one module) -->
@@ -248,7 +251,7 @@
   </div>
 
   {#if view === "landscape"}
-    <Configurator {view} bind:orient bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
+    <Configurator {view} bind:orient bind:showBay={() => showBay, (v) => (bays[view].show = v)} bind:bayModule={() => bayModule, (v) => (bays[view].module = v)} bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
   {/if}
 </main>
 

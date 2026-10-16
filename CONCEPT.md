@@ -100,6 +100,10 @@ Simplified from an earlier Fixed/Fluid plan and a "v2" proposal (a switch thresh
 2. **One fit rule.** If the window is smaller than the design, the console zooms down as a whole. If it's bigger, the **screen** takes the extra space, in width and height. Every other module is hardware and keeps its size; keys never grow.
 3. **Neighbours ride along.** Modules that share the screen's row or column get a longer body because the grid stretches them, with their keys centred at normal size. Nothing is redesigned per size.
 
+4. **Each arrangement keeps its own bay.** Portrait starts without the bay, so the screen gets the room (the drawer handles tree and plot); turned back on, it holds the List. Landscape keeps whatever was set there, so rotating back and forth gives each its own.
+
+**Guardrail for exceptions.** The arrangements may differ only in (a) the default for a module choice (today only the bay), and (b) a module's own look, decided by the size of its own cell (as the control pad does). No new placements, no new settings, and no rules keyed to the window's size. A wish that needs more than that goes under "Ideas for later" first.
+
 What that gives: desktop gets a big screen; a portrait phone gets an edge-to-edge screen; an upright iPad fills its width instead of leaving the mat at the sides.
 
 **No settings added.** If a very large monitor makes the screen feel like an app rather than an object, a cap (one number) can come later.
