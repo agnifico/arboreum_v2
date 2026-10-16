@@ -26,6 +26,16 @@
   let editor = $state.raw(null);
   let gutter = $state([]); // [{ n, top, height, current }]
   let loadedKey = null; // which note (or "new") is in the editor
+  let openedByClick = false; // keep the caret where the click put it
+
+  // Desktop basics: clicking the text while previewing opens it right there.
+  function clickToEdit(e) {
+    if (!editor || editor.isEditable || device.overlay || e.button !== 0) return;
+    openedByClick = true;
+    if (device.note) device.open();
+    else device.newNote();
+    editor.setEditable(true); // now, so this same click places the caret
+  }
 
   // --- Gutter: one number per textblock, measured from the DOM ---------
   function report() {
@@ -83,8 +93,10 @@
     untrack(() => {
       if (!editor) return;
       editor.setEditable(editable);
-      if (editable) editor.commands.focus(device.isNew ? "start" : "end");
-      else editor.commands.blur();
+      // A click already placed the caret; otherwise start at the end (or top for new).
+      if (editable && !openedByClick) editor.commands.focus(device.isNew ? "start" : "end");
+      else if (!editable) editor.commands.blur();
+      openedByClick = false;
       measure();
     });
   });
@@ -145,7 +157,8 @@
   });
 </script>
 
-<div class="host" bind:this={host} onscroll={measure}>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="host" bind:this={host} onscroll={measure} onmousedowncapture={clickToEdit}>
   <div class="gutter" aria-hidden="true">
     {#each gutter as g}
       {#if g.current}<span class="curline" style="top:{g.top}px; height:{g.height}px"></span>{/if}
