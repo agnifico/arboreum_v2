@@ -138,6 +138,7 @@
         sel?.modify?.("move", ...map[dir]);
       },
       focus: () => editor.commands.focus(),
+      focusEnd: () => requestAnimationFrame(() => editor.isEditable && editor.commands.focus("end")),
       getHTML: () => editor.getHTML(),
       reload: () => (loadedKey = null),
       commands: () => editor.chain().focus(),

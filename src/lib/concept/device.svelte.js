@@ -559,6 +559,7 @@ export class Device {
     this.#toList();
     this.selectedId = target;
     this.open();
+    this.editorApi?.focusEnd(); // ready to type, as if it had been opened with A
     if (closed.saved) this.say(`SAVED “${closed.title}”`);
   }
 
