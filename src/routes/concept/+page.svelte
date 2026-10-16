@@ -1,11 +1,13 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
+  import { cubicIn, backOut } from "svelte/easing";
   import "$lib/concept/materials.css";
   import Camera from "$lib/concept/modules/Camera.svelte";
   import Nameplate from "$lib/concept/modules/Nameplate.svelte";
   import ListModule from "$lib/concept/modules/ListModule.svelte";
   import Screen from "$lib/concept/modules/Screen.svelte";
   import MapViewer from "$lib/concept/modules/MapViewer.svelte";
+  import Treemoji from "$lib/concept/modules/Treemoji.svelte";
   import DPad from "$lib/concept/modules/DPad.svelte";
   import ControlPad from "$lib/concept/modules/ControlPad.svelte";
   import Speaker from "$lib/concept/modules/Speaker.svelte";
@@ -14,8 +16,9 @@
 
   const device = provideDevice(new Device());
   $effect(() => {
-    device.hasListModule = view === "landscape" && showList;
-    device.hasMapViewer = showBay;
+    const bay = showBay ? bayModule : null;
+    device.hasListModule = (view === "landscape" && leftList) || bay === "list";
+    untrack(() => device.slot(bay));
   });
   onMount(() => {
     const stop = device.start();
@@ -32,15 +35,22 @@
     if (device.handleKey(event)) event.preventDefault();
   }
 
+  // Bay swap motion: the module slides out sideways, then the next slides in.
+  const eject = () => ({ duration: 200, easing: cubicIn, css: (t, u) => `transform: translateX(${u * 56}px); opacity: ${t};` });
+  const insert = () => ({ delay: 170, duration: 340, easing: backOut, css: (t, u) => `transform: translateX(${u * 56}px); opacity: ${Math.min(1, t * 2)};` });
+
   // Look test 01: free-standing modules that together make the 1610F.
   // Landscape and portrait arrangements, fitted FIXED. See CONCEPT.md.
 
   let view = $state("landscape"); // landscape | portrait (arrangements, not devices)
-  let showBay = $state(true); // bay holds the Map viewer
+  let showBay = $state(true);
+  let bayModule = $state("map"); // what's in the bay: map | treemoji | list
   let showSpeaker = $state(true);
   let showChassis = $state(false); // optional enclosure behind the modules
   let showGlare = $state(false); // reflections on the screens
-  let showList = $state(true); // landscape only; otherwise the list is a full screen
+  let showList = $state(true); // landscape's left dock; otherwise the list is a full screen
+  // There's one List module: in the bay, it isn't on the left.
+  let leftList = $derived(showList && !(showBay && bayModule === "list"));
   let showDpad = $state(true);
   let showCtl = $state(true);
 
@@ -101,7 +111,7 @@
       ].filter(Boolean);
       return `width: ${PORTRAIT_W}px; height: ${PORTRAIT_H}px; grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`;
     }
-    const list = showList;
+    const list = leftList;
     const right = showBay || showSpeaker;
     const cols = [...(list ? ["150px", "110px"] : ["150px"]), "400px", "420px", right && "300px"].filter(Boolean);
     const n = cols.length - (right ? 1 : 0); // columns left of the right column
@@ -162,15 +172,24 @@
 
       <Camera />
       <Nameplate />
-      {#if view === "landscape" && showList}<ListModule />{/if}
+      {#if view === "landscape" && leftList}<ListModule />{/if}
       <Screen />
-      {#if showBay}<MapViewer tall={tallBay} />{/if}
+      {#if showBay}
+        <!-- Swapping the bay: the old module ejects, the new one slides in -->
+        {#key bayModule}
+          <div class="bay-slot" in:insert out:eject>
+            {#if bayModule === "map"}<MapViewer tall={tallBay} />
+            {:else if bayModule === "treemoji"}<Treemoji tall={tallBay} />
+            {:else}<ListModule />{/if}
+          </div>
+        {/key}
+      {/if}
       {#if showDpad}<DPad />{/if}
       {#if showCtl}<ControlPad />{/if}
       {#if view === "portrait"}
         <div class="side">
           {#if showSpeaker}<Speaker />{/if}
-          <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl docked />
+          <Configurator bind:view bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl docked />
         </div>
       {:else if showSpeaker && (showDpad || showCtl || !showBay)}
         <!-- (with no controls row the right column has room for one module) -->
@@ -180,7 +199,7 @@
   </div>
 
   {#if view === "landscape"}
-    <Configurator bind:view bind:showBay bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
+    <Configurator bind:view bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
   {/if}
 </main>
 
@@ -195,6 +214,9 @@
     --moss: #6d8756;
     --moss-hi: #87a26d;
     --moss-side: #4a5e3a;
+    --lichen: #c2cab1;
+    --lichen-hi: #dce2cf;
+    --lichen-side: #8f9a7f;
     --graphite: #2d302f;
     --graphite-hi: #3b3f3d;
     --graphite-side: #171918;
@@ -247,6 +269,17 @@
       0 12px 0 #0f1110,
       0 12px 0 1px rgba(0, 0, 0, 0.4),
       0 40px 60px -18px rgba(30, 28, 20, 0.55);
+  }
+  /* Both bay modules share the cell while one ejects and the next slides in */
+  .bay-slot {
+    grid-area: bay;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+  }
+  .bay-slot > :global(.mod) {
+    flex: 1;
+    min-width: 0;
   }
   .side {
     grid-area: side;

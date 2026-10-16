@@ -1,6 +1,7 @@
 <script>
   import { useDevice } from "../device.svelte.js";
   import GardenMap from "../GardenMap.svelte";
+  import TreeGrid from "../TreeGrid.svelte";
   import { TREES } from "../trees.js";
   // tall: the bay has the whole right column (no speaker under it), so the
   // map zooms in to fill it.
@@ -17,8 +18,8 @@
     const n = device.note;
     return n && n.mapX != null && n.mapY != null ? { x: n.mapX, y: n.mapY } : null;
   });
-  let focused = $derived(device.focus === "map");
-  let treeMode = $derived(focused && device.mapMode === "tree");
+  let focused = $derived(device.focus === "bay");
+  let treeMode = $derived(focused && device.bayMode === "tree");
   let readout = $derived.by(() => {
     if (treeMode) return TREES[device.treeIndex].name.toUpperCase();
     if (!view) return "NOT PLANTED";
@@ -37,20 +38,7 @@
     <div class="map-grid">
       {#if treeMode}
         <!-- TREE: the trees as a grid, driven like the map (D-pad, A picks, B back) -->
-        <div class="trees" role="radiogroup" aria-label="Trees">
-          {#each TREES as t, i}
-            <button
-              class="tree"
-              class:cur={i === device.treeIndex}
-              class:chosen={t.src === device.draftIcon}
-              role="radio"
-              aria-checked={t.src === device.draftIcon}
-              aria-label={t.name}
-              onmousedown={keepFocus}
-              onclick={() => device.pickTree(i)}
-            ><img src={t.src} alt="" /></button>
-          {/each}
-        </div>
+        <div class="tree-wrap"><TreeGrid fill={!tall} /></div>
       {:else}
         <GardenMap
           cursor={view}
@@ -58,7 +46,7 @@
           cols={tall ? 9 : 12}
           rows={tall ? 12 : 9}
           blink={focused}
-          onpick={device.editing ? (t) => device.enterMap("plot", t) : null}
+          onpick={device.editing ? (t) => device.enterBay("plot", t) : null}
           onaccept={focused && !treeMode ? () => device.plant() : null}
           acceptable={!readout.endsWith("TAKEN")}
         />
@@ -74,12 +62,12 @@
   </div>
   <div class="map-btns">
     <div class="mb-wrap mb-move">
-      <button class="map-btn" class:on={focused && !treeMode} aria-label="Move this note's tree on the map" onmousedown={keepFocus} onclick={() => device.toggleMap("plot")}>✥</button>
+      <button class="map-btn" class:on={focused && !treeMode} aria-label="Move this note's tree on the map" onmousedown={keepFocus} onclick={() => device.toggleBay("plot")}>✥</button>
       <span class="etch">MOVE</span>
     </div>
     <div class="mb-wrap mb-tree">
       <!-- Shows the note's tree; picks a different one -->
-      <button class="map-btn tree-btn" class:on={treeMode} aria-label="Choose this note's tree" onmousedown={keepFocus} onclick={() => device.toggleMap("tree")}>
+      <button class="map-btn tree-btn" class:on={treeMode} aria-label="Choose this note's tree" onmousedown={keepFocus} onclick={() => device.toggleBay("tree")}>
         {#if device.editing && device.draftIcon}<img src={device.draftIcon} alt="" />{:else}?{/if}
       </button>
       <span class="etch">TREE</span>
@@ -115,34 +103,17 @@
     outline: 2px solid var(--signal);
     outline-offset: 2px;
   }
-  .trees {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-auto-rows: minmax(0, 1fr); /* rows share the map window's height */
-    gap: 6px;
+  .tree-wrap {
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
-  .tree {
-    min-width: 0;
-    min-height: 0;
-    padding: 4px;
-    border-radius: 6px;
-    background: rgba(213, 228, 198, 0.05);
-    border: 1px solid transparent;
-  }
-  .tree img,
   .tree-btn img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     image-rendering: pixelated;
-  }
-  .tree.chosen {
-    background: rgba(213, 228, 198, 0.14);
-  }
-  .tree.cur {
-    border-color: var(--signal);
-    box-shadow: 0 0 0 1px var(--signal);
   }
   .tree-btn {
     padding: 10px;
@@ -218,13 +189,6 @@
   }
   .tall .map-grid {
     aspect-ratio: 9 / 12;
-  }
-  .tall .trees {
-    grid-auto-rows: auto;
-    align-content: center;
-  }
-  .tall .tree {
-    aspect-ratio: 1;
   }
   :global(.portrait) .map-grid { height: calc(100% - 22px); width: auto; aspect-ratio: 12 / 9; align-self: center; }
   :global(.portrait) .map-read { text-align: center; }

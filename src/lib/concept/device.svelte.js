@@ -59,8 +59,9 @@ const LOOSE_KEYS = new Set([" ", "a", "A", "b", "B"]);
 export class Device {
   /** Keys currently lit, so keyboard presses show on the hardware too. */
   lit = $state(Object.fromEntries(BUTTONS.map((b) => [b, false])));
-  /** Which part of the device has the D-pad: "list", "editor", "map" (the
-      Map viewer) or "drawer" (the screen's slide-out). */
+  /** Which part of the device has the D-pad: "list", "editor", "bay" (the
+      module in the bay: Map viewer or Treemoji) or "drawer" (the screen's
+      slide-out). */
   focus = $state("list");
   /** Notes as stored (the app's IndexedDB), kept live. */
   raw = $state.raw([]);
@@ -94,14 +95,15 @@ export class Device {
   draftIcon = $state(null);
   draftPlot = $state(null); // [x, y] or null
   baseline = $state.raw({ title: "", html: "", icon: null, plot: null });
-  /** Which modules are slotted (set by the page from Configure). */
-  hasMapViewer = $state(true);
+  /** What the bay holds: "map", "treemoji", "list" or null (empty). Set
+      through slot(), from Configure. */
+  bay = $state("map");
   /** Map cursor, shared by the Map viewer and the drawer's plot picker. */
   cursor = $state({ x: 12, y: 7 });
   /** The screen's slide-out drawer: which section, and the tree under the D-pad. */
   drawerSection = $state("tree"); // "tree" | "plot"
-  /** What the Map viewer's grid is showing while it has the D-pad. */
-  mapMode = $state("plot"); // "plot" | "tree"
+  /** What the bay module's screen shows while it has the D-pad. */
+  bayMode = $state("plot"); // "plot" (Map viewer) | "tree" (either)
   treeIndex = $state(0);
   /** Formatting under the caret (for lit format keys) and the word count. */
   active = $state({});
@@ -228,24 +230,50 @@ export class Device {
     return [!this.draftIcon && "tree", !this.pendingPlot && "plot"].filter(Boolean);
   }
 
-  /** What the drawer stands in for: modules that aren't slotted. The tree
-      always lives here until the Treemoji module exists (build step 11). */
+  get hasMapViewer() {
+    return this.bay === "map";
+  }
+  /** Who handles each job: a slotted module ("bay") or the drawer. The Map
+      viewer does tree and plot; Treemoji does the tree. */
+  get treeInBay() {
+    return this.bay === "map" || this.bay === "treemoji";
+  }
+
+  /** What the drawer stands in for: the jobs no slotted module handles. */
   get drawerSections() {
-    // With the Map viewer slotted it handles both tree and plot; no drawer.
-    return this.hasMapViewer ? [] : ["tree", "plot"];
+    return [!this.treeInBay && "tree", !this.hasMapViewer && "plot"].filter(Boolean);
+  }
+
+  /** Slot a module into the bay (or empty it). If the D-pad was on
+      something that just left, it goes back to the note. */
+  slot(module) {
+    this.bay = module;
+    if (this.focus === "bay" && !(this.bayMode === "tree" ? this.treeInBay : this.hasMapViewer)) this.focus = this.editing ? "editor" : "list";
+    if (this.focus === "drawer" && !this.drawerSections.includes(this.drawerSection)) {
+      if (this.drawerSections.length) this.drawerSection = this.drawerSections[0];
+      else this.closeDrawer();
+    }
+  }
+
+  /** Choose a tree: on the module that does it, or in the drawer. */
+  chooseTree() {
+    return this.treeInBay ? this.enterBay("tree") : this.openDrawer("tree");
   }
 
   /** The red "!": tap it to go where the missing thing is handled. */
   resolveMissing() {
     const m = this.missing;
     if (!m.length) return;
-    if (this.hasMapViewer) return this.enterMap(m.includes("tree") ? "tree" : "plot");
-    this.openDrawer(m.includes("tree") ? "tree" : "plot");
+    if (m.includes("tree")) return this.chooseTree();
+    if (this.hasMapViewer) return this.enterBay("plot");
+    this.openDrawer("plot");
   }
 
   openDrawer(section = "tree") {
     if (!this.editing) return;
-    this.drawerSection = this.drawerSections.includes(section) ? section : "tree";
+    const sections = this.drawerSections;
+    if (!sections.length) return;
+    this.drawerSection = sections.includes(section) ? section : sections[0];
     const i = TREES.findIndex((t) => t.src === this.draftIcon);
     this.treeIndex = i < 0 ? 0 : i;
     if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
@@ -260,7 +288,7 @@ export class Device {
     this.treeIndex = i;
     this.draftIcon = TREES[i].src;
     this.say(TREES[i].name.toUpperCase());
-    if (this.focus === "map") return void (this.focus = "editor");
+    if (this.focus === "bay") return void (this.focus = "editor");
     // Go on to the plot if it's also missing and handled here; else done.
     if (!this.draftPlot && this.drawerSections.includes("plot")) this.drawerSection = "plot";
     else this.closeDrawer();
@@ -351,8 +379,8 @@ export class Device {
     const o = this.overlay;
     if (o?.kind === "menu") return { a: "SELECT", b: "CLOSE", start: "CLOSE" };
     if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—" };
-    if (this.focus === "map" && this.mapMode === "tree") return { a: "PICK", b: "BACK", start: "—" };
-    if (this.focus === "map" || (this.focus === "drawer" && this.drawerSection === "plot")) {
+    if (this.focus === "bay" && this.bayMode === "tree") return { a: "PICK", b: "BACK", start: "—" };
+    if (this.focus === "bay" || (this.focus === "drawer" && this.drawerSection === "plot")) {
       const at = this.atCursor;
       const other = this.focus === "drawer" ? "TREE" : "—";
       return { a: at && !at.mine ? "TAKEN" : "PLANT", b: this.focus === "drawer" ? "CLOSE" : "BACK", start: other };
@@ -366,7 +394,7 @@ export class Device {
     this.light(button);
     if (this.overlay?.kind === "menu") return this.#menuInput(button);
     if (this.overlay?.kind === "confirm") return this.#confirmInput(button);
-    if (this.focus === "map") return this.#mapInput(button);
+    if (this.focus === "bay") return this.#bayInput(button);
     if (this.focus === "drawer") return this.#drawerInput(button);
     if (this.focus === "editor") return this.#editorInput(button);
     return this.#listInput(button);
@@ -394,7 +422,7 @@ export class Device {
       e && { label: "SAVE", run: () => this.save() },
       !e && has && { label: "OPEN NOTE", run: () => this.open() },
       { label: "NEW NOTE", run: () => this.newNote() },
-      e && { label: "CHOOSE TREE", run: () => (this.hasMapViewer ? this.enterMap("tree") : this.openDrawer("tree")) },
+      e && { label: "CHOOSE TREE", run: () => this.chooseTree() },
       // Left/right rotate the sort without closing the menu.
       { label: () => `SORT ◂ ${this.sortLabel} ▸`, run: () => this.cycleSort(), cycle: (d) => this.cycleSort(d) },
       (e || has) && { label: "DELETE NOTE", run: () => this.askDelete() },
@@ -589,22 +617,33 @@ export class Device {
     if (closed.saved) this.say(`SAVED “${closed.title}”`);
   }
 
-  // --- Map: plant the open note's tree ----------------------------------
-  /** Hand the D-pad to the map (Map viewer or the drawer's plot picker). */
-  enterMap(mode = "plot", at = null) {
+  // --- The bay module: plant the open note's tree, or choose it ---------
+  /** Hand the D-pad to the bay module: its map ("plot") or tree grid ("tree"). */
+  enterBay(mode = "plot", at = null) {
     if (!this.editing) return this.say("OPEN A NOTE FIRST");
-    this.mapMode = mode;
+    if (mode === "tree" ? !this.treeInBay : !this.hasMapViewer) return;
+    this.bayMode = mode;
     if (mode === "tree") {
       const t = TREES.findIndex((x) => x.src === this.draftIcon);
       this.treeIndex = t < 0 ? 0 : t;
     } else if (at) this.cursor = at; // a tapped tile: the cursor goes where you pointed
     else if (this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
-    this.focus = "map";
+    this.focus = "bay";
   }
-  /** The Map viewer's MOVE / TREE keys: press to enter, press again to leave (as B). */
-  toggleMap(mode) {
-    if (this.focus === "map" && this.mapMode === mode) return this.#mapInput("b");
-    this.enterMap(mode);
+  /** The bay module's own keys (MOVE, TREE): press to enter, press again to leave (as B). */
+  toggleBay(mode) {
+    if (this.focus === "bay" && this.bayMode === mode) return this.#bayInput("b");
+    this.enterBay(mode);
+  }
+
+  /** Treemoji's ◀ ▶: flip straight through the trees (part of the draft until saved). */
+  cycleTree(step) {
+    if (!this.editing) return this.say("OPEN A NOTE FIRST");
+    const i = TREES.findIndex((t) => t.src === this.draftIcon);
+    const next = i < 0 ? (step > 0 ? 0 : TREES.length - 1) : (i + step + TREES.length) % TREES.length;
+    this.treeIndex = next;
+    this.draftIcon = TREES[next].src;
+    this.say(TREES[next].name.toUpperCase());
   }
 
 
@@ -625,13 +664,13 @@ export class Device {
     this.say(`PLANTED · ${String(this.cursor.x).padStart(2, "0")},${String(this.cursor.y).padStart(2, "0")}`);
   }
 
-  #mapInput = (button) => {
+  #bayInput = (button) => {
     if (button === "b") {
       // Back, not "move here": the cursor returns to the tree's plot.
-      if (this.mapMode === "plot" && this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
+      if (this.bayMode === "plot" && this.draftPlot) this.cursor = { x: this.draftPlot[0], y: this.draftPlot[1] };
       return void (this.focus = "editor");
     }
-    if (this.mapMode === "tree") {
+    if (this.bayMode === "tree") {
       const step = { left: -1, right: 1, up: -4, down: 4 }[button]; // 4 trees a row
       if (step) this.treeIndex = Math.max(0, Math.min(TREES.length - 1, this.treeIndex + step));
       if (button === "a") this.pickTree();

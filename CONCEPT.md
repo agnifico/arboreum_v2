@@ -14,7 +14,7 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 | **Camera** | Top-left. The media button: adds an image to the note. | |
 | **Nameplate** | Fixed hardware title bar reading ARBOREUM 1610F. | Branding only, not customisable. Model numbers are hexadecimal: 1610F is `0x1610F`. |
 | **Screen** | Where writing happens. The notes list is a full screen here too, not a drawer. | |
-| **Bay** | Swappable slot: **Map viewer**, **Treemoji** or **List**. | Map viewer layouts: desktop has its two buttons side by side; mobile puts them at opposite corners for thumb reach. |
+| **Bay** | Swappable slot: **Map viewer**, **Treemoji** or **List**. | Picked in Configure; the old module ejects and the new one slides in. Whatever is slotted does its job; the drawer covers the rest. |
 | **D-pad** | Moves through the list and the text. | |
 | **Control pad** | **A**, **B**, **Start**. | Swaps with the **Format deck**: physical keys for bold, italic, headings, lists and so on. |
 
@@ -39,7 +39,11 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
   - The bay has its own row below the controls, with the Map viewer's Move and Tree keys on one side (in thumb reach at the bottom).
   - The speaker is a thin full-height strip down the right.
 - **Enclosure:** an optional dark frame behind the modules. It's off by default.
-- **Bay:** for now it holds the Map viewer. Desktop has its two buttons side by side; mobile puts them at opposite corners.
+- **Bay:** holds one of three modules, picked in Configure (BAY switch, then MAP · TREEMOJI · LIST).
+  - **Map viewer (MAP-01):** plot and tree. Desktop has its two keys side by side; portrait stacks them on one side.
+  - **Treemoji (TRM-01):** the tree buddy. A small screen shows the note's tree with a speech bubble (the classic app's lines, plus reactions to saving, planting and new trees; asleep while browsing). Three keys, pocket-pet style: ◀ and ▶ flip straight through the trees, and TREE opens the tree grid on its screen (tapping the buddy does the same). It handles the tree; the drawer handles the plot.
+  - **List (LST-01):** there is one List module. Putting it in the bay takes it off the left dock, and in portrait it gives the list a module under the controls instead of a full screen.
+  - **Who does what:** each job (tree, plot) goes to the slotted module that can do it; the drawer slides out only for the jobs nothing slotted handles. With the Map viewer: no drawer. With Treemoji: the drawer has the plot. With the List or an empty bay: the drawer has both.
 
 ## Screen strips
 
@@ -54,7 +58,7 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 | List | move | open | new note | menu (new, sort, backup) |
 | Editor | cursor | save | new note (the open note is saved and closed first) | menu (save, tree, new, delete, close) |
 | Map viewer · MOVE | cursor | plant here | back (cursor returns to the tree) | — |
-| Map viewer · TREE | tree grid | pick | back | — |
+| Map viewer or Treemoji · TREE | tree grid | pick | back | — |
 | Drawer | move | pick / plant | close | switch tree ↔ plot |
 | Confirm | — | yes | no | third choice, if any |
 
@@ -71,7 +75,7 @@ Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the pa
 ## Look
 
 - **Hardware:** semi-realistic and lightly skeuomorphic. Layered CSS/SVG, no 3D library: chamfered bodies, screws, seams, soft shadows.
-- **Colour:** each module has its own colour, all from one muted "workshop" family (moss, bone, aluminium, graphite). Signal orange is the accent, used only for A, latches, LEDs and stripes.
+- **Colour:** each module has its own colour, all from one muted "workshop" family (moss, bone, aluminium, graphite, and a pale lichen for Treemoji). Signal orange is the accent, used only for A, latches, LEDs and stripes.
 - **Screens:** carry the console feel. The main screen is dark glass with monospace text and an orange cursor. The map keeps its pixel art.
 - **Fonts:** Chakra Petch for printing on the hardware; JetBrains Mono on the screens.
 - **Layouts:** two handcrafted ones, landscape for desktop and portrait for mobile.
@@ -79,12 +83,12 @@ Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the pa
 ## Code structure
 
 - `src/routes/concept/+page.svelte`: the stage, the device grid (desktop and mobile layouts) and the module toggles.
-- `src/lib/concept/modules/*.svelte`: one component per module (Camera, Nameplate, ListModule, Screen, MapViewer, DPad, ControlPad, Speaker). Mobile tweaks sit beside each module's own styles.
+- `src/lib/concept/modules/*.svelte`: one component per module (Camera, Nameplate, ListModule, Screen, MapViewer, Treemoji, DPad, ControlPad, Speaker). Mobile tweaks sit beside each module's own styles.
 - `src/lib/concept/materials.css`: shared materials (module bodies, screws, etched labels, glass, pips). It's scoped to the `.arb` root with `:where()`, so module styles win and nothing leaks into the main app.
 - `src/lib/concept/Configurator.svelte`: the page-level Configure panel.
 - `src/lib/concept/device.svelte.js`: the shared device state (input, screens, notes, saving, map).
 - `src/lib/concept/garden.js`, `GardenMap.svelte`: the garden map (same tiles as the classic app) and its pixel window.
-- `src/lib/concept/MonoEditor.svelte`, `NoteRows.svelte`, `trees.js`: the editor, the list rows, the tree catalogue.
+- `src/lib/concept/MonoEditor.svelte`, `NoteRows.svelte`, `TreeGrid.svelte`, `trees.js`: the editor, the list rows, the tree grid (Map viewer, Treemoji and drawer share it), the tree catalogue.
 
 ## Layout system (decided)
 
@@ -228,8 +232,8 @@ Each step is small, checked in the browser, and committed on its own.
 
 9. ✅ **Missing modules.** What's slotted decides the red **!** and the right-hand drawer (tree or plot picker), laid out like the missing module.
 10. ✅ **Map viewer.** Real note positions and a cursor, using the same map data as the app. MOVE and TREE: it owns both the plot and the tree grid, with its own A/B context; a full mouse flow (tap a tile, tap again to plant); it zooms in when it has the whole column.
-11. **Treemoji and bay swapping.**
-    - Treemoji: the emoji buddy. (The tree picker now lives in the Map viewer; decide whether Treemoji takes it over when it's slotted instead.)
+11. ✅ **Treemoji and bay swapping.**
+    - Treemoji: the tree buddy, which takes over the tree grid when it's slotted (its "software" comes with the hardware); the drawer stands in only for the plot.
     - The bay swaps between Map, Treemoji and List, with slide-in/eject motion.
 12. **Format deck.** A module that swaps with the control pad.
 13. **Camera.** Image upload into the note.
@@ -240,7 +244,7 @@ Each step is small, checked in the browser, and committed on its own.
 15. **Fixed dock choices.** Configure lets the user pick from the allowed placements (sides for the list, bay and speaker, and the bottom-row pair).
 16. **Typing posture.** When the on-screen keyboard opens, the lower modules fold into a thin strip; they come back when it closes.
 17. **Portrait behaviour.** Touch input, the list as a full screen, the drawer, thumb reach, and checks on a real phone and an iPad.
-    - Known: in portrait the gutter's line numbers drift about a line from the text on long notes, and the Map viewer's A/B strip squeezes the small map when it shows. The screen already keeps a fixed height and scrolls inside.
+    - Known: in portrait the gutter's line numbers drift about a line from the text on long notes, and the Map viewer's A/B strip squeezes the small map when it shows. Treemoji's tree grid has small tiles in the short bay row. The screen already keeps a fixed height and scrolls inside.
 
 **E · The concept page**
 

@@ -22,6 +22,8 @@
 
 :where(.arb) .moss { --face: var(--moss); --face-hi: var(--moss-hi); --side: var(--moss-side); }
 
+:where(.arb) .lichen { --face: var(--lichen); --face-hi: var(--lichen-hi); --side: var(--lichen-side); }
+
 :where(.arb) .graphite {
   --face: var(--graphite);
   --face-hi: var(--graphite-hi);
