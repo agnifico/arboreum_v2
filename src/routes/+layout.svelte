@@ -15,6 +15,10 @@
   import { base } from '$app/paths';
   import { normalizeBackup } from '$lib/backup.js';
   import { afterNavigate } from '$app/navigation';
+  import { page } from '$app/state';
+
+  // The F16O concept device draws its own chrome (see CONCEPT.md).
+  let isConcept = $derived(page.url.pathname.startsWith('/concept'));
 
   let sidebar_switch = $state(true);
   let showImportConfirm = $state(false);
@@ -134,6 +138,9 @@
   }
 </script>
 
+{#if isConcept}
+  {@render children()}
+{:else}
 {#if $isMapVisible}
   <Garden notes={$notes} />
 {/if}
@@ -255,6 +262,7 @@
     </div>
   {/if}
 </div>
+{/if}
 
 <style>
   .super {
