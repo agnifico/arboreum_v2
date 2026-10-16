@@ -190,6 +190,7 @@
   let isSubscript = $state(false);
   let isHighlight = $state(false);
   let isTaskList = $state(false);
+  let activeColor = $state(null);
   let textAlign = $state("left");
   let showAlignDropdown = $state(false);
   let showListDropdown = $state(false);
@@ -357,6 +358,7 @@
         isSubscript = editor.isActive("subscript");
         isHighlight = editor.isActive("highlight");
         isTaskList = editor.isActive("taskList");
+        activeColor = editor.getAttributes("textStyle").color ?? null;
 
         if (editor.isActive({ textAlign: "left" })) {
           textAlign = "left";
@@ -807,9 +809,7 @@
                       editor.chain().focus().setColor(color.hex).run();
                       showColorPalette = false;
                     }}
-                    class:active={editor?.isActive("textStyle", {
-                      color: color.hex,
-                    })}
+                    class:active={activeColor === color.hex}
                   />
                 {/each}
                 <button
@@ -890,7 +890,7 @@
   <button
     type="button"
     on:click={() => editor.chain().focus().toggleBold().run()}
-    class:active={editor?.isActive("bold")}
+    class:active={isBold}
     aria-label="Bold"
   >
     <strong>B</strong>
@@ -898,7 +898,7 @@
   <button
     type="button"
     on:click={() => editor.chain().focus().toggleItalic().run()}
-    class:active={editor?.isActive("italic")}
+    class:active={isItalic}
     aria-label="Italic"
   >
     <em>I</em>
@@ -906,7 +906,7 @@
   <button
     type="button"
     on:click={() => editor.chain().focus().toggleStrike().run()}
-    class:active={editor?.isActive("strike")}
+    class:active={isStrike}
     aria-label="Strike"
   >
     <strike>S</strike>
@@ -917,7 +917,7 @@
   <button
     type="button"
     on:click={() => editor.chain().focus().toggleCode().run()}
-    class:active={editor?.isActive("code")}
+    class:active={isCode}
     aria-label="Code"
     title="Code"
   >
@@ -926,7 +926,7 @@
   <button
     type="button"
     on:click={() => editor.chain().focus().toggleBulletList().run()}
-    class:active={editor?.isActive("bulletList")}
+    class:active={isBulletList}
     aria-label="Bullet list"
     title="Bullet list"
   >
@@ -935,7 +935,7 @@
   <button
     type="button"
     on:click={() => editor.chain().focus().toggleOrderedList().run()}
-    class:active={editor?.isActive("orderedList")}
+    class:active={isOrderedList}
     aria-label="Ordered list"
     title="Ordered list"
   >
@@ -944,7 +944,7 @@
   <button
     type="button"
     on:click={() => editor.chain().focus().toggleBlockquote().run()}
-    class:active={editor?.isActive("blockquote")}
+    class:active={isBlockquote}
     aria-label="Quote"
     title="Quote"
   >
