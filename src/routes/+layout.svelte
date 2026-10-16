@@ -316,7 +316,7 @@
     align-items: center;
     gap: 0.5rem;
     margin-left: auto;
-    z-index: 2;
+    z-index: 30; /* its menus stay above the mobile notes drawer (20) */
   }
 
   /* The form elements should not disrupt the flexbox layout */
