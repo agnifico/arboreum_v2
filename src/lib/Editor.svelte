@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, untrack } from "svelte";
   import { Editor } from "@tiptap/core";
   import { StarterKit } from "@tiptap/starter-kit";
   import BubbleMenu from "@tiptap/extension-bubble-menu";
@@ -16,7 +16,7 @@
   import TextAlign from "@tiptap/extension-text-align";
   import Image from "@tiptap/extension-image";
 
-  import { goto } from "$app/navigation";
+  import { goto, replaceState } from "$app/navigation";
   import { db } from "$lib/db.js";
   import { v4 as uuidv4 } from "uuid";
   import {
@@ -26,6 +26,7 @@
     exitEditor,
     toggleFullscreen,
     enterPlacementMode,
+    showToast,
   } from "$lib/stores.js";
   import { browser } from "$app/environment";
   import { base } from "$app/paths";
@@ -55,17 +56,39 @@
 
   let editor;
 
-  // Effect to reset component state when the note prop changes
-  $effect(() => {
-    _title = note?.title || "";
-    body = note?.text || "";
-    treemoji = note?.icon || "/Tree2.png";
-    mapX = note?.mapX ?? null;
-    mapY = note?.mapY ?? null;
+  // The stored record this editor writes to; null until a new note is first saved.
+  let savedNote = $state.raw(note);
+  // What was last loaded or saved, to tell whether there are unsaved changes.
+  let baseline = $state.raw(null);
+  let saveState = $state("idle"); // idle | saving | saved | error
 
-    if (editor && body !== editor.getHTML()) {
-      editor.commands.setContent(body);
-    }
+  function current() {
+    return { title: _title, text: body, icon: treemoji, mapX, mapY };
+  }
+  const sameAs = (a, b) =>
+    !!a && !!b && a.title === b.title && a.text === b.text && a.icon === b.icon &&
+    a.mapX === b.mapX && a.mapY === b.mapY;
+  let dirty = $derived(!sameAs(current(), baseline));
+
+  // Reset the editor when the note prop changes (e.g. Create New while editing).
+  // Only `note` is tracked, so typing never triggers a reset.
+  $effect(() => {
+    const n = note;
+    untrack(() => {
+      savedNote = n;
+      _title = n?.title || "";
+      body = n?.text || "";
+      treemoji = n?.icon || "/Tree2.png";
+      mapX = n?.mapX ?? null;
+      mapY = n?.mapY ?? null;
+
+      if (editor) {
+        if (body !== editor.getHTML()) editor.commands.setContent(body);
+        body = editor.getHTML();
+      }
+      baseline = current();
+      saveState = "idle";
+    });
   });
 
   $effect(() => {
@@ -235,6 +258,9 @@
         }),
       ],
       content: body,
+      onUpdate: () => {
+        body = editor.getHTML();
+      },
       onTransaction: () => {
         // Update all reactive states on every transaction
         isBold = editor.isActive("bold");
@@ -278,6 +304,9 @@
         }
       },
     });
+    // Tiptap normalises the stored HTML; compare against its version.
+    body = editor.getHTML();
+    baseline = { ...baseline, text: body };
     if (browser) {
       window.addEventListener("click", handleClickOutside);
     }
@@ -292,27 +321,57 @@
     exitEditor();
   });
 
-  async function saveNote() {
+  // stay: keep editing after saving (Cmd/Ctrl+S); otherwise open the note.
+  async function saveNote({ stay = false } = {}) {
+    if (!editor || saveState === "saving") return false;
+    saveState = "saving";
+    const snapshot = current();
     const noteData = {
-      title: _title.trim(),
-      text: editor.getHTML(),
-      icon: treemoji,
-      createdAt: note?.createdAt || new Date(),
+      title: snapshot.title.trim(),
+      text: snapshot.text,
+      icon: snapshot.icon,
+      createdAt: savedNote?.createdAt || new Date(),
       updatedAt: new Date(),
-      mapX: mapX,
-      mapY: mapY,
+      mapX: snapshot.mapX,
+      mapY: snapshot.mapY,
     };
 
-    if (note) {
-      await db.notes.update(note.id, noteData);
-      await goto(`${base}/read/${note.noteid}`);
-    } else {
-      noteData.noteid = uuidv4();
-      const newId = await db.notes.add(noteData);
-      await goto(`${base}/read/${noteData.noteid}`);
+    try {
+      if (savedNote) {
+        await db.notes.update(savedNote.id, noteData);
+        savedNote = { ...savedNote, ...noteData };
+      } else {
+        noteData.noteid = uuidv4();
+        const id = await db.notes.add(noteData);
+        savedNote = { ...noteData, id };
+        // Later saves (and reloads) now edit this note instead of making copies.
+        if (stay) replaceState(`${base}/newleaf?noteid=${noteData.noteid}`, {});
+      }
+    } catch (error) {
+      console.error("Failed to save note:", error);
+      saveState = "error";
+      showToast("Couldn't save. Your writing is still here, try again.");
+      return false;
+    }
+
+    baseline = snapshot;
+    saveState = "saved";
+    if (!stay) {
+      await goto(`${base}/read/${savedNote.noteid}`);
+      showToast("Saved ✓");
+    }
+    return true;
+  }
+
+  function handleKeydown(event) {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+      event.preventDefault();
+      saveNote({ stay: true });
     }
   }
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <div class="app-bg">
   <div class="app" class:fullscreen-editor={$isFullscreen}>
@@ -335,8 +394,22 @@
           placeholder="<title>"
         />
         <div class="dashboard">
-          <button type="button" on:click={saveNote} class="button-2">
-            Save
+          <button
+            type="button"
+            on:click={() => saveNote()}
+            class="button-2"
+            class:is-saved={saveState === "saved" && !dirty}
+            title="Save (Ctrl/⌘ S)"
+          >
+            {#if saveState === "saving"}
+              Saving…
+            {:else if saveState === "error"}
+              Retry save
+            {:else if saveState === "saved" && !dirty}
+              Saved ✓
+            {:else}
+              Save
+            {/if}
           </button>
         </div>
       </div>
@@ -791,6 +864,13 @@
     color: var(--text-main);
     font-weight: 600;
     font-size: 1rem;
+  }
+  .button-2 {
+    white-space: nowrap;
+  }
+  .button-2.is-saved {
+    background-color: var(--hunter-green);
+    color: var(--neon-green);
   }
   .button-2:hover {
     transform: translateY(-3px);

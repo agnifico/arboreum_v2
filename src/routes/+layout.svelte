@@ -7,7 +7,7 @@
   import Button from "$lib/components/controls/Button.svelte";
   import MapButton from "$lib/components/controls/MapButton.svelte";
   import Modal from "$lib/components/Modal.svelte";
-  import { isFullscreen, isMapVisible, placementMode, toggleMap } from "$lib/stores.js";
+  import { isFullscreen, isMapVisible, placementMode, toggleMap, toast } from "$lib/stores.js";
   import { browser } from '$app/environment';
   import { db } from "$lib/db.js";
   import { liveQuery } from "dexie";
@@ -128,6 +128,12 @@
     <Button variant="primary" onClick={executeImport}>Overwrite and Import</Button>
   </svelte:fragment>
 </Modal>
+
+<div class="toast-region" role="status" aria-live="polite">
+  {#if $toast}
+    <div class="toast">{$toast}</div>
+  {/if}
+</div>
 
 <div class="super" class:fullscreen-active={$isFullscreen}>
   {#if !$isFullscreen}
@@ -301,6 +307,29 @@
 
   .greenline:hover {
     width: 24px;
+  }
+
+  .toast-region {
+    position: fixed;
+    left: 50%;
+    bottom: 1.5rem;
+    transform: translateX(-50%);
+    z-index: 2000;
+    pointer-events: none;
+  }
+  .toast {
+    padding: 0.5rem 1rem;
+    background-color: var(--charcoal);
+    color: var(--neon-green);
+    border: 3px solid var(--hunter-green);
+    border-radius: 10px;
+    font-family: "Fira Code", monospace;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    box-shadow:
+      rgba(0, 0, 0, 0.4) 0px 2px 4px,
+      rgba(0, 0, 0, 0.3) 0px 6px 9px -3px,
+      rgba(0, 0, 0, 0.2) 0px -4px 0px inset;
   }
 
   .mobile-only {

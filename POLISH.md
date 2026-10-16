@@ -9,9 +9,9 @@ If that changes, a migration and a test against v2 data come with it.
 ## 1. Editor
 
 - [ ] **E1** Tree picker popover is clipped by the editor's `overflow: hidden`: at 1000px it runs 135px past the right edge, at 375px it's cut off on the left.
-- [ ] **E2** Cmd/Ctrl+S doesn't save (the browser's "Save page" opens instead).
+- [x] **E2** Cmd/Ctrl+S doesn't save (the browser's "Save page" opens instead).
 - [ ] **E3** No warning when leaving with unsaved changes (in-app links, reload, closing the tab).
-- [ ] **E4** No "saved" feedback: Save silently jumps to the reading view.
+- [x] **E4** No "saved" feedback: Save silently jumps to the reading view.
 - [x] **E5** Editing a note whose tree sits at map x=0 or y=0 saves that coordinate as `null` (`mapX || null`), so the tree loses its place.
 - [ ] **E6** The rotating emoji message is a focusable button that does nothing.
 - [ ] **E7** Floating-menu quote button never shows as active (checks `blockQuote` instead of `blockquote`).

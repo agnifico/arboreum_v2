@@ -7,6 +7,17 @@ export const selectedCoordinates = writable(null);
 export const editorCoordinates = writable(null);
 export const isMapVisible = writable(false);
 export const editorStore = writable(null);
+export const toast = writable(null);
+
+let toastTimer;
+/**
+ * Shows a short message at the bottom of the screen (e.g. "Saved ✓").
+ */
+export function showToast(message, ms = 2200) {
+  clearTimeout(toastTimer);
+  toast.set(message);
+  toastTimer = setTimeout(() => toast.set(null), ms);
+}
 
 // --- Centralized UI State Management Functions ---
 
