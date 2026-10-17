@@ -686,9 +686,12 @@
     cursor: pointer;
     transition: color 0.1s ease, border-color 0.1s ease;
   }
-  .key:not(:disabled):hover {
-    color: var(--phosphor);
-    border-color: rgba(213, 228, 198, 0.22);
+  /* Hover only where there's a real pointer: on touch it sticks after a tap */
+  @media (hover: hover) {
+    .key:not(:disabled):hover {
+      color: var(--phosphor);
+      border-color: rgba(213, 228, 198, 0.22);
+    }
   }
   .pages {
     margin-left: auto;

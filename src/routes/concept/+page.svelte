@@ -24,13 +24,20 @@
   });
   onMount(() => {
     const stop = device.start();
+    // iOS Safari only shows :active (every key's press state) once something
+    // listens for touchstart; a passive no-op is enough.
+    const noop = () => {};
+    document.addEventListener("touchstart", noop, { passive: true });
     // Start in a note, ready to write (no menu in the way).
     device.ready.then(() => {
       device.caretAt = "start";
       if (device.note) device.open();
       else device.newNote();
     });
-    return stop;
+    return () => {
+      stop();
+      document.removeEventListener("touchstart", noop);
+    };
   });
 
   function handleKeydown(event) {

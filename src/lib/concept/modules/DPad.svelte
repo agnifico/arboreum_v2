@@ -21,6 +21,22 @@
 
   // The whole cross rocks toward the pressed arm, like a real pivoting D-pad.
   let held = $state(null);
+
+  // Hold to repeat (on a phone it's the only way to keep moving): the press
+  // lands on touch-down, then repeats after a pause, like a held arrow key.
+  let timer;
+  function down(e, dir) {
+    if (e.button !== 0) return;
+    held = dir;
+    device.press(dir);
+    const again = (wait) => (timer = setTimeout(() => (device.press(dir), again(70)), wait));
+    again(380);
+  }
+  function up() {
+    held = null;
+    clearTimeout(timer);
+  }
+  $effect(() => up);
   let tilt = $derived(held ?? ["up", "down", "left", "right"].find((d) => device.lit[d]) ?? null);
 </script>
 
@@ -68,10 +84,11 @@
         class="arm {dir}"
         aria-label={dir[0].toUpperCase() + dir.slice(1)}
         onmousedown={keepFocus}
-        onpointerdown={() => (held = dir)}
-        onpointerup={() => (held = null)}
-        onpointerleave={() => (held = null)}
-        onclick={() => device.press(dir)}
+        onpointerdown={(e) => down(e, dir)}
+        onpointerup={up}
+        onpointerleave={up}
+        onpointercancel={up}
+        onclick={(e) => e.detail === 0 && device.press(dir)}
       ></button>
     {/each}
   </div>
