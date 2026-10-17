@@ -202,7 +202,7 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 **Focus and highlight moving between modules:** one rule for how the cursor, highlight and focus move between the list, the editor, the Map viewer and the drawer.
 
-**Multi-select and delete in the list.** *Done (selection mode).* In by Select, Start → SELECT NOTES, the List module's slider or a long press on a row. Rows show `[ ]` / `[x]`; the D-pad moves, A (or a tap) picks, B or Select leaves, Start (or Delete) deletes the picked notes after a confirm that names them. The full-screen list shows a DELETE n chip in its status line while picking, for touch without a Start key.
+**Multi-select and delete in the list.** *Done (selection mode).* In by Select, Start → SELECT NOTES, the List module's slider (the classic app's Select/Exit switch stood on end, under the sort tabs: switched on, it rises and uncovers a red delete key; its edge turns orange) or a long press on a row. Rows show `[ ]` / `[x]`; the D-pad moves, A (or a tap) picks, B or Select leaves, Start (or Delete) deletes the picked notes after a confirm that names them. The full-screen list shows a DELETE n chip in its status line while picking, for touch without a Start key.
 
 **One overflow rule for strips.** Format keys and details both overflow on the right. Use one rule for both: content fades at the edge and scrolls; when the D-pad moves along a strip, the item under the cursor scrolls into view.
 
