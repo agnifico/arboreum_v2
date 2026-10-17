@@ -106,6 +106,8 @@ export class Device {
   /** What the bay module's screen shows while it has the D-pad. */
   bayMode = $state("plot"); // "plot" (Map viewer) | "tree" (either)
   treeIndex = $state(0);
+  /** Trees a row in the tree grid on show (TreeGrid reports it): 4, or 6 on a wide, short screen. */
+  treeCols = $state(4);
   /** Formatting under the caret (for lit format keys) and the word count. */
   active = $state({});
   words = $state(0);
@@ -339,9 +341,8 @@ export class Device {
       if (button === "a") this.plant();
       return;
     }
-    const COLS_T = 4;
     const n = TREES.length;
-    const step = { left: -1, right: 1, up: -COLS_T, down: COLS_T }[button];
+    const step = { left: -1, right: 1, up: -this.treeCols, down: this.treeCols }[button];
     if (step) this.treeIndex = Math.max(0, Math.min(n - 1, this.treeIndex + step));
     if (button === "a") this.pickTree();
   };
@@ -747,7 +748,7 @@ export class Device {
       return void (this.focus = "editor");
     }
     if (this.bayMode === "tree") {
-      const step = { left: -1, right: 1, up: -4, down: 4 }[button]; // 4 trees a row
+      const step = { left: -1, right: 1, up: -this.treeCols, down: this.treeCols }[button];
       if (step) this.treeIndex = Math.max(0, Math.min(TREES.length - 1, this.treeIndex + step));
       if (button === "a") this.pickTree();
       return;

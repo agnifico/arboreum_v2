@@ -1,5 +1,5 @@
 <script>
-  // The trees as a 4-wide grid, driven by the D-pad (the device's treeIndex)
+  // The trees as a grid (4 a row), driven by the D-pad (the device's treeIndex)
   // or a tap. Shared by the Map viewer, Treemoji and the drawer.
   import { useDevice } from "./device.svelte.js";
   import { TREES } from "./trees.js";
@@ -11,9 +11,26 @@
   const device = useDevice();
   // Tapping a tree keeps typing focus where it was (as hardware keys do).
   const keepFocus = (e) => e.preventDefault();
+
+  // A filled grid picks its row length from its own shape, so the tiles stay
+  // near square: 6 a row (two rows) on a wide, short screen such as a bay
+  // module in portrait, otherwise 4 (three rows). The D-pad steps by the same.
+  let el = $state();
+  let cols = $state(4);
+  $effect(() => {
+    if (!fill || !el) return;
+    const ro = new ResizeObserver(([e]) => (cols = e.contentRect.width > e.contentRect.height * 2 ? 6 : 4));
+    ro.observe(el);
+    return () => ro.disconnect();
+  });
+  $effect(() => {
+    if (!cursor) return;
+    device.treeCols = cols;
+    return () => (device.treeCols = 4);
+  });
 </script>
 
-<div class="trees" class:fill role="radiogroup" aria-label="Trees">
+<div class="trees" class:fill style:--cols={cols} bind:this={el} role="radiogroup" aria-label="Trees">
   {#each TREES as t, i}
     <button
       class="tree"
@@ -32,7 +49,7 @@
 <style>
   .trees {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr)); /* sprites mustn't widen the grid */
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); /* sprites mustn't widen the grid */
     gap: 6px;
   }
   .trees.fill {
