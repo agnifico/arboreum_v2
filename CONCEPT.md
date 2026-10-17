@@ -18,13 +18,13 @@ The one list of what's left, in working order. Details live in the sections link
 - [x] **Typing posture** (step 16, decided 17 Oct). The keyboard is allowed up (no keyboard on demand); while it's up in portrait, only the screen and the controls row show above it. Covers the viewport item too. *Done; checked on Android.*
 - [x] **Viewport.** The height while typing comes from `visualViewport` (above). `viewport-fit=cover` and safe areas are left out on purpose: in the browser Safari already keeps the page clear of the notch and paints the mat behind it. They only matter for a home-screen app, so they go with the manifest (iOS storage, below).
 - [ ] **iOS checks:** the first tap on a note opens it with the caret in place (tap-to-edit runs on mousedown); ~~Safari zooms in when focusing text under 16px~~ (fixed: `maximum-scale=1`, on iOS only, where pinch zoom still works); map tap-tap planting on a real iPhone; HEIC photos through the Camera.
-- [ ] **Touch-only gaps in the three ways:** without a hardware keyboard there's no way to indent list items (Tab / Shift+Tab) or to undo and redo.
-- [ ] **iOS storage:** Safari can clear IndexedDB and OPFS after 7 days without a visit unless the site is on the home screen. A web app manifest would fix it; `persist()` is only asked on the image path.
+- [x] **Touch-only gaps in the three ways:** without a hardware keyboard there's no way to indent list items (Tab / Shift+Tab) or to undo and redo. *Done: the format strip has ↶ ↷ (first) and ⇤ ⇥; the Format deck has ↶ ↷ leading its rows.*
+- [ ] **iOS storage** (later; fine for the prototype): Safari can clear IndexedDB and OPFS after 7 days without a visit unless the site is on the home screen. A web app manifest would fix it; `persist()` is only asked on the image path.
 - [x] Treemoji's tree grid has small tiles in the short portrait bay row. *Done: a filled tree grid takes 6 a row when its screen is wide and short; the D-pad steps by the same.*
 
 **2 · Deploy the concept.** *Done 17 Oct:* merged to `main` and live at arboreum-v2.vercel.app/concept, beside the classic app (which it doesn't touch). Phone tests now have HTTPS, which OPFS and `storage.persist()` need.
 
-**3 · Interaction consistency pass** (see its section): clickable confirms (open question), one focus rule between modules, undo granularity, marks at word level.
+**3 · Interaction consistency pass** (see its section): clickable confirms (open question), one focus rule between modules, undo granularity.
 
 **4 · Visual pass** (see its section): screen colour theme (Everforest as a base), D-pad feel. From the backlog: the Map viewer's cut-out screen in portrait, and the wells rule everywhere.
 
@@ -79,7 +79,7 @@ The one list of what's left, in working order. Details live in the sections link
 ## Screen strips
 
 - **A/B context strip:** overlaid at the bottom right and always visible. It says what A and B do right now.
-- **Secondary strip:** along the bottom, paged with ◀ ▶. One page holds formatting keys; the other holds details (words, date, status, tree, plot).
+- **Secondary strip:** along the bottom. It starts with its keys; the page switcher (◀ FORMAT ▶ / DETAILS) sits at the right. The format page: ↶ ↷, the formats, then ⇤ ⇥, IMG (add an image, like the Camera) and the image edge (▄ ▀ ▌ ▐, once the note has images; a tap cycles it). The details page: words, date, status, tree, plot. Both scroll (a mouse wheel scrolls them sideways) and fade only where there's more.
 - **Missing module:** a red **!** sits on whatever resolves the missing step (a tree or a plot). For a job the drawer stands in for, it's on the drawer's handle; for a job a slotted module does, an alert chip points at the bay ("! NO TREE ▸"). Both sit in the screen's status line, so nothing covers the text. The drawer slides out from the right, under its handle, laid out like the missing module.
 
 ## Inputs
@@ -211,7 +211,7 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 **Undo granularity.** One formatting action should be one undo step. *Fixed already:* undo right after opening a note emptied it, so each note now starts with a fresh undo history.
 
-**Marks at word level.** Treat the word as the unit. With the caret just before or after a bold, italic or underlined word, its key lights up, as it already does at the start of a line. Spaces carry no marks.
+**Marks at word level.** *Done (`word-marks.js`).* With the markup hidden, the caret at either edge of a formatted word is inside its markers (`**word|**`): the key lights and typed letters join the word. A space typed at the edge is plain and steps out. A mark key with only a caret applies to the whole word. Links are left out. Treat the word as the unit. With the caret just before or after a bold, italic or underlined word, its key lights up, as it already does at the start of a line. Spaces carry no marks.
 
 **D-pad hold-to-repeat.** *Done.* Holding a D-pad arm repeats: a short delay, then the repeat speeds up the longer it's held. It applies to the caret, the list and the map cursor. Physical keyboard arrows keep the system's own repeat.
 
@@ -352,7 +352,7 @@ How the strip works:
 
 Input:
 - **Camera module:** adds an image (file picker; on phones it can open the camera).
-- **Start menu:** choose the edge, remove an image.
+- **Start menu:** choose the edge, remove an image. The format strip has IMG and the edge key too.
 - **Moving images:** the D-pad selects an image and moves it along the strip; A confirms, B cancels.
 
 **Default edge** for a new note: bottom (text first, scrapbook after).
