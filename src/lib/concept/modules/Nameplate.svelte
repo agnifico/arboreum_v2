@@ -1,11 +1,6 @@
-<script>
-  // gear: the Configure gear is docked at the left end (portrait, no speaker)
-  let { gear = false } = $props();
-</script>
-
 <!-- NAMEPLATE: fixed hardware branding; the name sits at the right end so
      the plate reads across the whole width -->
-<section class="mod bone plate" class:gear aria-label="Nameplate">
+<section class="mod bone plate" aria-label="Nameplate">
   <span class="screw s-tl"></span><span class="screw s-bl"></span>
   <div class="plate-stripe" aria-hidden="true"></div>
   <div class="plate-print">
@@ -21,7 +16,7 @@
 <style>
   .plate { grid-area: plate; }
   .plate {
-    --stripe-x: 30px;
+    --stripe-x: 66px; /* room for the Configure gear at the left end */
     display: flex;
     align-items: center;
     gap: 36px;
@@ -72,8 +67,7 @@
     width: 150px;
     background: linear-gradient(115deg, transparent 0 34%, var(--signal) 34% 52%, transparent 52% 60%, #2b2d2c 60% 66%, transparent 66%);
   }
-  :global(.portrait) .plate { --stripe-x: 22px; padding: 0 22px 0 0; gap: 0; }
-  :global(.portrait) .plate.gear { --stripe-x: 58px; } /* room for the gear */
+  :global(.portrait) .plate { --stripe-x: 58px; padding: 0 22px 0 0; gap: 0; }
   :global(.portrait) .brand { font-size: 26px; }
   :global(.portrait) .model { margin-top: 3px; font-size: 12px; }
   :global(.portrait) .plate-print { display: none; }

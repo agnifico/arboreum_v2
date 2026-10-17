@@ -79,11 +79,10 @@
   // in the other. Only the screen stretches; every other module keeps its
   // size. One rule everywhere: no device special cases, so no jumps.
   let small = $derived(stageW < 520 || winH < 520);
-  // Landscape floats the Configure pill below the console; portrait docks it inside.
   let pad = $derived(
     small
-      ? { x: 8, top: 8, bottom: view === "landscape" ? 52 : 16 } // 16: room for the enclosure's 12px lip
-      : { x: 24, top: 20, bottom: view === "landscape" ? 64 : 20 }
+      ? { x: 8, top: 8, bottom: 16 } // 16: room for the enclosure's 12px lip
+      : { x: 24, top: 20, bottom: 20 }
   );
   let availW = $derived(stageW - pad.x * 2);
   let availH = $derived(winH - pad.top - pad.bottom);
@@ -223,7 +222,12 @@
       {/if}
 
       <Camera />
-      <Nameplate gear={view === "portrait" && !showSpeaker} />
+      <Nameplate />
+      <!-- Configure: always the gear at the nameplate's left end, in every
+           arrangement; its panel opens downward -->
+      <div class="plate-dock">
+        <Configurator {view} bind:orient bind:showBay={() => showBay, (v) => (bays[view].show = v)} bind:bayModule={() => bayModule, (v) => (bays[view].module = v)} bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
+      </div>
       {#if view === "landscape" && leftList}<ListModule />{/if}
       <Screen />
       {#if showBay}
@@ -245,12 +249,7 @@
         {/key}
       {/if}
       {#if view === "portrait"}
-        <!-- The Configure gear docks under the speaker strip, or (without
-             the speaker) at the nameplate's left end -->
-        <div class={showSpeaker ? "side" : "plate-dock"}>
-          {#if showSpeaker}<Speaker />{/if}
-          <Configurator {view} bind:orient bind:showBay={() => showBay, (v) => (bays[view].show = v)} bind:bayModule={() => bayModule, (v) => (bays[view].module = v)} bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl docked drop={!showSpeaker} />
-        </div>
+        {#if showSpeaker}<div class="side"><Speaker /></div>{/if}
       {:else if showSpeaker && (showDpad || showCtl || !showBay)}
         <!-- (with no controls row the right column has room for one module) -->
         <Speaker />
@@ -258,9 +257,6 @@
     </div>
   </div>
 
-  {#if view === "landscape"}
-    <Configurator {view} bind:orient bind:showBay={() => showBay, (v) => (bays[view].show = v)} bind:bayModule={() => bayModule, (v) => (bays[view].module = v)} bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
-  {/if}
 </main>
 
 <style>

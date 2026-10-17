@@ -56,12 +56,11 @@ The one list of what's left, in working order. Details live in the sections link
   - Bottom row: D-pad, then the control pad, then the speaker. They stay visible so the device reads at a glance.
 - **Mobile:** a portrait stack: camera and nameplate, then the screen, the D-pad with the control pad, the bay (optional), and the speaker (optional). On mobile the list opens full screen unless the bay holds it.
 - **Control pad:** Start, B and A in one straight row.
-- **Configure button:** the only thing on the page besides the console (no caption).
+- **Configure button:** a gear in the nameplate (no caption); nothing sits on the page outside the console.
   - Modules: list (landscape), D-pad, control pad, bay, speaker. Screen: show markup, line numbers (on by default; off leaves a slim margin and the current-line band), screen glare (off by default). Body: enclosure.
   - It also overrides the orientation (Auto / Landscape / Portrait; Auto follows the window's shape).
   - Turning modules off follows the placement rules: no List module means the list opens full screen; a lone control module takes the bottom row; no controls means the screen takes the height.
-  - Landscape: a small pill at the bottom right.
-  - Portrait: a gear docked in the console's side column, under the speaker strip. Without the speaker there's no side column; the gear docks at the nameplate's left end and its panel opens downward.
+  - Where: always a gear set into the nameplate's left end, in every arrangement, with or without the speaker; its panel opens downward. (It used to float at the bottom right in landscape and move between the speaker column and the nameplate in portrait.)
 - **Portrait arrangement** (formerly "mobile"):
   - The console is shaped to the phone's own screen, and the screen gets every bit of height the other modules don't need.
   - The D-pad and control pad share the row right under the screen, as in landscape. On the control pad, B and A sit side by side with Start below them.
