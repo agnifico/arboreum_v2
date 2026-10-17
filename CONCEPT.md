@@ -28,11 +28,13 @@ The one list of what's left, in working order. Details live in the sections link
 
 **4 · Visual pass** (see its section): screen colour theme (Everforest as a base), D-pad feel. From the backlog: the Map viewer's cut-out screen in portrait, and the wells rule everywhere.
 
-**5 · Images, the rest:** the link dot, "Save to a folder on my computer", images in backups (an image-aware export format).
+**5 · Images, the rest:** *done 17 Oct:* replace and remove on the picked image (REPLACE and a ✕ that asks in place; Start → IMAGE menu; the Camera and IMG replace it). Still open: the link dot, "Save to a folder on my computer", images in backups (an image-aware export format).
 
 **6 · The concept page and finishing** (build order E): the page around the device and the design philosophy pages, motion and click sounds, accessibility and performance, a console sweep, and a regression check of the classic app.
 
 **7 · The port.** *Routes done 17 Oct:* the device is `/`, the classic app lives under `/classic` (its own layout, links and routes moved with it), `/concept` redirects. Still open from the classic polish pass (POLISH.md): sanitise imported HTML, and remove the dead files and old config. Pages beyond the app (about, the project's idea, a portfolio) are still to place: where their links live on a page that's all console is open.
+
+**8 · The speaker as a music player** (briefed to Grok as an isolated test, `briefs/speaker-player.md`): tap the grille and SPK-01 flips over to a small player for the user's own MP3/WAV files; Chrome and Edge remember the folder. Once it's in, give it a console route (a Start menu line) so it meets the three ways. Spotify is out for now: the Web Playback SDK needs Premium for every listener and has no iOS support, and a Development Mode app is capped at five allowlisted users (extended quota is only for registered businesses with 250k monthly users).
 
 **Next after mobile:** the extended format deck (Ideas for later).
 
@@ -58,8 +60,9 @@ The one list of what's left, in working order. Details live in the sections link
   - Bottom row: D-pad, then the control pad, then the speaker. They stay visible so the device reads at a glance.
 - **Mobile:** a portrait stack: camera and nameplate, then the screen, the D-pad with the control pad, the bay (optional), and the speaker (optional). On mobile the list opens full screen unless the bay holds it.
 - **Control pad:** Select, Start, B and A in one straight row (Select and Start share a well, as on a handheld).
-- **Configure button:** a gear in the nameplate (no caption); nothing sits on the page outside the console.
-  - Modules: list (landscape), D-pad, control pad, bay, speaker. Screen: show markup, line numbers (on by default; off leaves a slim margin and the current-line band), screen glare (off by default). Body: enclosure.
+- **Configure button:** a gear in the nameplate (no caption); nothing sits on the page outside the console. Two tabs:
+  - **LAYOUT:** modules: list (landscape), D-pad, control pad, bay, speaker. Screen: show markup, line numbers (on by default; off leaves a slim margin and the current-line band), spell check.
+  - **LOOK:** the theme, and the finish (screen glare, off by default; the enclosure).
   - It also overrides the orientation (Auto / Landscape / Portrait; Auto follows the window's shape).
   - Turning modules off follows the placement rules: no List module means the list opens full screen; a lone control module takes the bottom row; no controls means the screen takes the height.
   - Where: always a gear set into the nameplate's left end, in every arrangement, with or without the speaker; its panel opens downward. (It used to float at the bottom right in landscape and move between the speaker column and the nameplate in portrait.)
@@ -78,7 +81,7 @@ The one list of what's left, in working order. Details live in the sections link
 
 ## Screen strips
 
-- **A/B context strip:** overlaid at the bottom right and always visible. It says what A and B do right now.
+- **A/B context strip:** overlaid at the bottom right and always visible. It says what A, B and Start do right now. Start's pip reads **SRT** (a three-letter word key, like the hardware's printing; not STR, which reads as "string"). Select's would read **SEL**; Select isn't on the strip today.
 - **Secondary strip:** along the bottom. It starts with its keys; the page switcher (◀ FORMAT ▶ / DETAILS) sits at the right. The format page: ↶ ↷, the formats, then ⇤ ⇥, IMG (add an image, like the Camera) and the image edge (▄ ▀ ▌ ▐, once the note has images; a tap cycles it). The details page: words, date, status, tree, plot. Both scroll (a mouse wheel scrolls them sideways) and fade only where there's more.
 - **Missing module:** a red **!** sits on whatever resolves the missing step (a tree or a plot). For a job the drawer stands in for, it's on the drawer's handle; for a job a slotted module does, an alert chip points at the bay ("! NO TREE ▸"). Both sit in the screen's status line, so nothing covers the text. The drawer slides out from the right, under its handle, laid out like the missing module.
 
@@ -118,7 +121,7 @@ Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the pa
 - `src/routes/+page.svelte`: the stage, the device grid (desktop and mobile layouts) and the module toggles. The classic app is everything under `src/routes/classic/`.
 - `src/lib/concept/modules/*.svelte`: one component per module (Camera, Nameplate, ListModule, Screen, MapViewer, Treemoji, DPad, ControlPad, FormatDeck, Speaker). Mobile tweaks sit beside each module's own styles.
 - `src/lib/concept/materials.css`: shared materials (module bodies, screws, etched labels, glass, pips). It's scoped to the `.arb` root with `:where()`, so module styles win and nothing leaks into the main app.
-- `src/lib/concept/Configurator.svelte`: the page-level Configure panel.
+- `src/lib/concept/Configurator.svelte`: the page-level Configure panel (LAYOUT and LOOK tabs); `themes.js`: the themes (module roles and the accent).
 - `src/lib/concept/device.svelte.js`: the shared device state (input, screens, notes, saving, map).
 - `src/lib/concept/garden.js`, `GardenMap.svelte`: the garden map (same tiles as the classic app) and its pixel window.
 - `src/lib/concept/media.js`, `opfs-writer.js`, `NoteImages.svelte`: a note's images (storage, the writer worker, the edge layouts).
@@ -197,13 +200,15 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 **Mouse everywhere on desktop:**
 - menu items are clickable (*done*: a click chooses, a mouse hover moves the caret);
-- confirm choices: *open question.* They show A/B pips like the context strip, which stays labels (Design philosophy, §2), so making them clickable needs a call;
+- confirm choices: *open question.* They show A/B pips like the context strip, which stays labels (Design philosophy, §2), so making them clickable needs a call. A candidate answer from the image keys: the mouse confirms in place (a ✕ that turns into CONFIRM on the first press), and the box stays for the console and keyboard;
 - the drawer is clickable too;
 - A/B context chips stay labels, not buttons (see Design philosophy, §2).
 
 **Keyboard parity:** ✅ Space and the letters A / B act as A and B wherever nothing is typed.
 
 **Focus and highlight moving between modules:** one rule for how the cursor, highlight and focus move between the list, the editor, the Map viewer and the drawer.
+
+**A compact Start menu.** *Done.* Related actions share a row: `IMAGES  ADD · GO TO`, `BACKUP  SAVE · LOAD`. Left and right pick a choice (boxed in the accent), A runs it, and a click on a choice runs it straight away. Rows that step through values keep ◂ ▸ (IMAGE EDGE, SORT).
 
 **Multi-select and delete in the list.** *Done (selection mode).* In by Select, Start → SELECT NOTES, the List module's slider (the classic app's Select/Exit switch stood on end, under the sort tabs: switched on, it rises and uncovers a red delete key; its edge turns orange) or a long press on a row. Rows show `[ ]` / `[x]`; the D-pad moves, A (or a tap) picks, B or Select leaves, Start (or Delete) deletes the picked notes after a confirm that names them. The full-screen list shows a DELETE n chip in its status line while picking, for touch without a Start key.
 
@@ -218,6 +223,15 @@ One pass over menus, context, focus and highlight across the whole device: list,
 **Delete confirm names the note and shows its tree.** *Done*, and the delete is locked to that note even if you switch notes while the box is open.
 
 ## Visual pass
+
+**Themes (done 17 Oct, Configure → LOOK).** Themes only, never per-module colour picks: a theme sets every module's colour and the accent together, so the contrast between modules is designed, not left to chance. Five, in `themes.js`:
+- **WORKSHOP:** today's moss, bone, aluminium and graphite, signal orange (exactly as before).
+- **ARCADE:** bright blocks, one colour each: blue D-pad, yellow controls, green bay, purple speaker, red deck, a red-orange accent.
+- **HANDHELD:** one warm mustard top to bottom (screen bezel included) on a dark mat, a red accent.
+- **SORBET:** pastel shells (peach, mint, lemon, lilac, pink) around a deep purple screen, a teal accent.
+- **MIDNIGHT:** dark bodies (indigo D-pad, teal bay, plum speaker), a cyan accent, a dark mat.
+
+How it works: each module has a **role** (`r-plate`, `r-cam`, `r-scr` for the screen and list, `r-dpad`, `r-ctl`, `r-bay` shared by the Map viewer and Treemoji, `r-spk`, `r-deck`) that sets its body from the theme. A theme gives one colour per role; its highlight, side and **ink** are worked out from it (dark labels on a light body, light on a dark one, firmer on saturated colours), so a theme can make any module bright or dark and its etched labels stay readable. The accent covers everything signal: the nameplate stripe, the model number, A, LEDs, latches, the cursor, the map cursor. The keys, keycaps and the screens' glass stay the same in every theme. The Configure panel takes the plate's colours. Like the rest of Configure, the theme isn't remembered between visits.
 
 **Screen colour theme.** A cohesive palette for every kind of text on the screen. A candidate base is Everforest, a soft green-earth editor theme that suits the moss palette.
 
@@ -288,7 +302,8 @@ Each step is small, checked in the browser, and committed on its own.
     - Three routes in: the Camera (file picker; on phones it offers the camera), pasting or dropping image files into the text, and Start → ADD IMAGE. A brand-new note is saved first, since images live in its folder. Each image lands beside the caret's line.
     - Storage as decided (OPFS, `notes/<noteid>/` with `layout.json`), written through a small worker: the sync access handle is the one write path every browser has had since Safari 15.2 (the simpler `createWritable` only arrived in Safari 26). Downscaled to 1600px on import; deleting a note deletes its folder.
     - Edges: top/bottom scrapbook (justified rows), left/right strip (positioned by line; a thumbnail that would overlap is pushed down, its line kept). The left strip sits outside the line numbers.
-    - Arranging: tap an image, or Start → ARRANGE IMAGES. Along the edge the D-pad moves it (strip: a line at a time; scrapbook: its place in the order), across it picks another; A done, B cancel, Start (or Delete) removes, with a confirm. Dragging with the mouse moves it too and places it on release.
+    - Arranging: tap an image, or Start → IMAGES → GO TO. Along the edge the D-pad moves it (strip: a line at a time; scrapbook: its place in the order), across it picks another; A done, B cancel, Start opens the IMAGE menu (REPLACE IMAGE, REMOVE IMAGE with a confirm). Start → IMAGES → GO TO hands the D-pad to the images (on a strip, the image nearest the caret's line), Delete removes with a confirm. Dragging with the mouse moves it too and places it on release.
+    - Replace and remove on the image itself (mouse and touch): the picked image shows REPLACE and a red ✕ in its corner. The ✕ asks in place: one press turns it into **✕ CONFIRM**, a second removes the image (it disarms after 3 s, or when another image is picked or a menu opens). On a narrow strip thumb the keys hang over the text. The Camera and the strip's IMG key (it reads ↻ IMG) replace the picked image too. A replaced image keeps its line or its place in the order.
     - Images and their layout save straight away, like hardware actions; they aren't part of the note's unsaved draft.
     - Not yet: the link dot (thumbnail joined to its line), "Save to a folder on my computer", and images in backups.
 
