@@ -212,11 +212,11 @@
     position: absolute;
     left: 2px;
     right: 2px;
-    bottom: 2px;
+    bottom: 0px;
     height: calc(var(--del) - 4px);
     display: grid;
     place-items: center;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 0px 4px 0;
     background: linear-gradient(180deg, #f0504f, var(--alert));
     box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25);
   }
@@ -230,13 +230,18 @@
   }
   /* Asking: the key glows, waiting for its second press */
   .sel-del.armed {
-    box-shadow: 0 0 0 1.5px #ffd2d0, 0 0 10px var(--alert);
-    animation: armed 0.9s ease-in-out infinite alternate;
+    /* background: linear-gradient(180deg, #bd4d4d, #9a3b3b); */
+    svg {
+      fill: #fff2f0;
+    }
+    animation: armed 0.5s ease-in-out infinite alternate;
   }
   @keyframes armed {
-    to { box-shadow: 0 0 0 1.5px #ffd2d0, 0 0 3px var(--alert); }
+    /* to { box-shadow: 0 0 0 1.5px #ffd2d0, 0 0 3px var(--alert); } */
+    to { bottom: 2px; }
   }
   .sel-del:not(:disabled):active {
+    filter: saturate(0.4) brightness(0.7);
     box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4);
   }
   .list-label {
