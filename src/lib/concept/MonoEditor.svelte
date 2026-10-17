@@ -169,6 +169,8 @@
       editorProps: {
         handlePaste: (_, e) => takeImages(e.clipboardData?.files),
         handleDrop: (_, e) => takeImages(e.dataTransfer?.files),
+        // The A/B strip sits over the text's bottom edge: keep the caret clear of it.
+        scrollMargin: { top: 5, bottom: 44, left: 5, right: 5 },
       },
       onUpdate: () => {
         device.html = editor.getHTML();
@@ -189,6 +191,8 @@
         sel?.modify?.(extend ? "extend" : "move", ...map[dir]);
       },
       focus: () => editor.commands.focus(),
+      // The screen got shorter (the keyboard came up): bring the caret back into view.
+      revealCaret: () => editor.isFocused && editor.commands.scrollIntoView(),
       focusEnd: () => requestAnimationFrame(() => editor.isEditable && editor.commands.focus("end")),
       getHTML: () => editor.getHTML(),
       reload: () => (loadedKey = null),

@@ -17,7 +17,7 @@
 
   const device = provideDevice(new Device());
   $effect(() => {
-    const bay = showBay ? bayModule : null;
+    const bay = bayOn ? bayModule : null;
     device.hasListModule = (view === "landscape" && leftList) || bay === "list";
     untrack(() => device.slot(bay));
     device.ctlSlotted = showCtl;
@@ -28,6 +28,13 @@
     // listens for touchstart; a passive no-op is enough.
     const noop = () => {};
     document.addEventListener("touchstart", noop, { passive: true });
+    // The typing posture follows the visible area (the keyboard's top).
+    const v = window.visualViewport;
+    const read = () =>
+      (vv = { top: v.offsetTop, h: v.height, layoutH: document.documentElement.clientHeight, zoomed: Math.abs(v.scale - 1) > 0.01 });
+    v?.addEventListener("resize", read);
+    v?.addEventListener("scroll", read);
+    if (v) read();
     // Start in a note, ready to write (no menu in the way).
     device.ready.then(() => {
       device.caretAt = "start";
@@ -37,6 +44,8 @@
     return () => {
       stop();
       document.removeEventListener("touchstart", noop);
+      v?.removeEventListener("resize", read);
+      v?.removeEventListener("scroll", read);
     };
   });
 
@@ -60,6 +69,26 @@
   // starts without one, so the screen gets the room, and brought back it holds the List.
   let bays = $state({ landscape: { show: true, module: "map" }, portrait: { show: false, module: "list" } });
   let showBay = $derived(bays[view].show);
+  // Typing posture (CONCEPT.md, step 16): while the keyboard is up in
+  // portrait, only the screen and the controls row show above it. The
+  // keyboard's top is where the visible area ends; it's up when that's well
+  // short of the layout's height while something editable has focus.
+  let vv = $state(null); // the visible area: { top, h, layoutH, zoomed }
+  let editableFocus = $state(false);
+  const editable = (el) => !!el && (el.isContentEditable || el.matches("input:not([type=checkbox], [type=radio], [type=file]), textarea"));
+  let kbUp = $derived(!!vv && editableFocus && !vv.zoomed && vv.layoutH - vv.h > 150);
+  let typing = $derived(view === "portrait" && kbUp);
+  // The bay and speaker step out while typing (they'd be behind the keyboard);
+  // the drawer stands in for the bay, as it does whenever the bay is empty.
+  let bayOn = $derived(showBay && !typing);
+  // The screen shrinks under the caret as the keyboard comes up: once the
+  // layout has settled, scroll the caret back into view.
+  $effect(() => {
+    if (!typing) return;
+    vv.h; // and again whenever the keyboard's height changes
+    const raf = requestAnimationFrame(() => device.editorApi?.revealCaret?.());
+    return () => cancelAnimationFrame(raf);
+  });
   let bayModule = $derived(bays[view].module); // what's in the bay: map | treemoji | list
   let showSpeaker = $state(true);
   let showChassis = $state(false); // optional enclosure behind the modules
@@ -92,11 +121,15 @@
       : { x: 24, top: 20, bottom: 20 }
   );
   let availW = $derived(stageW - pad.x * 2);
-  let availH = $derived(winH - pad.top - pad.bottom);
+  let availH = $derived((typing ? vv.h : winH) - pad.top - pad.bottom);
 
   const MAX_ZOOM = 1.25;
   const PORTRAIT_W = 440;
   const PORTRAIT_MIN_H = 720; // portrait's design height, enclosure included
+  const TYPING_MIN_H = 360; // the typing posture's: a short screen over the controls row
+  // While typing, the top row sits up past the top edge (that line is the
+  // snapping point), so the screen starts at the top of what's visible.
+  let above = $derived(typing ? 80 + 14 + (showChassis ? 22 : 0) : 0);
   // Padding around the grid: the enclosure's, or room for the bottom modules' thickness.
   let frame = $derived(showChassis ? { w: 44, h: 52 } : { w: 0, h: 14 });
 
@@ -107,6 +140,7 @@
     stageW, winH; // follow resizes and rotation
     const w = innerWidth, h = innerHeight;
     if (!shape) shape = h > w ? "portrait" : "landscape";
+    else if (kbUp) return; // the keyboard shortens the window; it isn't a rotation
     else if (h > w * 1.1) shape = "portrait";
     else if (w > h * 1.1) shape = "landscape";
   });
@@ -131,25 +165,25 @@
       // With the speaker, a slim side column down the right holds its strip
       // and the Configure gear; without it there's no column (the gear docks
       // in the nameplate) and the modules take the full width.
-      const side = showSpeaker;
+      const side = showSpeaker && !typing;
       const main = PORTRAIT_W - (side ? 44 : 0); // 30px column + gap
       const ctlW = Math.round((main - 14) * (deckShare ?? 1 / 2));
       const cols = ["110px", fr(main - 28 - 110 - ctlW), fr(ctlW), side && "30px"].filter(Boolean).join(" ");
       // The screen takes what's left and scrolls inside; it never grows with the note.
       // Controls sit right under the screen (as in landscape); the bay goes below them.
       // The controls row is slim; the deck's three rows beside the D-pad need 160.
-      const rows = ["80px", "minmax(0, 1fr)", bottom && (deckShare ? "160px" : "144px"), showBay && "190px"].filter(Boolean);
+      const rows = ["80px", "minmax(0, 1fr)", bottom && (deckShare ? "160px" : "144px"), bayOn && "190px"].filter(Boolean);
       const sc = side ? " side" : "";
       const areas = [
         `"cam plate plate${side ? " plate" : ""}"`,
-        `"scr scr scr${side ? (showBay || bottom ? " scr" : " side") : ""}"`,
+        `"scr scr scr${side ? (bayOn || bottom ? " scr" : " side") : ""}"`,
         bottom && `"${showDpad && showCtl ? "dpad dpad ctl" : pair(3)}${sc}"`,
-        showBay && `"bay bay bay${sc}"`,
+        bayOn && `"bay bay bay${sc}"`,
       ].filter(Boolean);
       return {
         css: `grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`,
         w: PORTRAIT_W,
-        h: PORTRAIT_MIN_H - frame.h,
+        h: (typing ? TYPING_MIN_H : PORTRAIT_MIN_H) - frame.h,
       };
     }
     const list = leftList;
@@ -190,7 +224,7 @@
   // that zoom, so it's never smaller than the design and the screen's tracks
   // take the difference.
   let scale = $derived(Math.min(availW / (grid.w + frame.w), availH / (grid.h + frame.h), MAX_ZOOM));
-  let size = $derived(`width: ${availW / scale - frame.w}px; height: ${availH / scale - frame.h}px;`);
+  let size = $derived(`width: ${availW / scale - frame.w}px; height: ${availH / scale - frame.h + above}px;`);
 
 </script>
 
@@ -201,6 +235,8 @@
     if (device.dirty) e.preventDefault();
   }}
   onpagehide={() => device.saveOnLeave()}
+  onfocusin={(e) => (editableFocus = editable(e.target))}
+  onfocusout={(e) => (editableFocus = editable(e.relatedTarget))}
 />
 <svelte:document onvisibilitychange={() => document.visibilityState === "hidden" && device.saveOnLeave()} />
 
@@ -218,12 +254,17 @@
   bind:clientWidth={stageW}
   style="padding: {pad.top}px {pad.x}px {pad.bottom}px;"
 >
-  <div class="fit" style="width:{availW}px; height:{availH}px;">
+  <!-- While typing, pinned to the visible area: Safari scrolls the page to
+       keep the caret in view, and the console stays on the keyboard -->
+  <div
+    class="fit"
+    style="width:{availW}px; height:{availH}px;{typing ? ` position: fixed; top: ${vv.top + pad.top}px; left: ${pad.x}px;` : ''}"
+  >
     <div
       class="device {view}"
       class:chassis={showChassis}
       class:no-glare={!showGlare}
-      style="{grid.css} {size} transform: scale({scale});"
+      style="{grid.css} {size} transform: translateY({-above * scale}px) scale({scale});"
     >
       {#if showChassis}
         <span class="screw c-tl"></span><span class="screw c-tr"></span>
@@ -239,7 +280,7 @@
       </div>
       {#if view === "landscape" && leftList}<ListModule />{/if}
       <Screen />
-      {#if showBay}
+      {#if bayOn}
         <!-- Swapping the bay: the old module ejects, the new one slides in -->
         {#key bayModule}
           <div class="slot bay-slot" in:insert out:eject>
@@ -258,7 +299,7 @@
         {/key}
       {/if}
       {#if view === "portrait"}
-        {#if showSpeaker}<div class="side"><Speaker /></div>{/if}
+        {#if showSpeaker && !typing}<div class="side"><Speaker /></div>{/if}
       {:else if showSpeaker && (showDpad || showCtl || !showBay)}
         <!-- (with no controls row the right column has room for one module) -->
         <Speaker />
