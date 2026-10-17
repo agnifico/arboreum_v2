@@ -53,7 +53,11 @@
   <div class="glass">
     <div class="status">
       {#if showList}
-        <span>▣ <b>NOTES</b> <span class="mode">· {device.notes.length}</span></span>
+        {#if device.picking}
+          <span>▣ <b>SELECT</b> <span class="mode">· {device.pickedNotes.length} OF {device.notes.length}</span></span>
+        {:else}
+          <span>▣ <b>NOTES</b> <span class="mode">· {device.notes.length}</span></span>
+        {/if}
       {:else}
         {#if device.editing}
           <span class="title-wrap">▣ <input class="title-in" bind:value={device.draftTitle} placeholder="untitled" aria-label="Title" onkeydown={titleKey} /></span>
@@ -66,6 +70,11 @@
              drawer's handle carries it for the jobs the drawer stands in for
              (laid out like the missing module); this alert points at the bay
              for the jobs a slotted module does. -->
+        <!-- Picking on the full-screen list: the delete is on the screen too, for
+             touch without a Start key (the List module has its own slider) -->
+        {#if showList && device.picking && device.pickedNotes.length}
+          <button class="alert pick-del" onclick={() => device.askDeletePicked()}>DELETE {device.pickedNotes.length}</button>
+        {/if}
         {#if device.editing && !showList}
           {#if alertText && !drawerOpen}
             <button class="alert" onclick={() => device.resolveMissing()} aria-label="Missing: {alertText}">
@@ -422,6 +431,9 @@
   .alert {
     font-family: inherit;
     cursor: pointer;
+  }
+  .pick-del {
+    padding-left: 8px;
   }
   .alert-arrow {
     color: var(--alert);

@@ -419,6 +419,10 @@ export class Device {
     }
     if (this.focus === "drawer") return { a: "PICK", b: "CLOSE", start: this.drawerSections.length > 1 ? "PLOT" : "—", select: "—" };
     if (this.focus === "editor") return { a: "SAVE", b: "NEW", start: "MENU", select: "LIST" };
+    if (this.picking) {
+      const n = this.pickedNotes.length;
+      return { a: this.picked.includes(this.note?.noteid) ? "UNPICK" : "PICK", b: "DONE", start: n ? `DELETE ${n}` : "—", select: "DONE" };
+    }
     return { a: "OPEN", b: "NEW", start: "MENU", select: "SELECT NOTES" };
   }
 
@@ -471,6 +475,7 @@ export class Device {
     const items = [
       e && { label: "SAVE", run: () => this.save() },
       !e && has && { label: "OPEN NOTE", run: () => this.open() },
+      !e && has && { label: "SELECT NOTES", run: () => this.startPicking() },
       { label: "NEW NOTE", run: () => this.newNote() },
       e && { label: "CHOOSE TREE", run: () => this.chooseTree() },
       e && { label: "ADD IMAGE", run: () => this.pickImages() },
@@ -608,6 +613,7 @@ export class Device {
   /** Open the selected note for editing. */
   open() {
     if (!this.note) return;
+    this.stopPicking();
     this.isNew = false;
     this.editingId = this.note.noteid;
     const n = this.raw.find((x) => x.noteid === this.editingId);
@@ -639,6 +645,7 @@ export class Device {
   async newNote() {
     const closed = await this.closeCurrent();
     if (!closed.ok) return;
+    this.stopPicking();
     this.isNew = true;
     this.editingId = "new";
     this.draftTitle = "";
@@ -939,6 +946,62 @@ export class Device {
     this.focus = "list";
     this.editorApi?.reload();
   }
+  // --- Selection mode in the list: pick notes, then delete them together.
+  // In by Select, the Start menu, the List module's slider or a long press.
+  picking = $state(false);
+  picked = $state([]); // noteids
+  get pickedNotes() {
+    return this.raw.filter((n) => this.picked.includes(n.noteid));
+  }
+  startPicking(first = null) {
+    if (this.editing) return;
+    this.overlay = null;
+    this.focus = "list";
+    this.picking = true;
+    this.picked = first ? [first] : [];
+    this.say("SELECT NOTES");
+  }
+  stopPicking() {
+    this.picking = false;
+    this.picked = [];
+  }
+  togglePick(id = this.note?.noteid) {
+    if (!id) return;
+    this.picked = this.picked.includes(id) ? this.picked.filter((x) => x !== id) : [...this.picked, id];
+  }
+  askDeletePicked() {
+    const targets = this.pickedNotes;
+    if (!targets.length) return this.say("PICK NOTES WITH A");
+    const one = targets.length === 1;
+    const names = targets.slice(0, 3).map((n) => `“${n.title?.trim() || "untitled"}”`).join(", ");
+    const more = targets.length > 3 ? ` and ${targets.length - 3} more` : "";
+    this.confirm({
+      title: one ? "DELETE NOTE?" : `DELETE ${targets.length} NOTES?`,
+      text: `${names}${more} ${one ? "and its tree" : "and their trees"} will be gone, images too. This can't be undone.`,
+      icon: targets[0].icon || "/Tree2.png",
+      yes: "DELETE",
+      no: "KEEP",
+      onYes: () => this.deleteNotes(targets),
+    });
+  }
+  async deleteNotes(targets) {
+    const ids = targets.map((n) => n.noteid);
+    const rows = this.raw.filter((n) => ids.includes(n.noteid));
+    if (!rows.length) return;
+    const i = this.index;
+    try {
+      await db.notes.bulkDelete(rows.map((n) => n.id));
+    } catch (error) {
+      console.error("Couldn't delete the notes:", error);
+      return this.say("COULDN'T DELETE", 3000);
+    }
+    this.raw = this.raw.filter((n) => !ids.includes(n.noteid));
+    for (const id of ids) media.dropNote(id); // their images go with them
+    if (ids.includes(this.selectedId)) this.index = Math.min(i, this.notes.length - 1);
+    this.stopPicking();
+    this.say(rows.length === 1 ? `DELETED “${rows[0].title?.trim() || "untitled"}”` : `DELETED ${rows.length} NOTES`);
+  }
+
   /** Ask before deleting; the target is fixed now, so switching notes while
       the box is open can't change what gets deleted. */
   askDelete() {
@@ -998,11 +1061,18 @@ export class Device {
 
   #listInput = (button) => {
     const n = this.notes.length;
+    if (button === "select") return this.picking ? this.stopPicking() : n && this.startPicking();
     if (button === "up" && n) this.index = (this.index - 1 + n) % n;
     if (button === "down" && n) this.index = (this.index + 1) % n;
     // Left/right page through the list, five rows at a time.
     if (button === "left" && n) this.index = Math.max(0, this.index - 5);
     if (button === "right" && n) this.index = Math.min(n - 1, this.index + 5);
+    if (this.picking) {
+      if (button === "a") this.togglePick();
+      if (button === "b") this.stopPicking();
+      if (button === "start") this.askDeletePicked();
+      return;
+    }
     if (button === "a" && n) this.open();
     if (button === "b") this.newNote();
     if (button === "start") this.openMenu();
@@ -1040,8 +1110,8 @@ export class Device {
       return true;
     }
     if (event.metaKey || event.ctrlKey || event.altKey) return false;
-    // Arranging images: Delete / Backspace removes the one under the D-pad.
-    if ((event.key === "Delete" || event.key === "Backspace") && this.focus === "image" && !this.overlay && !typing) {
+    // Arranging images, or picking notes: Delete / Backspace removes (Start).
+    if ((event.key === "Delete" || event.key === "Backspace") && (this.focus === "image" || (this.focus === "list" && this.picking)) && !this.overlay && !typing) {
       this.press("start");
       return true;
     }

@@ -9,11 +9,11 @@
   <span class="screw s-tl"></span><span class="screw s-bl"></span>
   <div class="list-glass">
     <div class="list-head">
-      <span>NOTES · {device.notes.length}</span>
+      <span>{#if device.picking}PICKED · {device.pickedNotes.length}/{device.notes.length}{:else}NOTES · {device.notes.length}{/if}</span>
       <span class="list-sort">{device.sortLabel} ▾</span>
     </div>
     <NoteRows />
-    <div class="list-foot"><i class="pip a">A</i>OPEN <i class="pip b">B</i>NEW</div>
+    <div class="list-foot"><i class="pip a">A</i>{device.picking ? device.labels.a : "OPEN"} <i class="pip b">B</i>{device.picking ? "DONE" : "NEW"}</div>
     <div class="glare" aria-hidden="true"></div>
   </div>
   <!-- Physical index tabs: sort the list -->

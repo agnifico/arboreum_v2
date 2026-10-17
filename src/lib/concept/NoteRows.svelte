@@ -15,8 +15,12 @@
 
   // Touch/mouse: tap selects, tapping the selected row again opens it.
   // While a note is open, tapping another opens it straight away (the open
-  // one is saved first).
+  // one is saved first). While picking notes, a tap picks or unpicks.
   function tap(i) {
+    if (device.picking) {
+      device.index = i;
+      return device.togglePick(device.notes[i].noteid);
+    }
     if (device.editing) return device.switchTo(i);
     if (i === device.index) device.press("a");
     else device.index = i;
@@ -36,7 +40,9 @@
   {#each device.notes as n, i (n.noteid)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
     <!-- Keyboard users drive the list with the D-pad keys (arrows, Enter) -->
-    <li class:sel={!device.isNew && i === device.index} onclick={() => tap(i)}>
+    {@const picked = device.picking && device.picked.includes(n.noteid)}
+    <li class:sel={!device.isNew && i === device.index} class:picked onclick={() => tap(i)}>
+      {#if device.picking}<span class="li-pick" aria-label={picked ? "picked" : "not picked"}>{picked ? "[x]" : "[ ]"}</span>{/if}
       <span class="li-num">{String(i + 1).padStart(2, "0")}</span>
       <img class="li-tree" src={n.tree} alt="" />
       <span class="li-title">{n.title}</span>
@@ -78,6 +84,18 @@
   }
   .sel .li-num {
     color: var(--signal);
+  }
+  /* Picking: the same markers as task lists */
+  .li-pick {
+    color: var(--phosphor-dim);
+    font-size: 11px;
+  }
+  .picked .li-pick {
+    color: var(--signal);
+    font-weight: 700;
+  }
+  .list-rows li.picked {
+    color: #fff;
   }
   .li-tree {
     width: 18px;
