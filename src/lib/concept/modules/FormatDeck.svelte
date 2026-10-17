@@ -1,23 +1,32 @@
 <script>
   import { useDevice, Device } from "../device.svelte.js";
+  // rows: 2 (marks over line kinds), or 3 when it's narrow (portrait, beside the D-pad)
+  let { rows = 2 } = $props();
   const device = useDevice();
   // Hardware keys don't take keyboard focus on click, so typing carries on
   // in the editor (keyboard users can still Tab to them).
   const keepFocus = (e) => e.preventDefault();
   const by = (keys) => keys.map((k) => Device.FORMATS.find((f) => f.key === k));
   // Inline marks on top, line kinds below.
-  const ROWS = [
-    by(["bold", "italic", "underline", "strike", "highlight", "code"]),
-    by(["h1", "h2", "h3", "bulletList", "orderedList", "taskList", "blockquote"]),
-  ];
+  const LAYOUTS = {
+    2: [
+      by(["bold", "italic", "underline", "strike", "highlight", "code"]),
+      by(["h1", "h2", "h3", "bulletList", "orderedList", "taskList", "blockquote"]),
+    ],
+    3: [
+      by(["bold", "italic", "underline", "strike", "highlight"]),
+      by(["code", "h1", "h2", "h3"]),
+      by(["bulletList", "orderedList", "taskList", "blockquote"]),
+    ],
+  };
 </script>
 
 <!-- FORMAT DECK: physical keys for the formatting; swaps with the control pad -->
-<section class="mod graphite deck" class:off={!device.canFormat} aria-label="Format deck module">
+<section class="mod graphite deck" class:off={!device.canFormat} class:two={rows === 2} aria-label="Format deck module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="deck-keys">
-    {#each ROWS as row}
+    {#each LAYOUTS[rows] as row}
       <div class="deck-row">
         {#each row as f}
           <!-- A key stays down, its LED lit, while that format is under the caret -->
@@ -58,8 +67,8 @@
   /* Bone keycaps on the dark deck */
   .cap {
     position: relative;
-    min-width: 40px;
-    height: 34px;
+    min-width: 50px;
+    height: 38px;
     padding: 0 6px;
     border-radius: 6px;
     font-family: var(--mono);
@@ -103,11 +112,14 @@
     bottom: 12px;
     text-align: center;
   }
-  /* Portrait: smaller caps in wrapped rows; the label keeps only the latch */
-  :global(.portrait) .deck-keys { flex-direction: row; flex-wrap: wrap; justify-content: center; width: 148px; gap: 7px 4px; margin-top: -14px; }
-  :global(.portrait) .deck-row { display: contents; }
+  /* Portrait: thumb-sized caps (two big rows across the width, or three
+     beside the D-pad); the label keeps only the latch */
+  :global(.portrait) .deck-keys { gap: 7px; margin-top: -14px; }
+  :global(.portrait) .deck-row { gap: 6px; }
   :global(.portrait) .model { display: none; }
-  :global(.portrait) .cap { min-width: 26px; height: 22px; padding: 0 3px; font-size: 10px; border-radius: 5px; box-shadow: 0 3px 0 var(--bone-side), 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 #fff; }
+  :global(.portrait) .two .deck-keys { gap: 10px; }
+  :global(.portrait) .two .cap { min-width: 44px; height: 38px; font-size: 14px; }
+  :global(.portrait) .cap { min-width: 40px; height: 30px; padding: 0 3px; font-size: 12px; border-radius: 5px; box-shadow: 0 3px 0 var(--bone-side), 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 #fff; }
   :global(.portrait) .cap:active,
   :global(.portrait) .cap.on { transform: translateY(2px); box-shadow: 0 1px 0 var(--bone-side), inset 0 1px 0 #fff; }
   :global(.portrait) .led { top: 3px; right: 3px; width: 3px; height: 3px; }

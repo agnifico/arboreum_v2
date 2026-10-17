@@ -4,15 +4,32 @@
   // Hardware keys don't take keyboard focus on click, so typing carries on
   // in the editor (keyboard users can still Tab to them).
   const keepFocus = (e) => e.preventDefault();
+  // Select acts on release (holding it with the D-pad selects instead); a
+  // click from the keyboard (Enter on the focused key) is a plain tap.
+  function selectDown(e) {
+    if (e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    device.selectDown();
+  }
 </script>
 
-<!-- CONTROL PAD: Start, B, A in one straight row (portrait: B A, Start under) -->
+<!-- CONTROL PAD: Select, Start, B, A in one straight row (narrow portrait: B A, Select Start under) -->
 <section class="mod bone ctl" aria-label="Control pad">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="ctl-row">
-    <!-- Start: its function is on the key, in a well like the A/B pad -->
+    <!-- Select and Start share a well, as on a handheld; names on the keys -->
     <div class="start-well">
+      <button
+        class="start"
+        class:lit={device.lit.select}
+        aria-label="Select: {device.labels.select}"
+        onmousedown={keepFocus}
+        onpointerdown={selectDown}
+        onpointerup={() => device.selectUp()}
+        onpointercancel={() => device.selectUp({ cancel: true })}
+        onclick={(e) => e.detail === 0 && device.press("select")}
+      >SELECT</button>
       <button class="start" class:lit={device.lit.start} aria-label="Start: {device.labels.start}" onmousedown={keepFocus} onclick={() => device.press("start")}>START</button>
     </div>
     <div class="ab-pad">
@@ -32,6 +49,7 @@
 <style>
   .ctl { grid-area: ctl; }
   .ctl {
+    container-type: inline-size; /* its own width decides the portrait layout */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -50,6 +68,8 @@
   }
   /* Bottom padding = top + the key's 3px drop, so the well looks even */
   .start-well {
+    display: flex;
+    gap: 10px;
     padding: 9px 12px 12px;
     border-radius: 22px;
     background: color-mix(in oklab, var(--bone), black 9%);
@@ -119,11 +139,16 @@
   }
   /* Portrait: B and A on one row, Start on its own row under them */
   :global(.portrait) .ctl-row { flex-direction: column-reverse; gap: 10px; margin-top: -14px; }
-  :global(.portrait) .start-well { padding: 7px 8px 10px; }
+  :global(.portrait) .start-well { gap: 8px; padding: 7px 8px 10px; }
   :global(.portrait) .start { width: 48px; height: 20px; font-size: 7.5px; letter-spacing: 0.1em; }
   /* Wells: bottom padding = top + the key's drop (round 5px, Start 3px) */
   :global(.portrait) .ab-pad { gap: 12px; padding: 8px 10px 13px; border-radius: 34px; }
   :global(.portrait) .round { width: 44px; height: 44px; font-size: 15px; }
   :global(.portrait) .ctl-label { font-size: 8.5px; letter-spacing: 0.12em; bottom: 10px; }
   :global(.portrait) .model { display: none; } /* the label keeps only the latch */
+  /* Portrait with room (an upright tablet, or no D-pad beside it): Start, B, A
+     back in one row, as in landscape, with the portrait-sized keys */
+  @container (min-width: 300px) {
+    :global(.portrait) .ctl-row { flex-direction: row; gap: 22px; margin-top: -10px; }
+  }
 </style>

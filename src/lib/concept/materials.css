@@ -90,6 +90,14 @@
   border: none;
   padding: 0;
   cursor: pointer;
+  /* Touch: fast taps aren't a double-tap zoom, a long press isn't a text
+     selection or the phone's callout, and no grey flash (the key's own press
+     state shows the tap). */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 :where(.arb) .glass,

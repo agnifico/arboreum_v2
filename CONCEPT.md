@@ -7,16 +7,45 @@ A conceptual design project. Arboreum's notes, presented as a piece of swappable
 
 It is built at `/concept` inside the working app, on the same notes (IndexedDB `arboreum`), and leaves the existing app untouched. Once it's complete, it gets ported to become the main interface, and the current ("classic") interface is archived. It may grow into its own project later.
 
+## Open items (start here)
+
+The one list of what's left, in working order. Details live in the sections linked. Tick items off here as they're done, and add new ones here first.
+
+**1 · Finish mobile** (build order D, steps 16–17; needs a real phone)
+- [x] **Saving when the phone leaves.** Save the draft on `visibilitychange` / `pagehide`. Today only `beforeunload` guards, and phones often skip it (app switch, tab killed), so a draft can be lost. *Done: hidden or pagehide saves quietly, as leaving a note does.*
+- [x] **Touch basics on every key:** `touch-action: manipulation` (fast taps on the D-pad or A can zoom the page on iOS), no text selection or iOS callout on a long press, no grey tap highlight. Press states: iOS often skips `:active`; the strip's `.key:hover` sticks after a tap (needs `@media (hover: hover)`). D-pad arms need `pointercancel`. *Done in code; press states still to check on the phone.*
+- [x] **D-pad hold-to-repeat** (from the interaction pass; on a phone it's the only way to keep moving). *Done: the press lands on touch-down, repeats after 380 ms, every 70 ms.*
+- [ ] **Keyboard on demand + typing posture** (step 16). The ⌨ key raises the keyboard and can trigger the posture directly, so nothing has to guess from viewport sizes.
+- [ ] **Viewport:** the console's height follows `innerHeight`, which changes as the browser bars show and hide; also `viewport-fit=cover` and safe areas (notch, home indicator).
+- [ ] **iOS checks:** the first tap on a note opens it with the caret in place (tap-to-edit runs on mousedown); Safari zooms in when focusing text under 16px (the console is scaled to about 0.85); map tap-tap planting on a real iPhone; HEIC photos through the Camera.
+- [ ] **Touch-only gaps in the three ways:** without a hardware keyboard there's no way to indent list items (Tab / Shift+Tab) or to undo and redo.
+- [ ] **iOS storage:** Safari can clear IndexedDB and OPFS after 7 days without a visit unless the site is on the home screen. A web app manifest would fix it; `persist()` is only asked on the image path.
+- [ ] Treemoji's tree grid has small tiles in the short portrait bay row.
+
+**2 · Deploy the concept.** `concept/f16o` isn't merged or deployed yet ("desktop first, then deploy" in the working plan). It lives at `/concept` and doesn't touch the classic app. Deploying also gives phone tests HTTPS: OPFS, `storage.persist()` and the VirtualKeyboard API need a secure context, so the Camera won't work over plain `http://` on the LAN.
+
+**3 · Interaction consistency pass** (see its section): mouse on menus, confirms and the drawer, one focus rule between modules, one overflow rule for strips, undo granularity, marks at word level.
+
+**4 · Visual pass** (see its section): screen colour theme (Everforest as a base), spell check toggle, D-pad feel. From the backlog: the Map viewer's cut-out screen in portrait, and the wells rule everywhere.
+
+**5 · Images, the rest:** the link dot, "Save to a folder on my computer", images in backups (an image-aware export format).
+
+**6 · The concept page and finishing** (build order E): the page around the device and the design philosophy pages, motion and click sounds, accessibility and performance, a console sweep, and a regression check of the classic app.
+
+**7 · The port:** the concept becomes the main interface and the classic one is archived. Before then, two open questions from the classic polish pass (POLISH.md) still apply: sanitise imported HTML, and remove the dead files and old config.
+
+**Parked** (Ideas for later): Select key, mini A/B on the Format deck, phone turned sideways, a second bay on upright tablets, a filler module for spare height (an empty expansion port as an Easter egg), a cap on very wide monitors.
+
 ## Modules
 
 | Module | What it is | Notes |
 |---|---|---|
 | **Camera** | Top-left. The media button: adds an image to the note. | Its LED lights while an image comes in. |
-| **Nameplate** | Fixed hardware title bar reading ARBOREUM 1610F. | Branding only, not customisable. Model numbers are hexadecimal: 1610F is `0x1610F`. |
+| **Nameplate** | Fixed hardware title bar: ARBOREUM at the right end with 1610F under it, stripes at the left (landscape adds the line "Classic note taking, reimagined / Customisation within structure"). | Branding only, not customisable. Model numbers are hexadecimal: 1610F is `0x1610F`. |
 | **Screen** | Where writing happens. The notes list is a full screen here too, not a drawer. | |
 | **Bay** | Swappable slot: **Map viewer**, **Treemoji** or **List**. | Picked in Configure; the old module ejects and the new one slides in. Whatever is slotted does its job; the drawer covers the rest. |
 | **D-pad** | Moves through the list and the text. | |
-| **Control pad** | **A**, **B**, **Start**. | Swaps with the **Format deck** (FMT-01): physical keys for bold, italic, headings, lists and so on. The orange ⇄ latch in either module's label swaps them; so does Configure. |
+| **Control pad** | **A**, **B**, **Start**, **Select**. | Swaps with the **Format deck** (FMT-01): physical keys for bold, italic, headings, lists and so on. The orange ⇄ latch in either module's label swaps them; so does Configure. |
 
 ## Structure (decided after look test 00)
 
@@ -26,18 +55,18 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
   - Middle row: List module on the left, then the screen, then the bay on the right.
   - Bottom row: D-pad, then the control pad, then the speaker. They stay visible so the device reads at a glance.
 - **Mobile:** a portrait stack: camera and nameplate, then the screen, the D-pad with the control pad, the bay (optional), and the speaker (optional). On mobile the list opens full screen unless the bay holds it.
-- **Control pad:** Start, B and A in one straight row.
-- **Configure button:** the only thing on the page besides the console (no caption).
-  - Modules: list (landscape), D-pad, control pad, bay, speaker. Screen: show markup, screen glare (off by default). Body: enclosure.
-  - It also switches the orientation (landscape/portrait).
+- **Control pad:** Select, Start, B and A in one straight row (Select and Start share a well, as on a handheld).
+- **Configure button:** a gear in the nameplate (no caption); nothing sits on the page outside the console.
+  - Modules: list (landscape), D-pad, control pad, bay, speaker. Screen: show markup, line numbers (on by default; off leaves a slim margin and the current-line band), screen glare (off by default). Body: enclosure.
+  - It also overrides the orientation (Auto / Landscape / Portrait; Auto follows the window's shape).
   - Turning modules off follows the placement rules: no List module means the list opens full screen; a lone control module takes the bottom row; no controls means the screen takes the height.
-  - Landscape: a small pill at the bottom right.
-  - Portrait: a gear docked in the console's side column, under the speaker strip.
+  - Where: always a gear set into the nameplate's left end, in every arrangement, with or without the speaker; its panel opens downward. (It used to float at the bottom right in landscape and move between the speaker column and the nameplate in portrait.)
 - **Portrait arrangement** (formerly "mobile"):
   - The console is shaped to the phone's own screen, and the screen gets every bit of height the other modules don't need.
-  - The D-pad and control pad share the row right under the screen, as in landscape. On the control pad, B and A sit side by side with Start below them.
+  - The D-pad and control pad share the row right under the screen, as in landscape. On the control pad, B and A sit side by side with Select and Start below them.
   - The bay has its own row below the controls, with the Map viewer's Move and Tree keys on one side (in thumb reach at the bottom).
-  - The speaker is a thin full-height strip down the right.
+  - The speaker is a thin full-height strip down the right. Without it, the other modules take the full width.
+  - The console always spans the window's width; the screen takes whatever height is left (down to a usable minimum, below which the console zooms to fit the height).
 - **Enclosure:** an optional dark frame behind the modules. It's off by default.
 - **Bay:** holds one of three modules, picked in Configure (BAY switch, then MAP · TREEMOJI · LIST).
   - **Map viewer (MAP-01):** plot and tree. Desktop has its two keys side by side; portrait stacks them on one side.
@@ -49,34 +78,36 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 
 - **A/B context strip:** overlaid at the bottom right and always visible. It says what A and B do right now.
 - **Secondary strip:** along the bottom, paged with ◀ ▶. One page holds formatting keys; the other holds details (words, date, status, tree, plot).
-- **Missing module:** the context strip shows a red **!** pointing to the missing step, such as choosing a tree or a plot. A drawer then slides out from the right of the screen, laid out like the missing module.
+- **Missing module:** a red **!** sits on whatever resolves the missing step (a tree or a plot). For a job the drawer stands in for, it's on the drawer's handle; for a job a slotted module does, an alert chip points at the bay ("! NO TREE ▸"). Both sit in the screen's status line, so nothing covers the text. The drawer slides out from the right, under its handle, laid out like the missing module.
 
 ## Inputs
 
-| Screen | D-pad | A | B | Start |
-|---|---|---|---|---|
-| List | move | open | new note | menu (new, sort, backup) |
-| Editor | cursor | save | new note (the open note is saved and closed first) | menu (save, tree, new, delete, close) |
-| Map viewer · MOVE | cursor | plant here | back (cursor returns to the tree) | — |
-| Map viewer or Treemoji · TREE | tree grid | pick | back | — |
-| Drawer | move | pick / plant | close | switch tree ↔ plot |
-| Confirm | — | yes | no | third choice, if any |
+| Screen | D-pad | A | B | Start | Select (tap) |
+|---|---|---|---|---|---|
+| List | move | open | new note | menu (new, sort, backup) | selection mode |
+| Editor | cursor | save | new note (the open note is saved and closed first) | menu (save, tree, new, delete, close) | to the list (the note is saved) |
+| Map viewer · MOVE | cursor | plant here | back (cursor returns to the tree) | — | — |
+| Map viewer or Treemoji · TREE | tree grid | pick | back | — | — |
+| Drawer | move | pick / plant | close | switch tree ↔ plot | — |
+| Confirm | — | yes | no | third choice, if any | — |
 
-**Leaving a note always saves it:** B, opening another note, or Close note. A brand-new note with nothing in it is simply dropped. Hardware keys don't take keyboard focus when clicked, so typing carries on in the editor.
+**Select is the list key.** A tap means "the list": from a note it goes to the list, in the list it switches selection mode. Holding Select with the D-pad means "extend the selection": text in a note, a run of notes in the list. It acts when it's let go, and only if the D-pad wasn't used while it was held.
 
-On a computer keyboard: arrow keys are the D-pad, **Enter, Space or the letter A** is A, **Esc or the letter B** is B, and **Ctrl/⌘ K** is Start. Space and the letters only count where nothing is typed (the list, the map, the drawer, menus and confirms), never while writing a note. Tab stays free for moving keyboard focus. Inside the editor only Esc (B), Ctrl/⌘ S (save) and Ctrl/⌘ K (Start) map, so typing stays normal.
+**Leaving a note always saves it:** B, Select, opening another note, or Close note. A brand-new note with nothing in it is simply dropped. Hardware keys don't take keyboard focus when clicked, so typing carries on in the editor.
+
+On a computer keyboard: arrow keys are the D-pad, **Enter, Space or the letter A** is A, **Esc or the letter B** is B, **Ctrl/⌘ K** is Start, and **Ctrl/⌘ L** is a tap of Select (Shift with the arrows is holding Select). Space and the letters only count where nothing is typed (the list, the map, the drawer, menus and confirms), never while writing a note. Tab stays free for moving keyboard focus. Inside the editor only Esc (B), Ctrl/⌘ S (save), Ctrl/⌘ K (Start) and Ctrl/⌘ L (Select) map, so typing stays normal.
 - Why not Shift: inside a text editor Shift already means capitals and selection.
 - Why not Ctrl/⌘ M: on a Mac ⌘ M minimises the window.
 
 Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the page. The page opens straight into a note, with no menu.
 
-**The Map viewer's own keys.** MOVE and TREE each hand the D-pad to the Map viewer; pressing the same key again leaves, exactly like B. While the Map viewer has the D-pad, its own screen shows the A/B context and the main screen's strip steps aside. With the Map viewer slotted there is no tree/plot drawer at all. Leaving the editor and coming back (map, menu) puts the caret back where it was.
+**The Map viewer's own keys.** MOVE and TREE each hand the D-pad to the Map viewer; pressing the same key again leaves, exactly like B. While a key has the D-pad it stays latched down (a push-on, push-off key, not an outline), on the Map viewer and on Treemoji alike. While the Map viewer has the D-pad, its own screen shows the A/B context and the main screen's strip steps aside. With the Map viewer slotted there is no tree/plot drawer at all. Leaving the editor and coming back (map, menu) puts the caret back where it was.
 
 ## Look
 
 - **Hardware:** semi-realistic and lightly skeuomorphic. Layered CSS/SVG, no 3D library: chamfered bodies, screws, seams, soft shadows.
 - **Colour:** each module has its own colour, all from one muted "workshop" family (moss, bone, aluminium, graphite, and a pale lichen for Treemoji). Signal orange is the accent, used only for A, latches, LEDs and stripes.
-- **Screens:** carry the console feel. The main screen is dark glass with monospace text and an orange cursor. The map keeps its pixel art.
+- **Screens:** carry the console feel. The main screen's glass tints by state: warm moss while writing, cool slate while browsing. The main screen is dark glass with monospace text and an orange cursor. The map keeps its pixel art.
 - **Fonts:** Chakra Petch for printing on the hardware; JetBrains Mono on the screens.
 - **Layouts:** two handcrafted ones, landscape for desktop and portrait for mobile.
 
@@ -91,25 +122,23 @@ Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the pa
 - `src/lib/concept/media.js`, `opfs-writer.js`, `NoteImages.svelte`: a note's images (storage, the writer worker, the edge layouts).
 - `src/lib/concept/MonoEditor.svelte`, `NoteRows.svelte`, `TreeGrid.svelte`, `trees.js`: the editor, the list rows, the tree grid (Map viewer, Treemoji and drawer share it), the tree catalogue.
 
-## Layout system (decided)
+## Layout system (decided 17 Oct: the screen is the only thing that stretches)
 
-The layout splits into three separate things:
+Simplified from an earlier Fixed/Fluid plan and a "v2" proposal (a switch threshold, dock customisation, container queries). All of that is dropped. The whole model is three points:
 
-1. **Arrangement:** where the modules sit. There are two hand-crafted arrangements, **landscape** and **portrait**, and both follow the placement rules below.
-2. **Fit:** how an arrangement meets the window.
-   - **Fixed:** the arrangement keeps its designed proportions and zooms as a whole, centred on the mat, like a product photo. Portrait is designed at 440 × 953 (a 9 : 19.5 phone).
-   - **Fluid:** always fills the window exactly; the screen is the elastic module.
-3. **Mode:** Fixed or Fluid.
+1. **Two arrangements, picked by the window's shape.** Taller than wide gives **portrait**, otherwise **landscape**. It follows the window live (rotating a phone or tablet switches it), with a small buffer at the line so it doesn't flicker while resizing. The orientation switch in Configure stays as an override (Auto / Landscape / Portrait).
+2. **One fit rule.** If the window is smaller than the design, the console zooms down as a whole. If it's bigger, the **screen** takes the extra space, in width and height. Every other module is hardware and keeps its size; keys never grow.
+3. **Neighbours ride along.** Modules that share the screen's row or column get a longer body because the grid stretches them, with their keys centred at normal size. Nothing is redesigned per size. A module's own screen is the exception that grows with it, and it shows more rather than bigger: the Map viewer shows more of the garden (the base 12 × 9 view sets the tile size, then as many whole tiles as fit, up to the whole 25 × 15), and Treemoji's screen, when it's tall, puts the tree grid on a shelf under the buddy, ready to tap.
 
-That gives four results (fixed landscape, fluid landscape, fixed portrait, fluid portrait) from only **two designs**.
+4. **Each arrangement keeps its own bay.** Portrait starts without the bay, so the screen gets the room (the drawer handles tree and plot); turned back on, it holds the List. Landscape keeps whatever was set there, so rotating back and forth gives each its own.
 
-| | Fixed (default) | Fluid |
-|---|---|---|
-| Orientation | Picked once from the screen's shape on first load (taller than wide → portrait), then kept. Can be changed in Configure. | Follows the shape of the space continuously, with a buffer so it doesn't flicker at the switch point. |
-| Fit | Uniform zoom to fit, never cut off or scrolled. | Fills the window; other modules keep their size within limits, and the screen takes the rest. |
-| Dock choices | The user picks from the allowed placements. | Automatic, from the same rules. |
+**Guardrail for exceptions.** The arrangements may differ only in (a) the default for a module choice (today only the bay), and (b) a module's own look, decided by the size of its own cell (as the control pad does). No new placements, no new settings, and no rules keyed to the window's size. A wish that needs more than that goes under "Ideas for later" first.
 
-**Default is Fixed:** brain off by default. Fluid and custom docks are opt-in in Configure.
+What that gives: desktop gets a big screen; a portrait phone gets an edge-to-edge screen; an upright iPad fills its width instead of leaving the mat at the sides.
+
+**No settings added.** If a very large monitor makes the screen feel like an app rather than an object, a cap (one number) can come later.
+
+**Not handled:** a phone turned sideways. It shows landscape zoomed small; it also needs a different answer for the keyboard, so it's parked under "Ideas for later".
 
 ### Placement rules
 
@@ -117,6 +146,9 @@ That gives four results (fixed landscape, fluid landscape, fixed portrait, fluid
 2. **Controls** always sit below the screen.
 3. **Beside the screen** (landscape only), at most one dock per side: the **list on the left**, the **bay (map viewer) on the right**.
 4. **The bottom row is a pair:** either **D-pad + A/B**, or **List + something else**. A/B never appears without the D-pad.
+   - **The D-pad follows the control slot:** whenever the slot changes (latch or Configure), the D-pad turns on for the control pad and off for the Format deck or no controls. A manual toggle in Configure holds until the slot changes again. (This settles the old "D-pad without controls" question.)
+   - **Portrait sizes:** the controls row is 144px with a slightly smaller D-pad (160px when the Format deck's three rows sit beside it). The control pad stacks B A over Start only when its cell is narrow; with room (an upright tablet, or no D-pad) Start, B and A are one row again. It decides from its own width (a container query).
+   - **Split:** D-pad + control pad share the row half and half. D-pad + Format deck: the deck takes two thirds (it matters more there). In portrait the deck beside the D-pad has three rows of wide keys; without the D-pad it spans the row in two rows of thumb-sized keys.
 5. **No controls row:** the screen goes full screen (touch and keyboard only).
 6. **Portrait:** side docks move below the controls row. The list becomes a full screen rather than a module. The speaker is filler and takes a thin edge strip.
 
@@ -151,7 +183,7 @@ How that plays out, with the Map viewer as the worked example:
 
 The project blends real-world hardware, UI/UX and modern web layout, and it uses that blend on purpose. Modules that exist only for the look can give way to ones that do something:
 - **Without the Map viewer, the speaker lets the screen grow:** with the bay pulled, the main screen widens into the space.
-- **Without the speaker, the bay grows:** with the speaker pulled and the Map viewer slotted, the Map viewer takes the whole right column and its map zooms in (9 × 12 bigger tiles in place of 12 × 9). A larger map asset can come later.
+- **Without the speaker, the bay grows:** with the speaker pulled and the Map viewer slotted, the Map viewer takes the whole right column and its map zooms in (9 tiles across instead of 12, as many rows as fit). A larger map asset can come later.
 
 The physical metaphor decides the rules (one dock per side, controls below the screen); the web decides how the space flows.
 
@@ -159,7 +191,7 @@ The physical metaphor decides the rules (one dock per side, controls below the s
 
 One pass over menus, context, focus and highlight across the whole device: list, editor, map, drawer, menus and confirms. Collected from testing (16 Oct):
 
-**Open vs closed must be obvious.** Whether a note is open for editing or just being browsed needs a clear visual state; the proposal is that the screen's background shifts and the status shows EDITING or PREVIEW. Today Close note only moves the caret away.
+**Open vs closed must be obvious.** *Done (the glass):* writing a note is a warm moss glass; browsing (the list, or a note in preview) a cool slate one, so where you are reads at a glance. The status line already says PREVIEW for a note that isn't open.
 
 **Mouse everywhere on desktop:**
 - menu items and confirm choices are clickable;
@@ -170,7 +202,7 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 **Focus and highlight moving between modules:** one rule for how the cursor, highlight and focus move between the list, the editor, the Map viewer and the drawer.
 
-**Multi-select and delete in the list.** Either bring back a Select switch, or give the list context a Select mode: Start → Select, then the D-pad moves, A toggles, B exits, and Start deletes n.
+**Multi-select and delete in the list.** *Done (selection mode).* In by Select, Start → SELECT NOTES, the List module's slider (the classic app's Select/Exit switch stood on end, under the sort tabs: switched on, it rises and uncovers a red delete key; its edge turns orange) or a long press on a row. Rows show `[ ]` / `[x]`; the D-pad moves, A (or a tap) picks, B or Select leaves, Start (or Delete) deletes the picked notes after a confirm that names them. The full-screen list shows a DELETE n chip in its status line while picking, for touch without a Start key.
 
 **One overflow rule for strips.** Format keys and details both overflow on the right. Use one rule for both: content fades at the edge and scrolls; when the D-pad moves along a strip, the item under the cursor scrolls into view.
 
@@ -190,9 +222,18 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 **D-pad feel:** more tuning.
 
+## Ideas for later
+
+- **Mini A/B on the Format deck (open question).** A small A, B, Start (and Select) on the deck would make D-pad + deck a complete console, and a natural typing posture on phones; the control pad would become the big-buttons choice. To settle: whether the strip's FORMAT page stays while the deck is in (today it steps aside, as the deck's virtual stand-in), and how the keys fit in portrait (three rows, or a small A/B column).
+- **A second bay on upright tablets.** An iPad held upright has the width for two bays side by side (for example Map | List). Needs a second slot in Configure and "who does what" rules for two slotted modules.
+- **A filler module for spare height.** Something like the speaker, real-looking but doing nothing much, for a column with spare height: an empty expansion port ("EXP-01 · NO CARTRIDGE") that ejects a tiny fake cartridge when tapped, or a battery meter that's quietly the storage in use.
+- **A cap on very wide monitors.** One number: past it the console stops growing and the mat shows, so it stays an object rather than an app.
+- **Phone turned sideways.** Today it's landscape zoomed small. A real answer is probably a handheld arrangement (D-pad left, screen centre, A/B right), and it has to work with the on-screen keyboard taking most of the height. Rare; not now.
+
 ## Fine-tuning backlog (component-by-component pass)
 
 - **Map viewer, mobile:** give the screen a custom shape (a clip-path cut-out) with the Move and Plant buttons set into that cut-out, instead of sitting beside a plain rectangle.
+- **Drawer tab:** now a chip at the right of the status line (tree sprite, PLOT, the red ! when its job is missing), not a tab over the text. *Done.*
 - **Wells rule (applies everywhere):** a recessed well's top padding sets the base, left/right padding is its own value, and the bottom padding equals the top plus the key's drop shadow (round keys 5px, Start 3px).
 
 ## Working plan (decided)
@@ -250,11 +291,14 @@ Each step is small, checked in the browser, and committed on its own.
 
 **D · Layout modes and touch**
 
-14. **Fluid fit.** The console fills the window, the screen is elastic, and orientation follows the space with a buffer.
-15. **Fixed dock choices.** Configure lets the user pick from the allowed placements (sides for the list, bay and speaker, and the bottom-row pair).
+14. ✅ **The screen stretches.** The console zooms to the tighter direction (up to 125%) and the screen takes what's left in the other. Columns under the screen share extra width in proportion, so the D-pad and control bodies widen with their keys centred and the deck keeps its two thirds; the side docks get taller. Checked from 375 to 2560px wide, both arrangements, with the enclosure, the deck, and without controls, speaker or bay: the console fills the window, nothing scrolls, phones unchanged.
+15. ✅ **Orientation follows the window.** Taller than wide gives portrait on load; after that it switches only 10% past square, so resizing near the line doesn't flicker. Configure's switch is Auto / Landscape / Portrait (not remembered between visits, like the other Configure settings). Checked by resizing one page across the line both ways, rotating a phone size, and overriding in a portrait window.
 16. **Typing posture.** When the on-screen keyboard opens, the lower modules fold into a thin strip; they come back when it closes.
+    - **The keyboard on demand (found in phone testing):** focusing the editor shouldn't raise the phone's keyboard. The editor gets `inputmode="none"` (caret and selection still work, no keyboard), and a keyboard key (⌨) raises it by switching to `inputmode="text"`, then lowers it again. Where Chrome's VirtualKeyboard API exists (Android), use `virtualkeyboardpolicy="manual"` with `navigator.virtualKeyboard.show()` / `hide()`; iOS may need a blur and refocus for the switch to take. Tapping the text moves the caret without raising the keyboard.
 17. **Portrait behaviour.** Touch input, the list as a full screen, the drawer, thumb reach, and checks on a real phone and an iPad.
-    - Known: in portrait the gutter's line numbers drift about a line from the text on long notes, and the Map viewer's A/B strip squeezes the small map when it shows. Treemoji's tree grid has small tiles in the short bay row. The screen already keeps a fixed height and scrolls inside.
+    - Fixed: the gutter's line numbers drifted from the text at any zoom other than 100% (screen rects are zoomed, the gutter isn't).
+    - Fixed: on touch the map couldn't plant. In portrait the A/B strip shrank the map when it showed, so the second tap landed on another tile; it now shares the line under the map with the readout. The map also takes taps from pointer events with `touch-action: manipulation`, so tap-tap isn't a double-tap zoom on iOS (not yet checked on a real iPhone).
+    - Known: Treemoji's tree grid has small tiles in the short bay row. The screen already keeps a fixed height and scrolls inside.
 
 **E · The concept page**
 

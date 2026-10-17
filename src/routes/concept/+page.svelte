@@ -24,13 +24,20 @@
   });
   onMount(() => {
     const stop = device.start();
+    // iOS Safari only shows :active (every key's press state) once something
+    // listens for touchstart; a passive no-op is enough.
+    const noop = () => {};
+    document.addEventListener("touchstart", noop, { passive: true });
     // Start in a note, ready to write (no menu in the way).
     device.ready.then(() => {
       device.caretAt = "start";
       if (device.note) device.open();
       else device.newNote();
     });
-    return stop;
+    return () => {
+      stop();
+      document.removeEventListener("touchstart", noop);
+    };
   });
 
   function handleKeydown(event) {
@@ -46,9 +53,14 @@
   // Look test 01: free-standing modules that together make the 1610F.
   // Landscape and portrait arrangements, fitted FIXED. See CONCEPT.md.
 
-  let view = $state("landscape"); // landscape | portrait (arrangements, not devices)
-  let showBay = $state(true);
-  let bayModule = $state("map"); // what's in the bay: map | treemoji | list
+  let orient = $state("auto"); // Configure: auto | landscape | portrait
+  let shape = $state(null); // the window's shape, for auto
+  let view = $derived(orient === "auto" ? (shape ?? "landscape") : orient); // landscape | portrait (arrangements, not devices)
+  // Each arrangement keeps its own bay (CONCEPT.md, "Layout system"): portrait
+  // starts without one, so the screen gets the room, and brought back it holds the List.
+  let bays = $state({ landscape: { show: true, module: "map" }, portrait: { show: false, module: "list" } });
+  let showBay = $derived(bays[view].show);
+  let bayModule = $derived(bays[view].module); // what's in the bay: map | treemoji | list
   let showSpeaker = $state(true);
   let showChassis = $state(false); // optional enclosure behind the modules
   let showGlare = $state(false); // reflections on the screens
@@ -57,67 +69,101 @@
   let leftList = $derived(showList && !(showBay && bayModule === "list"));
   let showDpad = $state(true);
   let showCtl = $state(true);
+  // The D-pad follows the control slot: on with the control pad, off with the
+  // Format deck or no controls. A manual toggle holds until the slot changes.
+  let lastSlot = null;
+  $effect(() => {
+    const slot = showCtl ? device.controls : "none";
+    if (lastSlot !== null && slot !== lastSlot) showDpad = slot === "pad";
+    lastSlot = slot;
+  });
 
-  // The device is drawn at its natural size, then scaled to fit the window.
-  let natW = $state(0);
-  let natH = $state(0);
   let stageW = $state(1440); // the page's own width, so overflow can't inflate it
   let winH = $state(900);
 
-  // Fit: FIXED (see CONCEPT.md, "Layout system"). Each arrangement keeps its
-  // designed proportions and zooms as a whole to fit the window, centred on
-  // the mat. One rule everywhere: no device special cases, so no jumps.
+  // Fit (see CONCEPT.md, "Layout system"): the console zooms as a whole to
+  // the tighter direction (up to 125%), and the screen takes whatever is left
+  // in the other. Only the screen stretches; every other module keeps its
+  // size. One rule everywhere: no device special cases, so no jumps.
   let small = $derived(stageW < 520 || winH < 520);
-  // Landscape floats the Configure pill below the console; portrait docks it inside.
   let pad = $derived(
     small
-      ? { x: 8, top: 8, bottom: view === "landscape" ? 52 : 16 } // 16: room for the enclosure's 12px lip
-      : { x: 24, top: 20, bottom: view === "landscape" ? 64 : 20 }
+      ? { x: 8, top: 8, bottom: 16 } // 16: room for the enclosure's 12px lip
+      : { x: 24, top: 20, bottom: 20 }
   );
   let availW = $derived(stageW - pad.x * 2);
   let availH = $derived(winH - pad.top - pad.bottom);
 
-  // Portrait is designed at 440 x 953 (a 9 : 19.5 phone); the screen row takes what's left.
+  const MAX_ZOOM = 1.25;
   const PORTRAIT_W = 440;
-  const PORTRAIT_H = 953;
+  const PORTRAIT_MIN_H = 720; // portrait's design height, enclosure included
+  // Padding around the grid: the enclosure's, or room for the bottom modules' thickness.
+  let frame = $derived(showChassis ? { w: 44, h: 52 } : { w: 0, h: 14 });
 
-  let scale = $derived(natW && natH ? Math.min(availW / natW, availH / natH, 1.25) : 1);
-
-  // Orientation is picked once from the shape of the screen, then stays put.
-  onMount(() => {
-    if (innerWidth < innerHeight) view = "portrait";
+  // Auto orientation follows the window's shape: taller than wide is portrait.
+  // After the first pick it only switches 10% past square, so resizing near
+  // the line doesn't flicker.
+  $effect(() => {
+    stageW, winH; // follow resizes and rotation
+    const w = innerWidth, h = innerHeight;
+    if (!shape) shape = h > w ? "portrait" : "landscape";
+    else if (h > w * 1.1) shape = "portrait";
+    else if (w > h * 1.1) shape = "landscape";
   });
 
   // With no speaker under it (or no bottom row), the bay has the whole right
   // column, and the Map viewer zooms in to use it.
   let tallBay = $derived(view === "landscape" && showBay && (!showSpeaker || !(showDpad || showCtl)));
 
-  // Grid layout per view; the right column only exists if something is in it.
   // Grid layout per view, from the placement rules (CONCEPT.md): controls
   // sit below the screen; a side holds at most one dock; with no controls
-  // the screen takes the height.
+  // the screen takes the height. Gives the grid's css and its design size.
+  // Tracks under the screen are fr, weighted by their design widths, so
+  // extra width is shared in proportion and the deck keeps its share.
+  const fr = (w) => `minmax(0, ${w}fr)`;
   let grid = $derived.by(() => {
     const bottom = showDpad || showCtl;
     const pair = (n) => (showDpad && showCtl ? `${"dpad ".repeat(n - 1)}ctl` : (showDpad ? "dpad " : "ctl ").repeat(n).trim());
+    // The control slot's share of the bottom row: half beside the D-pad for
+    // the control pad, two thirds for the Format deck (it matters more there).
+    const deckShare = showDpad && showCtl && device.controls === "deck" ? 2 / 3 : null;
     if (view === "portrait") {
-      // A slim side column down the right holds the speaker strip with the
-      // Configure gear docked under it.
-      const cols = "110px 90px 168px 30px";
+      // With the speaker, a slim side column down the right holds its strip
+      // and the Configure gear; without it there's no column (the gear docks
+      // in the nameplate) and the modules take the full width.
+      const side = showSpeaker;
+      const main = PORTRAIT_W - (side ? 44 : 0); // 30px column + gap
+      const ctlW = Math.round((main - 14) * (deckShare ?? 1 / 2));
+      const cols = ["110px", fr(main - 28 - 110 - ctlW), fr(ctlW), side && "30px"].filter(Boolean).join(" ");
       // The screen takes what's left and scrolls inside; it never grows with the note.
       // Controls sit right under the screen (as in landscape); the bay goes below them.
-      const rows = ["80px", "minmax(0, 1fr)", bottom && "160px", showBay && "190px"].filter(Boolean);
-      const sideRow = showBay || bottom ? "" : " side"; // nowhere else to dock it
+      // The controls row is slim; the deck's three rows beside the D-pad need 160.
+      const rows = ["80px", "minmax(0, 1fr)", bottom && (deckShare ? "160px" : "144px"), showBay && "190px"].filter(Boolean);
+      const sc = side ? " side" : "";
       const areas = [
-        '"cam plate plate plate"',
-        `"scr scr scr ${sideRow ? "side" : "scr"}"`,
-        bottom && `"${showDpad && showCtl ? "dpad dpad ctl" : pair(3)} side"`,
-        showBay && '"bay bay bay side"',
+        `"cam plate plate${side ? " plate" : ""}"`,
+        `"scr scr scr${side ? (showBay || bottom ? " scr" : " side") : ""}"`,
+        bottom && `"${showDpad && showCtl ? "dpad dpad ctl" : pair(3)}${sc}"`,
+        showBay && `"bay bay bay${sc}"`,
       ].filter(Boolean);
-      return `width: ${PORTRAIT_W}px; height: ${PORTRAIT_H}px; grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`;
+      return {
+        css: `grid-template-columns: ${cols}; grid-template-rows: ${rows.join(" ")}; grid-template-areas: ${areas.join(" ")};`,
+        w: PORTRAIT_W,
+        h: PORTRAIT_MIN_H - frame.h,
+      };
     }
     const list = leftList;
     const right = showBay || showSpeaker;
-    const cols = [...(list ? ["150px", "110px"] : ["150px"]), "400px", "420px", right && "300px"].filter(Boolean);
+    // Bottom-row cells keep their total width; the Format deck takes two thirds.
+    const cells = list ? [400, 420] : [150, 400, 420];
+    if (deckShare) {
+      const total = cells.reduce((x, y) => x + y) + 14 * (cells.length - 1);
+      const deckW = Math.round((total - 14) * deckShare);
+      cells[cells.length - 2] += cells[cells.length - 1] - deckW;
+      cells[cells.length - 1] = deckW;
+    }
+    const fixed = [list && 150, list && 110, right && 300].filter(Boolean);
+    const cols = [list && "150px", list && "110px", ...cells.map(fr), right && "300px"].filter(Boolean);
     const n = cols.length - (right ? 1 : 0); // columns left of the right column
     // Right column: with a bottom row, bay over speaker; without one, just one of them.
     const r2 = right ? (showBay ? " bay" : bottom ? " scr" : " spk") : "";
@@ -125,16 +171,26 @@
     const row2 = list ? "list list scr scr" : "scr scr scr";
     // Bottom row cells (left of the right column): under the list it's still the list.
     const under = list ? "list list " : "";
-    const cells = n - (list ? 2 : 0);
-    const row3 = under + (showDpad && showCtl ? `${"dpad ".repeat(cells - 1)}ctl` : pair(cells));
+    const nCells = n - (list ? 2 : 0);
+    const row3 = under + (showDpad && showCtl ? `${"dpad ".repeat(nCells - 1)}ctl` : pair(nCells));
     const areas = [
       `"cam ${"plate ".repeat(n - 1 + (right ? 1 : 0)).trim()}"`,
       `"${row2}${r2}"`,
       bottom && `"${row3}${r3}"`,
     ].filter(Boolean);
-    const rows = bottom ? "112px 440px 182px" : "112px 636px";
-    return `grid-template-columns: ${cols.join(" ")}; grid-template-rows: ${rows}; grid-template-areas: ${areas.join(" ")};`;
+    const rows = bottom ? "112px minmax(0, 1fr) 182px" : "112px minmax(0, 1fr)";
+    return {
+      css: `grid-template-columns: ${cols.join(" ")}; grid-template-rows: ${rows}; grid-template-areas: ${areas.join(" ")};`,
+      w: [...fixed, ...cells].reduce((x, y) => x + y) + 14 * (cols.length - 1),
+      h: 112 + 636 + 14, // screen row 440 + bottom row 182 + gap, or the screen alone
+    };
   });
+
+  // Zoom so the design fits; the grid is then drawn at the window's size at
+  // that zoom, so it's never smaller than the design and the screen's tracks
+  // take the difference.
+  let scale = $derived(Math.min(availW / (grid.w + frame.w), availH / (grid.h + frame.h), MAX_ZOOM));
+  let size = $derived(`width: ${availW / scale - frame.w}px; height: ${availH / scale - frame.h}px;`);
 
 </script>
 
@@ -144,7 +200,9 @@
   onbeforeunload={(e) => {
     if (device.dirty) e.preventDefault();
   }}
+  onpagehide={() => device.saveOnLeave()}
 />
+<svelte:document onvisibilitychange={() => document.visibilityState === "hidden" && device.saveOnLeave()} />
 
 <svelte:head>
   <title>Arboreum 1610F · look test</title>
@@ -160,14 +218,12 @@
   bind:clientWidth={stageW}
   style="padding: {pad.top}px {pad.x}px {pad.bottom}px;"
 >
-  <div class="fit" style="width:{natW * scale}px; height:{natH * scale}px;">
+  <div class="fit" style="width:{availW}px; height:{availH}px;">
     <div
       class="device {view}"
       class:chassis={showChassis}
       class:no-glare={!showGlare}
-      style="{grid} transform: scale({scale});"
-      bind:offsetWidth={natW}
-      bind:offsetHeight={natH}
+      style="{grid.css} {size} transform: scale({scale});"
     >
       {#if showChassis}
         <span class="screw c-tl"></span><span class="screw c-tr"></span>
@@ -176,6 +232,11 @@
 
       <Camera />
       <Nameplate />
+      <!-- Configure: always the gear at the nameplate's left end, in every
+           arrangement; its panel opens downward -->
+      <div class="plate-dock">
+        <Configurator {view} bind:orient bind:showBay={() => showBay, (v) => (bays[view].show = v)} bind:bayModule={() => bayModule, (v) => (bays[view].module = v)} bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
+      </div>
       {#if view === "landscape" && leftList}<ListModule />{/if}
       <Screen />
       {#if showBay}
@@ -192,15 +253,12 @@
       {#if showCtl}
         {#key device.controls}
           <div class="slot ctl-slot" in:insert={{ y: true }} out:eject={{ y: true }}>
-            {#if device.controls === "deck"}<FormatDeck />{:else}<ControlPad />{/if}
+            {#if device.controls === "deck"}<FormatDeck rows={view === "portrait" && showDpad ? 3 : 2} />{:else}<ControlPad />{/if}
           </div>
         {/key}
       {/if}
       {#if view === "portrait"}
-        <div class="side">
-          {#if showSpeaker}<Speaker />{/if}
-          <Configurator bind:view bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl docked />
-        </div>
+        {#if showSpeaker}<div class="side"><Speaker /></div>{/if}
       {:else if showSpeaker && (showDpad || showCtl || !showBay)}
         <!-- (with no controls row the right column has room for one module) -->
         <Speaker />
@@ -208,9 +266,6 @@
     </div>
   </div>
 
-  {#if view === "landscape"}
-    <Configurator bind:view bind:showBay bind:bayModule bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
-  {/if}
 </main>
 
 <style>
@@ -299,6 +354,13 @@
     align-items: center;
     justify-content: flex-end;
     gap: 12px;
+  }
+  .plate-dock {
+    grid-area: plate;
+    align-self: center;
+    justify-self: start;
+    margin-left: 18px;
+    z-index: 2;
   }
   .c-tl { top: 9px; left: 9px; }
   .c-tr { top: 9px; right: 9px; }

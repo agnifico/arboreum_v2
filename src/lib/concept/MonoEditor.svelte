@@ -73,7 +73,10 @@
   function measure() {
     if (!editor || !host) return;
     const blocks = editor.view.dom.querySelectorAll("p, h1, h2, h3, h4, h5, h6, pre");
-    const hostTop = host.getBoundingClientRect().top - host.scrollTop;
+    // Screen rects are zoomed with the console; the gutter is laid out in its
+    // own unzoomed pixels, so divide the zoom back out.
+    const hr = host.getBoundingClientRect();
+    const k = hr.height / host.offsetHeight || 1;
     const at = editor.view.domAtPos(editor.state.selection.from).node;
     const curEl = (at.nodeType === 1 ? at : at.parentElement)?.closest("p, h1, h2, h3, h4, h5, h6, pre");
     // New images land beside the caret's line.
@@ -84,7 +87,7 @@
       const r = el.getBoundingClientRect();
       // Numbers take their line's height, so they line up with taller headings.
       const lh = parseFloat(getComputedStyle(el).lineHeight) || 26;
-      return { n: i + 1, top: r.top - hostTop, height: r.height, lh, current: el === curEl && device.focus === "editor" };
+      return { n: i + 1, top: (r.top - hr.top) / k + host.scrollTop, height: r.height / k, lh, current: el === curEl && device.focus === "editor" };
     });
   }
 
@@ -177,12 +180,13 @@
     });
     // The device moves the caret with the on-screen D-pad through this.
     device.editorApi = {
-      move(dir) {
+      // extend: Select is held, so the D-pad grows the selection instead.
+      move(dir, extend = false) {
         if (!editor.isEditable) return;
         editor.commands.focus();
         const sel = window.getSelection();
         const map = { up: ["backward", "line"], down: ["forward", "line"], left: ["backward", "character"], right: ["forward", "character"] };
-        sel?.modify?.("move", ...map[dir]);
+        sel?.modify?.(extend ? "extend" : "move", ...map[dir]);
       },
       focus: () => editor.commands.focus(),
       focusEnd: () => requestAnimationFrame(() => editor.isEditable && editor.commands.focus("end")),
@@ -211,7 +215,8 @@
   class="host"
   class:strip-l={edge === "left"}
   class:strip-r={edge === "right"}
-  style="--thumb:{thumb}px; --gut:{narrow ? 34 : 54}px"
+  class:no-lines={!device.showLines}
+  style="--thumb:{thumb}px; --gut:{device.showLines ? (narrow ? 34 : 54) : narrow ? 14 : 22}px"
   bind:this={host}
   bind:clientWidth={hostW}
   onscroll={measure}
@@ -255,7 +260,7 @@
   .gutter {
     position: absolute;
     inset: 0 auto 0 0;
-    width: 54px;
+    width: var(--gut);
     pointer-events: none;
   }
   .num {
@@ -264,6 +269,10 @@
     line-height: 26px;
     font-size: 15px;
     color: #3d4b3b;
+  }
+  /* Line numbers off: the gutter shrinks to a margin, the current line stays lit */
+  .no-lines .num {
+    display: none;
   }
   .num.cur {
     color: var(--phosphor-dim);
@@ -275,7 +284,7 @@
     background: rgba(213, 228, 198, 0.04);
   }
   .mono {
-    margin-left: 54px;
+    margin-left: var(--gut);
     font-size: 15px;
     line-height: 26px;
     color: var(--phosphor);
@@ -389,8 +398,7 @@
   }
 
   :global(.portrait) .host { padding: 10px 14px 10px 0; }
-  :global(.portrait) .gutter { width: 34px; }
   :global(.portrait) .num { right: 10px; font-size: 13px; line-height: 22px; }
-  :global(.portrait) .mono { margin-left: 34px; font-size: 13px; }
+  :global(.portrait) .mono { font-size: 13px; }
   :global(.portrait) .mono :global(.ProseMirror *) { line-height: 22px; }
 </style>

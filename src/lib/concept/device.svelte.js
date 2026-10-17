@@ -14,7 +14,7 @@ const KEY = "arb-device";
 export const provideDevice = (device) => setContext(KEY, device);
 export const useDevice = () => getContext(KEY);
 
-export const BUTTONS = ["up", "down", "left", "right", "a", "b", "start"];
+export const BUTTONS = ["up", "down", "left", "right", "a", "b", "start", "select"];
 
 export const SORTS = [
   { key: "saved", label: "SAVED" },
@@ -38,8 +38,8 @@ export function ago(v, now = Date.now()) {
 }
 
 // Keyboard ↔ hardware. Outside the editor every key maps; inside it only Esc
-// (B), Ctrl/⌘ S (save) and Ctrl/⌘ K (Start) do, so typing stays normal.
-// Start is Ctrl/⌘ K everywhere; Tab stays free for moving keyboard focus.
+// (B), Ctrl/⌘ S (save), Ctrl/⌘ K (Start) and Ctrl/⌘ L (Select) do, so typing
+// stays normal. Tab stays free for moving keyboard focus.
 export const KEYMAP = {
   ArrowUp: "up",
   ArrowDown: "down",
@@ -111,6 +111,7 @@ export class Device {
   words = $state(0);
   /** Configure → Show markup: draw markers (#, **, _) instead of styling. */
   showMarkup = $state(false);
+  showLines = $state(true); // Configure: line numbers in the gutter
   /** Bottom strip page: "format" or "details". */
   stripPage = $state("format");
   /** What sits in the control slot: the control pad ("pad") or the Format
@@ -407,21 +408,46 @@ export class Device {
   /** What A, B and Start do right now (the screen's context strip). */
   get labels() {
     const o = this.overlay;
-    if (o?.kind === "menu") return { a: "SELECT", b: "CLOSE", start: "CLOSE" };
-    if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—" };
-    if (this.focus === "image") return { a: "DONE", b: "CANCEL", start: "REMOVE" };
-    if (this.focus === "bay" && this.bayMode === "tree") return { a: "PICK", b: "BACK", start: "—" };
+    if (o?.kind === "menu") return { a: "CHOOSE", b: "CLOSE", start: "CLOSE", select: "—" };
+    if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—", select: "—" };
+    if (this.focus === "image") return { a: "DONE", b: "CANCEL", start: "REMOVE", select: "—" };
+    if (this.focus === "bay" && this.bayMode === "tree") return { a: "PICK", b: "BACK", start: "—", select: "—" };
     if (this.focus === "bay" || (this.focus === "drawer" && this.drawerSection === "plot")) {
       const at = this.atCursor;
       const other = this.focus === "drawer" ? "TREE" : "—";
-      return { a: at && !at.mine ? "TAKEN" : "PLANT", b: this.focus === "drawer" ? "CLOSE" : "BACK", start: other };
+      return { a: at && !at.mine ? "TAKEN" : "PLANT", b: this.focus === "drawer" ? "CLOSE" : "BACK", start: other, select: "—" };
     }
-    if (this.focus === "drawer") return { a: "PICK", b: "CLOSE", start: this.drawerSections.length > 1 ? "PLOT" : "—" };
-    if (this.focus === "editor") return { a: "SAVE", b: "NEW", start: "MENU" };
-    return { a: "OPEN", b: "NEW", start: "MENU" };
+    if (this.focus === "drawer") return { a: "PICK", b: "CLOSE", start: this.drawerSections.length > 1 ? "PLOT" : "—", select: "—" };
+    if (this.focus === "editor") return { a: "SAVE", b: "NEW", start: "MENU", select: "LIST" };
+    if (this.picking) {
+      const n = this.pickedNotes.length;
+      return { a: this.picked.includes(this.note?.noteid) ? "UNPICK" : "PICK", b: "DONE", start: n ? `DELETE ${n}` : "—", select: "DONE" };
+    }
+    return { a: "OPEN", b: "NEW", start: "MENU", select: "SELECT NOTES" };
   }
 
-  press(button) {
+  // Select acts when it's let go, and only if the D-pad wasn't used while it
+  // was held: holding Select with the D-pad extends a selection instead.
+  selectHeld = $state(false);
+  #selectUsed = false;
+  selectDown() {
+    this.selectHeld = true;
+    this.#selectUsed = false;
+    this.lit.select = true;
+  }
+  selectUp({ cancel = false } = {}) {
+    if (!this.selectHeld) return;
+    this.selectHeld = false;
+    this.lit.select = false;
+    if (!cancel && !this.#selectUsed) this.press("select");
+  }
+
+  // extend: the D-pad grows a selection (Select held, or Shift on the keyboard).
+  #extend = false;
+  press(button, { extend = false } = {}) {
+    const arrow = ["up", "down", "left", "right"].includes(button);
+    if (this.selectHeld && arrow) this.#selectUsed = true;
+    this.#extend = arrow && (extend || this.selectHeld);
     this.light(button);
     if (this.overlay?.kind === "menu") return this.#menuInput(button);
     if (this.overlay?.kind === "confirm") return this.#confirmInput(button);
@@ -453,6 +479,7 @@ export class Device {
     const items = [
       e && { label: "SAVE", run: () => this.save() },
       !e && has && { label: "OPEN NOTE", run: () => this.open() },
+      !e && has && { label: "SELECT NOTES", run: () => this.startPicking() },
       { label: "NEW NOTE", run: () => this.newNote() },
       e && { label: "CHOOSE TREE", run: () => this.chooseTree() },
       e && { label: "ADD IMAGE", run: () => this.pickImages() },
@@ -590,6 +617,7 @@ export class Device {
   /** Open the selected note for editing. */
   open() {
     if (!this.note) return;
+    this.stopPicking();
     this.isNew = false;
     this.editingId = this.note.noteid;
     const n = this.raw.find((x) => x.noteid === this.editingId);
@@ -617,10 +645,21 @@ export class Device {
     return { ok, saved: ok, title };
   }
 
+  #leaving = null;
+  /** The page is going away (hidden, app switch, tab closed): keep the draft.
+      Phones often skip beforeunload, so this is the real guard. Hidden and
+      pagehide can fire together; one save covers both, so a new note isn't
+      added twice. */
+  saveOnLeave() {
+    if (!this.dirty || this.isBlank()) return;
+    this.#leaving ??= this.save({ quiet: true }).finally(() => (this.#leaving = null));
+  }
+
   /** B: save and close the open note, then start a new one. */
   async newNote() {
     const closed = await this.closeCurrent();
     if (!closed.ok) return;
+    this.stopPicking();
     this.isNew = true;
     this.editingId = "new";
     this.draftTitle = "";
@@ -921,6 +960,62 @@ export class Device {
     this.focus = "list";
     this.editorApi?.reload();
   }
+  // --- Selection mode in the list: pick notes, then delete them together.
+  // In by Select, the Start menu, the List module's slider or a long press.
+  picking = $state(false);
+  picked = $state([]); // noteids
+  get pickedNotes() {
+    return this.raw.filter((n) => this.picked.includes(n.noteid));
+  }
+  startPicking(first = null) {
+    if (this.editing) return;
+    this.overlay = null;
+    this.focus = "list";
+    this.picking = true;
+    this.picked = first ? [first] : [];
+    this.say("SELECT NOTES");
+  }
+  stopPicking() {
+    this.picking = false;
+    this.picked = [];
+  }
+  togglePick(id = this.note?.noteid) {
+    if (!id) return;
+    this.picked = this.picked.includes(id) ? this.picked.filter((x) => x !== id) : [...this.picked, id];
+  }
+  askDeletePicked() {
+    const targets = this.pickedNotes;
+    if (!targets.length) return this.say("PICK NOTES WITH A");
+    const one = targets.length === 1;
+    const names = targets.slice(0, 3).map((n) => `“${n.title?.trim() || "untitled"}”`).join(", ");
+    const more = targets.length > 3 ? ` and ${targets.length - 3} more` : "";
+    this.confirm({
+      title: one ? "DELETE NOTE?" : `DELETE ${targets.length} NOTES?`,
+      text: `${names}${more} ${one ? "and its tree" : "and their trees"} will be gone, images too. This can't be undone.`,
+      icon: targets[0].icon || "/Tree2.png",
+      yes: "DELETE",
+      no: "KEEP",
+      onYes: () => this.deleteNotes(targets),
+    });
+  }
+  async deleteNotes(targets) {
+    const ids = targets.map((n) => n.noteid);
+    const rows = this.raw.filter((n) => ids.includes(n.noteid));
+    if (!rows.length) return;
+    const i = this.index;
+    try {
+      await db.notes.bulkDelete(rows.map((n) => n.id));
+    } catch (error) {
+      console.error("Couldn't delete the notes:", error);
+      return this.say("COULDN'T DELETE", 3000);
+    }
+    this.raw = this.raw.filter((n) => !ids.includes(n.noteid));
+    for (const id of ids) media.dropNote(id); // their images go with them
+    if (ids.includes(this.selectedId)) this.index = Math.min(i, this.notes.length - 1);
+    this.stopPicking();
+    this.say(rows.length === 1 ? `DELETED “${rows[0].title?.trim() || "untitled"}”` : `DELETED ${rows.length} NOTES`);
+  }
+
   /** Ask before deleting; the target is fixed now, so switching notes while
       the box is open can't change what gets deleted. */
   askDelete() {
@@ -980,21 +1075,39 @@ export class Device {
 
   #listInput = (button) => {
     const n = this.notes.length;
-    if (button === "up" && n) this.index = (this.index - 1 + n) % n;
-    if (button === "down" && n) this.index = (this.index + 1) % n;
+    if (button === "select") return this.picking ? this.stopPicking() : n && this.startPicking();
+    // Select held with the D-pad: pick a run of notes, from here to where it lands.
+    const from = this.index;
+    if (this.#extend && n && !this.picking) this.startPicking();
+    // Up/down wrap round, except while extending a run (it stops at the ends).
+    if (button === "up" && n) this.index = this.#extend ? Math.max(0, this.index - 1) : (this.index - 1 + n) % n;
+    if (button === "down" && n) this.index = this.#extend ? Math.min(n - 1, this.index + 1) : (this.index + 1) % n;
     // Left/right page through the list, five rows at a time.
     if (button === "left" && n) this.index = Math.max(0, this.index - 5);
     if (button === "right" && n) this.index = Math.min(n - 1, this.index + 5);
+    if (this.#extend && this.picking) {
+      const [lo, hi] = from < this.index ? [from, this.index] : [this.index, from];
+      const run = this.notes.slice(lo, hi + 1).map((x) => x.noteid);
+      this.picked = [...new Set([...this.picked, ...run])];
+      return;
+    }
+    if (this.picking) {
+      if (button === "a") this.togglePick();
+      if (button === "b") this.stopPicking();
+      if (button === "start") this.askDeletePicked();
+      return;
+    }
     if (button === "a" && n) this.open();
     if (button === "b") this.newNote();
     if (button === "start") this.openMenu();
   };
 
   #editorInput = (button) => {
-    if (["up", "down", "left", "right"].includes(button)) this.editorApi?.move(button);
+    if (["up", "down", "left", "right"].includes(button)) this.editorApi?.move(button, this.#extend);
     if (button === "a") this.save();
     if (button === "b") this.newNote();
     if (button === "start") this.openMenu();
+    if (button === "select") this.leave(); // Select is the list key: back to the notes
   };
 
   /** Keyboard → hardware. Returns true if the key was handled. */
@@ -1011,14 +1124,18 @@ export class Device {
       }
       return true;
     }
-    // Ctrl/⌘ K is Start everywhere, including while typing.
+    // Ctrl/⌘ K is Start and Ctrl/⌘ L is Select (a tap), everywhere, including while typing.
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       this.press("start");
       return true;
     }
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "l") {
+      this.press("select");
+      return true;
+    }
     if (event.metaKey || event.ctrlKey || event.altKey) return false;
-    // Arranging images: Delete / Backspace removes the one under the D-pad.
-    if ((event.key === "Delete" || event.key === "Backspace") && this.focus === "image" && !this.overlay && !typing) {
+    // Arranging images, or picking notes: Delete / Backspace removes (Start).
+    if ((event.key === "Delete" || event.key === "Backspace") && (this.focus === "image" || (this.focus === "list" && this.picking)) && !this.overlay && !typing) {
       this.press("start");
       return true;
     }
@@ -1029,7 +1146,7 @@ export class Device {
     if (LOOSE_KEYS.has(event.key) && this.focus === "editor" && !this.overlay) return false;
     // Keys on page controls (e.g. Configure) keep their normal behaviour.
     if (!typing && t?.closest?.(".config")) return false;
-    this.press(button);
+    this.press(button, { extend: event.shiftKey }); // Shift with the arrows is holding Select
     return true;
   }
 }

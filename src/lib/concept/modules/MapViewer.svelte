@@ -3,6 +3,7 @@
   import GardenMap from "../GardenMap.svelte";
   import TreeGrid from "../TreeGrid.svelte";
   import { TREES } from "../trees.js";
+  import { COLS, ROWS } from "../garden.js";
   // tall: the bay has the whole right column (no speaker under it), so the
   // map zooms in to fill it.
   let { tall = false } = $props();
@@ -17,6 +18,21 @@
     if (device.editing) return device.cursor;
     const n = device.note;
     return n && n.mapX != null && n.mapY != null ? { x: n.mapX, y: n.mapY } : null;
+  });
+  // The map's screen takes the room its glass gets and shows more of the
+  // garden, not bigger tiles: the base view (12 × 9, or 9 × 12 zoomed in for
+  // a tall bay) sets the tile size, then as many whole tiles as fit, up to
+  // the whole garden.
+  let areaW = $state(0);
+  let areaH = $state(0);
+  let fit = $derived.by(() => {
+    const [bc, br] = tall ? [9, 12] : [12, 9];
+    if (!areaW || !areaH) return { cols: bc, rows: br, w: 0, h: 0 };
+    const t0 = Math.min(areaW / bc, areaH / br);
+    const cols = Math.min(COLS, Math.max(bc, Math.floor(areaW / t0)));
+    const rows = Math.min(ROWS, Math.max(br, Math.floor(areaH / t0)));
+    const t = Math.min(areaW / cols, areaH / rows);
+    return { cols, rows, w: cols * t, h: rows * t };
   });
   let focused = $derived(device.focus === "bay");
   let treeMode = $derived(focused && device.bayMode === "tree");
@@ -35,7 +51,8 @@
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="map-glass">
-    <div class="map-grid">
+    <div class="map-area" bind:clientWidth={areaW} bind:clientHeight={areaH}>
+    <div class="map-grid" style="width: {fit.w}px; height: {fit.h}px;">
       {#if treeMode}
         <!-- TREE: the trees as a grid, driven like the map (D-pad, A picks, B back) -->
         <div class="tree-wrap"><TreeGrid fill={!tall} /></div>
@@ -43,14 +60,15 @@
         <GardenMap
           cursor={view}
           plots={device.plots}
-          cols={tall ? 9 : 12}
-          rows={tall ? 12 : 9}
+          cols={fit.cols}
+          rows={fit.rows}
           blink={focused}
           onpick={device.editing ? (t) => device.enterBay("plot", t) : null}
           onaccept={focused && !treeMode ? () => device.plant() : null}
           acceptable={!readout.endsWith("TAKEN")}
         />
       {/if}
+    </div>
     </div>
     <div class="map-read" class:taken={readout.endsWith("TAKEN")}>{readout}</div>
     <!-- The A/B context lives here while the Map viewer has the D-pad -->
@@ -85,13 +103,25 @@
     padding: 28px 24px 30px;
     gap: 18px;
   }
+  /* The glass takes the bay's spare height; the keys sit under it */
   .map-glass {
     width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     padding: 10px;
   }
-  .map-grid {
+  /* Measured, never sized by the map (it's sized from this) */
+  .map-area {
     position: relative;
-    aspect-ratio: 12 / 9;
+    flex: 1;
+    min-height: 0;
+  }
+  .map-grid {
+    position: absolute;
+    inset: 0;
+    margin: auto;
     border-radius: 3px;
     overflow: hidden;
     image-rendering: pixelated;
@@ -99,9 +129,16 @@
   .map-read.taken {
     color: #ffb3a1;
   }
+  /* Latched while it has the D-pad: a push-on, push-off key that stays down
+     (pressing it again goes all the way, then it pops back up) */
   .map-btn.on {
-    outline: 2px solid var(--signal);
-    outline-offset: 2px;
+    transform: translateY(3px);
+    background: radial-gradient(circle at 40% 30%, #484d4a, #2a2e2c 60%, #1f2221);
+    box-shadow: 0 2px 0 #121413, 0 3px 4px rgba(0, 0, 0, 0.2), inset 0 2px 5px rgba(0, 0, 0, 0.55);
+  }
+  .map-btn.on:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #121413, inset 0 2px 5px rgba(0, 0, 0, 0.55);
   }
   .tree-wrap {
     height: 100%;
@@ -181,22 +218,29 @@
   }
   /* Mobile: both buttons on one side, so the screen gets the width */
   :global(.portrait) .bay { flex-direction: row; align-items: stretch; padding: 16px 16px 16px 18px; gap: 16px; }
-  :global(.portrait) .map-glass { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-  /* Tall bay: a zoomed-in, portrait-shaped map window, centred in the column */
+  /* The readout and the A/B context share the line under the map, so the map
+     never changes size when the A/B context shows (a second tap must land on
+     the same tile to plant). */
+  :global(.portrait) .map-glass {
+    flex: 1;
+    display: grid;
+    grid-template: "map map" minmax(0, 1fr) "read ab" 20px / 1fr auto; /* a fixed line: the pips are taller than the text */
+    padding: 10px;
+    gap: 4px 12px;
+    align-items: center;
+  }
+  /* Tall bay: the map zooms in (9 tiles across) */
   .tall {
-    justify-content: center;
     padding-inline: 16px;
   }
-  .tall .map-grid {
-    aspect-ratio: 9 / 12;
-  }
-  :global(.portrait) .map-grid { height: calc(100% - 22px); width: auto; aspect-ratio: 12 / 9; align-self: center; }
-  :global(.portrait) .map-read { text-align: center; }
+  :global(.portrait) .map-area { grid-area: map; align-self: stretch; }
+  :global(.portrait) .map-read { grid-area: read; margin-top: 0; }
+  :global(.portrait) .map-glass:has(.map-ab.off) .map-read { grid-column: 1 / -1; text-align: center; }
   :global(.portrait) .map-btns { flex-direction: column; justify-content: center; gap: 8px; }
   :global(.portrait) .mb-wrap { gap: 6px; }
   :global(.portrait) .map-btn { width: 40px; height: 40px; border-radius: 10px; font-size: 16px; }
   :global(.portrait) .tree-btn { padding: 7px; }
-  :global(.portrait) .map-ab { justify-content: center; margin-top: 4px; padding-top: 4px; }
-  :global(.portrait) .map-ab.off { display: none; } /* the map needs the room more (mobile pass) */
+  :global(.portrait) .map-ab { grid-area: ab; margin-top: 0; padding-top: 0; border-top: none; }
+  :global(.portrait) .map-ab.off { display: none; } /* the readout takes the whole line */
   :global(.portrait) .bay-label { display: none; }
 </style>

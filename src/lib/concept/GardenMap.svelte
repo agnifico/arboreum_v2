@@ -29,7 +29,13 @@
   const same = (a, b) => a && b && a.x === b.x && a.y === b.y;
   let onCursor = $derived(!!onaccept && same(hover, cursor));
 
+  // Taps come from pointer events, not click: iOS is unreliable with clicks
+  // on non-button elements. A press that slides more than a few pixels isn't a tap.
+  let down = null;
   function tap(e) {
+    const d = down;
+    down = null;
+    if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8) return;
     const t = tileAt(e);
     if (onaccept && same(t, cursor)) return onaccept();
     if (!onpick) return;
@@ -145,7 +151,8 @@
   class:accept={onCursor && acceptable}
   class:refuse={onCursor && !acceptable}
   aria-hidden="true"
-  onclick={tap}
+  onpointerdown={(e) => e.button === 0 && (down = { x: e.clientX, y: e.clientY })}
+  onpointerup={tap}
   onpointermove={(e) => (onpick || onaccept) && (hover = tileAt(e))}
   onpointerleave={() => (hover = null)}
 ></canvas>
@@ -160,6 +167,7 @@
   }
   .tappable {
     cursor: crosshair;
+    touch-action: manipulation; /* tap, tap again to plant: not a double-tap zoom */
   }
   /* On the cursor's own tile the crosshair becomes a green cross: click to accept */
   .accept {
