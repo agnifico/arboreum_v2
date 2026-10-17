@@ -12,9 +12,9 @@ It is built at `/concept` inside the working app, on the same notes (IndexedDB `
 The one list of what's left, in working order. Details live in the sections linked. Tick items off here as they're done, and add new ones here first.
 
 **1 · Finish mobile** (build order D, steps 16–17; needs a real phone)
-- [ ] **Saving when the phone leaves.** Save the draft on `visibilitychange` / `pagehide`. Today only `beforeunload` guards, and phones often skip it (app switch, tab killed), so a draft can be lost. *Do first.*
-- [ ] **Touch basics on every key:** `touch-action: manipulation` (fast taps on the D-pad or A can zoom the page on iOS), no text selection or iOS callout on a long press, no grey tap highlight. Press states: iOS often skips `:active`; the strip's `.key:hover` sticks after a tap (needs `@media (hover: hover)`). D-pad arms need `pointercancel`.
-- [ ] **D-pad hold-to-repeat** (from the interaction pass; on a phone it's the only way to keep moving).
+- [x] **Saving when the phone leaves.** Save the draft on `visibilitychange` / `pagehide`. Today only `beforeunload` guards, and phones often skip it (app switch, tab killed), so a draft can be lost. *Done: hidden or pagehide saves quietly, as leaving a note does.*
+- [x] **Touch basics on every key:** `touch-action: manipulation` (fast taps on the D-pad or A can zoom the page on iOS), no text selection or iOS callout on a long press, no grey tap highlight. Press states: iOS often skips `:active`; the strip's `.key:hover` sticks after a tap (needs `@media (hover: hover)`). D-pad arms need `pointercancel`. *Done in code; press states still to check on the phone.*
+- [x] **D-pad hold-to-repeat** (from the interaction pass; on a phone it's the only way to keep moving). *Done: the press lands on touch-down, repeats after 380 ms, every 70 ms.*
 - [ ] **Keyboard on demand + typing posture** (step 16). The ⌨ key raises the keyboard and can trigger the posture directly, so nothing has to guess from viewport sizes.
 - [ ] **Viewport:** the console's height follows `innerHeight`, which changes as the browser bars show and hide; also `viewport-fit=cover` and safe areas (notch, home indicator).
 - [ ] **iOS checks:** the first tap on a note opens it with the caret in place (tap-to-edit runs on mousedown); Safari zooms in when focusing text under 16px (the console is scaled to about 0.85); map tap-tap planting on a real iPhone; HEIC photos through the Camera.
