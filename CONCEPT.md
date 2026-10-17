@@ -24,7 +24,7 @@ The one list of what's left, in working order. Details live in the sections link
 
 **2 · Deploy the concept.** `concept/f16o` isn't merged or deployed yet ("desktop first, then deploy" in the working plan). It lives at `/concept` and doesn't touch the classic app. Deploying also gives phone tests HTTPS: OPFS, `storage.persist()` and the VirtualKeyboard API need a secure context, so the Camera won't work over plain `http://` on the LAN.
 
-**3 · Interaction consistency pass** (see its section): mouse on menus, confirms and the drawer, one focus rule between modules, multi-select and delete, one overflow rule for strips, undo granularity, marks at word level.
+**3 · Interaction consistency pass** (see its section): mouse on menus, confirms and the drawer, one focus rule between modules, one overflow rule for strips, undo granularity, marks at word level.
 
 **4 · Visual pass** (see its section): screen colour theme (Everforest as a base), spell check toggle, D-pad feel. From the backlog: the Map viewer's cut-out screen in portrait, and the wells rule everywhere.
 
