@@ -165,7 +165,7 @@
 </script>
 
 <!-- BAY: Treemoji, the tree buddy. It chooses the note's tree. -->
-<section class="mod lichen trm" class:focused class:tall aria-label="Treemoji module">
+<section class="mod lichen r-bay trm" class:focused class:tall aria-label="Treemoji module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="map-glass trm-glass">

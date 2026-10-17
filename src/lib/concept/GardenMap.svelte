@@ -118,9 +118,13 @@
     if (cursor && (on || !blink || onCursor)) {
       const x = (cursor.x - cam.x) * T;
       const y = (cursor.y - cam.y) * T;
-      ctx.fillStyle = "rgba(255, 106, 26, 0.3)";
+      // The theme's accent (read here, so a theme change shows on the next blink)
+      const signal = getComputedStyle(canvas).getPropertyValue("--signal").trim() || "#ff6a1a";
+      ctx.fillStyle = signal;
+      ctx.globalAlpha = 0.3;
       ctx.fillRect(x, y, T, T);
-      ctx.strokeStyle = "#ff6a1a";
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = signal;
       ctx.lineWidth = 2;
       ctx.strokeRect(x + 1, y + 1, T - 2, T - 2);
     }

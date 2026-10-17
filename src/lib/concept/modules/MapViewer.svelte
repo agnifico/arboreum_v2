@@ -47,7 +47,7 @@
 </script>
 
 <!-- BAY: Map viewer -->
-<section class="mod alu bay" class:focused class:tall aria-label="Map viewer module">
+<section class="mod alu r-bay bay" class:focused class:tall aria-label="Map viewer module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="map-glass">

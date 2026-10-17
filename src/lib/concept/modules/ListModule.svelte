@@ -13,7 +13,7 @@
 </script>
 
 <!-- LIST: notes as a numbered list with index tabs (left dock, or the bay) -->
-<section class="mod graphite list" class:focused={device.focus === "list"} aria-label="List module">
+<section class="mod graphite r-scr list" class:focused={device.focus === "list"} aria-label="List module">
   <span class="screw s-tl"></span><span class="screw s-bl"></span>
   <div class="list-glass">
     <div class="list-head">
@@ -97,7 +97,7 @@
   }
   .tab.on {
     color: #2b1406;
-    background: linear-gradient(90deg, #ff8a45, var(--signal));
+    background: linear-gradient(90deg, var(--signal-hi), var(--signal));
     box-shadow: 0 2px 0 var(--signal-side);
   }
   /* The selection switch: a recessed track; the slider covers the delete key

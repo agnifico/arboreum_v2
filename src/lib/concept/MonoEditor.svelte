@@ -320,7 +320,7 @@
     position: absolute;
     left: 0;
     width: 200vw;
-    background: rgba(255, 106, 26, 0.1);
+    background: color-mix(in srgb, var(--signal) 10%, transparent);
   }
   .num.held {
     color: var(--signal);

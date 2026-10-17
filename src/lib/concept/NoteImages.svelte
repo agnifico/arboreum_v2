@@ -81,7 +81,44 @@
     }
     device.placeImages();
   }
+
+  // --- The picked image's own keys, for the mouse and touch -----------
+  // REPLACE picks a new file for it. ✕ asks first, in place: the first
+  // press turns it into CONFIRM, a second press removes the image.
+  const picked = (img) => device.focus === "image" && device.imageSel === img.id;
+  let armed = $state(null);
+  let disarm;
+  function del(id) {
+    clearTimeout(disarm);
+    if (armed === id) {
+      armed = null;
+      return device.removeImage(id);
+    }
+    armed = id;
+    disarm = setTimeout(() => (armed = null), 3000);
+  }
+  // Picking another image, leaving, or a menu or box opening disarms it.
+  $effect(() => {
+    if (armed && (device.overlay || !(device.focus === "image" && device.imageSel === armed))) armed = null;
+  });
+  const keepFocus = (e) => e.preventDefault();
 </script>
+
+{#snippet tools(img)}
+  {#if picked(img) && !device.overlay}
+    <span class="tools">
+      {#if armed !== img.id}
+        <button class="tool" aria-label="Replace this image" onmousedown={keepFocus} onclick={() => device.replaceImage(img.id)}>REPLACE</button>
+      {/if}
+      <button
+        class="tool del"
+        class:armed={armed === img.id}
+        aria-label={armed === img.id ? "Press again to remove this image" : "Remove this image"}
+        onmousedown={keepFocus}
+        onclick={() => del(img.id)}>✕{#if armed === img.id}<span>CONFIRM</span>{/if}</button>
+    </span>
+  {/if}
+{/snippet}
 
 {#if images.length}
   {#if mode === "book"}
@@ -89,16 +126,16 @@
       {#each rows as row}
         <div class="row" style="height:{row.h}px">
           {#each row.items as img (img.id)}
-            <button
-              class="nimg"
-              class:sel={device.focus === "image" && device.imageSel === img.id}
-              data-img={img.id}
-              style="width:{row.h * (img.w / img.h)}px"
-              aria-label="Image"
-              onpointerdown={(e) => down(e, img)}
-              onpointermove={move}
-              onpointerup={up}
-            ><img src={device.mediaUrls[img.id]} alt="" draggable="false" onload={onmeasure} /></button>
+            <div class="nimg" class:sel={picked(img)} data-img={img.id} style="width:{row.h * (img.w / img.h)}px">
+              <button
+                class="hit"
+                aria-label="Image"
+                onpointerdown={(e) => down(e, img)}
+                onpointermove={move}
+                onpointerup={up}
+              ><img src={device.mediaUrls[img.id]} alt="" draggable="false" onload={onmeasure} /></button>
+              {@render tools(img)}
+            </div>
           {/each}
         </div>
       {/each}
@@ -106,15 +143,16 @@
   {:else}
     <div class="strip {side}" role="group" aria-label="Images">
       {#each placed as p (p.img.id)}
-        <button
-          class="nimg thumb"
-          class:sel={device.focus === "image" && device.imageSel === p.img.id}
-          style="top:{p.top}px; width:{thumb}px; height:{p.h}px"
-          aria-label="Image beside line {p.img.line}"
-          onpointerdown={(e) => down(e, p.img, p.top)}
-          onpointermove={move}
-          onpointerup={up}
-        ><img src={device.mediaUrls[p.img.id]} alt="" draggable="false" /></button>
+        <div class="nimg thumb" class:sel={picked(p.img)} style="top:{p.top}px; width:{thumb}px; height:{p.h}px">
+          <button
+            class="hit"
+            aria-label="Image beside line {p.img.line}"
+            onpointerdown={(e) => down(e, p.img, p.top)}
+            onpointermove={move}
+            onpointerup={up}
+          ><img src={device.mediaUrls[p.img.id]} alt="" draggable="false" /></button>
+          {@render tools(p.img)}
+        </div>
       {/each}
     </div>
   {/if}
@@ -135,11 +173,19 @@
     position: relative;
     flex: none;
     height: 100%;
-    padding: 0;
     border-radius: 3px;
-    overflow: hidden;
     background: rgba(213, 228, 198, 0.06);
     box-shadow: 0 0 0 1px rgba(213, 228, 198, 0.12);
+  }
+  /* The image clips, not the cell: its keys may hang over the text */
+  .hit {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    background: none;
     cursor: grab;
     touch-action: none;
   }
@@ -150,7 +196,7 @@
     object-fit: cover;
   }
   .nimg.sel {
-    box-shadow: 0 0 0 2px var(--signal), 0 0 12px rgba(255, 106, 26, 0.4);
+    box-shadow: 0 0 0 2px var(--signal), 0 0 12px color-mix(in srgb, var(--signal) 40%, transparent);
   }
   .strip {
     position: absolute;
@@ -167,5 +213,55 @@
     position: absolute;
     left: 0;
     pointer-events: auto;
+  }
+  /* The picked image's keys: small glass pills in its top-right corner */
+  .tools {
+    position: absolute;
+    z-index: 1;
+    top: 4px;
+    right: 4px;
+    display: flex;
+    gap: 3px;
+  }
+  /* A narrow thumb: on the left strip they grow toward the text, not the numbers */
+  .strip.left .tools {
+    right: auto;
+    left: 4px;
+  }
+  .tool {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 9px;
+    font-family: var(--label);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--phosphor);
+    background: rgba(11, 16, 13, 0.78);
+    box-shadow: 0 0 0 1px rgba(213, 228, 198, 0.2);
+    cursor: pointer;
+  }
+  .tool.del {
+    width: 18px;
+    padding: 0;
+    justify-content: center;
+    color: #ff8a8f;
+    transition: width 0.15s ease;
+  }
+  /* Armed: the ✕ grows into CONFIRM, solid red */
+  .tool.del.armed {
+    width: auto;
+    padding: 0 7px 0 6px;
+    color: #fff;
+    background: var(--alert);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 0 10px rgba(229, 50, 59, 0.5);
+  }
+  @media (hover: hover) {
+    .tool:hover {
+      box-shadow: 0 0 0 1px var(--phosphor);
+    }
   }
 </style>

@@ -42,7 +42,7 @@
 </script>
 
 <!-- D-PAD -->
-<section class="mod moss dpadmod" aria-label="D-pad module">
+<section class="mod moss r-dpad dpadmod" aria-label="D-pad module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="dpad">
@@ -109,7 +109,7 @@
     width: 136px;
     height: 136px;
     border-radius: 50%;
-    background: radial-gradient(circle, color-mix(in oklab, var(--moss), black 22%) 60%, color-mix(in oklab, var(--moss), black 10%) 72%);
+    background: radial-gradient(circle, color-mix(in oklab, var(--face), black 22%) 60%, color-mix(in oklab, var(--face), black 10%) 72%);
     box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(255, 255, 255, 0.25);
   }
   .cross {
@@ -154,8 +154,8 @@
     right: 0;
     bottom: 12px;
     text-align: center;
-    color: rgba(20, 28, 16, 0.55);
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+    color: var(--ink);
+    text-shadow: var(--ink-sh);
   }
   :global(.portrait) .dpad { transform: scale(0.76) translateY(-5px); }
 </style>

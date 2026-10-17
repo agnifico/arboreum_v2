@@ -416,7 +416,7 @@ export class Device {
     const o = this.overlay;
     if (o?.kind === "menu") return { a: "CHOOSE", b: "CLOSE", start: "CLOSE", select: "—" };
     if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—", select: "—" };
-    if (this.focus === "image") return { a: "DONE", b: "CANCEL", start: "REMOVE", select: "—" };
+    if (this.focus === "image") return { a: "DONE", b: "CANCEL", start: "IMAGE", select: "—" };
     if (this.focus === "bay" && this.bayMode === "tree") return { a: "PICK", b: "BACK", start: "—", select: "—" };
     if (this.focus === "bay" || (this.focus === "drawer" && this.drawerSection === "plot")) {
       const at = this.atCursor;
@@ -478,25 +478,28 @@ export class Device {
 
   // --- Screens --------------------------------------------------------
 
-  /** One Start menu, always in the same order; only what applies is shown. */
+  /** One Start menu, always in the same order; only what applies is shown.
+      A row with `choices` holds a few related actions side by side: left and
+      right pick one, A (or a click on it) runs it. */
   openMenu() {
     const e = this.editing;
     const has = !!this.note;
+    const imgs = e && this.media.images.length > 0;
     const items = [
       e && { label: "SAVE", run: () => this.save() },
       !e && has && { label: "OPEN NOTE", run: () => this.open() },
       !e && has && { label: "SELECT NOTES", run: () => this.startPicking() },
       { label: "NEW NOTE", run: () => this.newNote() },
       e && { label: "CHOOSE TREE", run: () => this.chooseTree() },
-      e && { label: "ADD IMAGE", run: () => this.pickImages() },
-      e && this.media.images.length && { label: () => `IMAGE EDGE ◂ ${this.media.edge.toUpperCase()} ▸`, run: () => this.cycleEdge(), cycle: (d) => this.cycleEdge(d) },
-      e && this.media.images.length && { label: "ARRANGE IMAGES", run: () => this.arrangeImages() },
+      // GO TO hands the D-pad to the images (to move, replace or remove them).
+      imgs && { label: "IMAGES", choices: [{ label: "ADD", run: () => this.pickImages() }, { label: "GO TO", run: () => this.goToImages() }], pick: 0 },
+      e && !imgs && { label: "ADD IMAGE", run: () => this.pickImages() },
+      imgs && { label: () => `IMAGE EDGE ◂ ${this.media.edge.toUpperCase()} ▸`, run: () => this.cycleEdge(), cycle: (d) => this.cycleEdge(d) },
       // Left/right rotate the sort without closing the menu.
       { label: () => `SORT ◂ ${this.sortLabel} ▸`, run: () => this.cycleSort(), cycle: (d) => this.cycleSort(d) },
       (e || has) && { label: "DELETE NOTE", run: () => this.askDelete() },
       e && { label: "CLOSE NOTE", run: () => this.leave() },
-      { label: "SAVE BACKUP", run: () => this.saveBackup() },
-      { label: "LOAD BACKUP", run: () => this.loadBackup() },
+      { label: "BACKUP", choices: [{ label: "SAVE", run: () => this.saveBackup() }, { label: "LOAD", run: () => this.loadBackup() }], pick: 0 },
       // A way out that doesn't need B (it closes like B and Start do).
       { label: "CLOSE MENU", run: () => {} },
     ].filter(Boolean);
@@ -791,11 +794,46 @@ export class Device {
     media.revoke(old);
   }
 
-  /** The Camera (or Start → Add image): choose images, then add them. */
+  /** The Camera (or Start → Add image): choose images, then add them. With
+      an image under the D-pad, they replace it instead (one file). */
   pickImages() {
     if (!media.supported()) return this.say("NO IMAGE STORAGE IN THIS BROWSER", 3000);
+    if (this.focus === "image") return this.replaceImage();
     const input = Object.assign(document.createElement("input"), { type: "file", accept: "image/*", multiple: true });
     input.onchange = () => input.files?.length && this.addImages([...input.files]);
+    input.click();
+  }
+
+  /** Swap an image's file for another; it keeps its place (line or order). */
+  replaceImage(id = this.imageSel) {
+    const old = this.media.images.find((x) => x.id === id);
+    if (!old || !media.supported()) return;
+    const noteid = this.#mediaKey;
+    const input = Object.assign(document.createElement("input"), { type: "file", accept: "image/*" });
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file?.type.startsWith("image/")) return;
+      this.camBusy = true;
+      try {
+        const { entry, url } = await media.add(noteid, file, old.line);
+        const i = this.media.images.indexOf(old);
+        if (this.#mediaKey !== noteid || i < 0) return void URL.revokeObjectURL(url); // moved on meanwhile
+        this.media.images[i] = entry;
+        // B goes back to the layout from before: it gets the new file too.
+        if (this.#imageBefore) this.#imageBefore.images = this.#imageBefore.images.map((x) => (x.id === id ? { ...entry, line: x.line } : x));
+        if (this.imageSel === id) this.imageSel = entry.id;
+        URL.revokeObjectURL(this.mediaUrls[id]);
+        this.mediaUrls = { ...this.mediaUrls, [entry.id]: url };
+        await media.removeFile(noteid, old);
+        await this.#saveMedia();
+        this.say("IMAGE REPLACED");
+      } catch (error) {
+        console.error("Couldn't replace the image:", error);
+        this.say("COULDN'T REPLACE THE IMAGE", 3000);
+      } finally {
+        this.camBusy = false;
+      }
+    };
     input.click();
   }
 
@@ -858,10 +896,13 @@ export class Device {
     this.imageSel = id;
     this.focus = "image";
   }
-  arrangeImages() {
-    const first = this.media.images[0];
-    if (!first) return this.say("NO IMAGES · PRESS THE CAMERA");
-    this.selectImage(first.id);
+  /** Start → IMAGES → GO TO: the D-pad moves into the images. On a strip it
+      lands on the image nearest the caret's line, otherwise the first. */
+  goToImages() {
+    const imgs = this.media.images;
+    if (!imgs.length) return this.say("NO IMAGES · PRESS THE CAMERA");
+    const near = this.stripEdge ? imgs.reduce((a, b) => (Math.abs(b.line - this.caretLine) < Math.abs(a.line - this.caretLine) ? b : a)) : imgs[0];
+    this.selectImage(near.id);
   }
   /** Strip: move an image to a line (one line is the unit). */
   setImageLine(id, line) {
@@ -885,26 +926,40 @@ export class Device {
   }
 
   askRemoveImage(id = this.imageSel) {
-    const img = this.media.images.find((x) => x.id === id);
-    if (!img) return;
+    if (!this.media.images.some((x) => x.id === id)) return;
     this.confirm({
       title: "REMOVE IMAGE?",
       text: "It will be gone from this note. This can't be undone.",
       yes: "REMOVE",
       no: "KEEP",
-      onYes: async () => {
-        const i = this.media.images.indexOf(img);
-        this.media.images.splice(i, 1);
-        if (this.#imageBefore) this.#imageBefore.images = this.#imageBefore.images.filter((x) => x.id !== id);
-        URL.revokeObjectURL(this.mediaUrls[id]);
-        await media.removeFile(this.#mediaKey, img);
-        await this.#saveMedia();
-        const next = this.media.images[Math.min(i, this.media.images.length - 1)];
-        if (next) this.imageSel = next.id;
-        else this.focus = "editor";
-        this.say("IMAGE REMOVED");
-      },
+      onYes: () => this.removeImage(id),
     });
+  }
+
+  /** Remove an image now (the confirm comes first: a box, or the ✕ pressed twice). */
+  async removeImage(id) {
+    const img = this.media.images.find((x) => x.id === id);
+    if (!img) return;
+    const i = this.media.images.indexOf(img);
+    this.media.images.splice(i, 1);
+    if (this.#imageBefore) this.#imageBefore.images = this.#imageBefore.images.filter((x) => x.id !== id);
+    URL.revokeObjectURL(this.mediaUrls[id]);
+    await media.removeFile(this.#mediaKey, img);
+    await this.#saveMedia();
+    const next = this.media.images[Math.min(i, this.media.images.length - 1)];
+    if (next) this.imageSel = next.id;
+    else this.focus = "editor";
+    this.say("IMAGE REMOVED");
+  }
+
+  /** Start with an image under the D-pad: what can be done to it. */
+  #imageMenu() {
+    const items = [
+      { label: "REPLACE IMAGE", run: () => this.replaceImage() },
+      { label: "REMOVE IMAGE", run: () => this.askRemoveImage() },
+      { label: "CLOSE MENU", run: () => {} },
+    ];
+    this.overlay = { kind: "menu", title: "IMAGE", items, index: 0 };
   }
 
   #imageInput = (button) => {
@@ -923,7 +978,7 @@ export class Device {
       this.media = this.#imageBefore ?? this.media;
       this.focus = "editor";
     }
-    if (button === "start") this.askRemoveImage();
+    if (button === "start") this.#imageMenu();
   };
 
   /** Back to writing from whatever had the D-pad (a click in the text). */
@@ -956,7 +1011,8 @@ export class Device {
     { key: "redo", label: "↷", ok: (d) => d.can.redo, run: (c) => c.redo() },
     { key: "outdent", label: "⇤", ok: (d) => d.can.outdent, run: (c) => c.command(({ commands: k }) => k.liftListItem("listItem") || k.liftListItem("taskItem")) },
     { key: "indent", label: "⇥", ok: (d) => d.can.indent, run: (c) => c.command(({ commands: k }) => k.sinkListItem("listItem") || k.sinkListItem("taskItem")) },
-    { key: "image", label: "IMG", ok: () => true, act: (d) => d.pickImages() },
+    // With an image under the D-pad, IMG replaces it (as the Camera does).
+    { key: "image", label: (d) => (d.focus === "image" ? "↻ IMG" : "IMG"), ok: () => true, act: (d) => d.pickImages() },
     // The note's image edge, as the image's place beside the text: ▄ bottom, ▀ top, ▌ left, ▐ right.
     { key: "edge", label: (d) => ({ bottom: "▄", top: "▀", left: "▌", right: "▐" })[d.media.edge], ok: (d) => d.media.images.length > 0, act: (d) => d.cycleEdge() },
   ];
@@ -970,13 +1026,18 @@ export class Device {
     return this.focus === "editor" && !this.overlay && !!this.editorApi;
   }
 
+  /** Whether an action key works now. IMG works on a picked image too. */
+  canAct(f) {
+    return (this.canFormat || (f.key === "image" && this.focus === "image" && !this.overlay)) && f.ok(this);
+  }
+
   format(key) {
-    if (!this.canFormat) return;
     const action = Device.ACTIONS.find((x) => x.key === key);
     if (action) {
-      if (!action.ok(this)) return;
+      if (!this.canAct(action)) return;
       return action.act ? action.act(this) : action.run(this.editorApi.commands()).run();
     }
+    if (!this.canFormat) return;
     const f = Device.FORMATS.find((x) => x.key === key);
     const word = Device.MARKS.includes(key) ? this.editorApi.wordRange() : null;
     let c = this.editorApi.commands();
@@ -1095,9 +1156,11 @@ export class Device {
   // --- Input per screen -----------------------------------------------
 
   /** A click or tap on a menu item: the same as moving to it and pressing A. */
-  chooseMenuItem(i) {
+  /** A click on a menu row (or on one of its choices). */
+  chooseMenuItem(i, choice) {
     if (this.overlay?.kind !== "menu") return;
     this.overlay.index = i;
+    if (choice !== undefined) this.overlay.items[i].pick = choice;
     this.#menuInput("a");
   }
 
@@ -1106,12 +1169,14 @@ export class Device {
     const n = m.items.length;
     if (button === "up") m.index = (m.index - 1 + n) % n;
     if (button === "down") m.index = (m.index + 1) % n;
-    if ((button === "left" || button === "right") && m.items[m.index].cycle) m.items[m.index].cycle(button === "left" ? -1 : 1);
+    const item = m.items[m.index];
+    const step = { left: -1, right: 1 }[button];
+    if (step && item.cycle) item.cycle(step);
+    if (step && item.choices) item.pick = (item.pick + step + item.choices.length) % item.choices.length;
     if (button === "b" || button === "start") this.overlay = null;
     if (button === "a") {
-      const item = m.items[m.index];
       this.overlay = null;
-      item.run();
+      (item.choices ? item.choices[item.pick] : item).run();
     }
   };
 

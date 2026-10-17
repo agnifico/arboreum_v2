@@ -8,8 +8,9 @@
   position: relative;
   border-radius: 14px;
   background: linear-gradient(165deg, var(--face-hi), var(--face) 38%, color-mix(in oklab, var(--face), black 8%));
+  /* --rim: the top edge's catch-light (strong on a light body, faint on a dark one) */
   box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.55),
+    inset 0 1.5px 0 rgb(255 255 255 / var(--rim, 0.55)),
     inset 0 -2px 0 rgba(0, 0, 0, 0.12),
     0 6px 0 var(--side),
     0 6px 0 1px rgba(0, 0, 0, 0.3),
@@ -28,13 +29,19 @@
   --face: var(--graphite);
   --face-hi: var(--graphite-hi);
   --side: var(--graphite-side);
-  box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.3),
-    0 6px 0 var(--side),
-    0 6px 0 1px rgba(0, 0, 0, 0.4),
-    0 16px 20px -6px rgba(40, 36, 24, 0.55);
+  --rim: 0.12;
 }
+
+/* Theme roles (themes.js): each module takes its body, ink and rim from its
+   role, after its material, so a theme can colour every module. */
+:where(.arb) .r-plate { --face: var(--plate); --face-hi: var(--plate-hi); --side: var(--plate-side); --ink: var(--plate-ink); --ink-hard: var(--plate-ink-hard); --ink-sh: var(--plate-ink-sh); --rim: var(--plate-rim); }
+:where(.arb) .r-cam { --face: var(--cam); --face-hi: var(--cam-hi); --side: var(--cam-side); --ink: var(--cam-ink); --ink-hard: var(--cam-ink-hard); --ink-sh: var(--cam-ink-sh); --rim: var(--cam-rim); }
+:where(.arb) .r-scr { --face: var(--scr); --face-hi: var(--scr-hi); --side: var(--scr-side); --ink: var(--scr-ink); --ink-hard: var(--scr-ink-hard); --ink-sh: var(--scr-ink-sh); --rim: var(--scr-rim); }
+:where(.arb) .r-dpad { --face: var(--dpad); --face-hi: var(--dpad-hi); --side: var(--dpad-side); --ink: var(--dpad-ink); --ink-hard: var(--dpad-ink-hard); --ink-sh: var(--dpad-ink-sh); --rim: var(--dpad-rim); }
+:where(.arb) .r-ctl { --face: var(--ctl); --face-hi: var(--ctl-hi); --side: var(--ctl-side); --ink: var(--ctl-ink); --ink-hard: var(--ctl-ink-hard); --ink-sh: var(--ctl-ink-sh); --rim: var(--ctl-rim); }
+:where(.arb) .r-bay { --face: var(--bay); --face-hi: var(--bay-hi); --side: var(--bay-side); --ink: var(--bay-ink); --ink-hard: var(--bay-ink-hard); --ink-sh: var(--bay-ink-sh); --rim: var(--bay-rim); }
+:where(.arb) .r-spk { --face: var(--spk); --face-hi: var(--spk-hi); --side: var(--spk-side); --ink: var(--spk-ink); --ink-hard: var(--spk-ink-hard); --ink-sh: var(--spk-ink-sh); --rim: var(--spk-rim); }
+:where(.arb) .r-deck { --face: var(--deck); --face-hi: var(--deck-hi); --side: var(--deck-side); --ink: var(--deck-ink); --ink-hard: var(--deck-ink-hard); --ink-sh: var(--deck-ink-sh); --rim: var(--deck-rim); }
 
 :where(.arb) .screw {
   position: absolute;
@@ -74,14 +81,15 @@
   text-transform: uppercase;
 }
 
+/* Inside a themed module both follow its body's ink (dark or light) */
 :where(.arb) .etch {
-  color: rgba(30, 32, 31, 0.55);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  color: var(--ink, rgba(30, 32, 31, 0.55));
+  text-shadow: var(--ink-sh, 0 1px 0 rgba(255, 255, 255, 0.45));
 }
 
 :where(.arb) .etch-dark {
-  color: rgba(210, 214, 210, 0.4);
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.6);
+  color: var(--ink, rgba(210, 214, 210, 0.4));
+  text-shadow: var(--ink-sh, 0 -1px 0 rgba(0, 0, 0, 0.6));
 }
 
 /* One class of weight: beats the app's global button rule, stays below module styles */
@@ -138,11 +146,12 @@
 
 :where(.arb) .pip.b { background: #8e9a88; }
 
-:where(.arb) .pip.st { background: #4c5a49; color: var(--phosphor); border-radius: 4px; width: 22px; }
+/* Start and Select are word keys: three letters on a pill (SRT, SEL) */
+:where(.arb) .pip.st { background: #4c5a49; color: var(--phosphor); border-radius: 4px; width: auto; padding: 0 4px; font-size: 8.5px; font-weight: 700; letter-spacing: 0.06em; }
 
 :where(.arb) .portrait .pip { width: 16px; height: 16px; font-size: 9px; }
 
-:where(.arb) .portrait .pip.st { width: 19px; }
+:where(.arb) .portrait .pip.st { width: auto; padding: 0 3px; font-size: 7.5px; }
 
 /* Input focus: the module that currently has the D-pad shows a lit bar */
 :where(.arb) .mod.focused::after {

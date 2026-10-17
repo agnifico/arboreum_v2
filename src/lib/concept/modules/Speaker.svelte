@@ -3,7 +3,7 @@
 </script>
 
 <!-- SPEAKER -->
-<section class="mod graphite spk" aria-label="Speaker module">
+<section class="mod graphite r-spk spk" aria-label="Speaker module">
   <span class="screw s-tl"></span><span class="screw s-br"></span>
   <div class="slots" aria-hidden="true">{#each Array(slots) as _}<i></i>{/each}</div>
   <div class="spk-foot">

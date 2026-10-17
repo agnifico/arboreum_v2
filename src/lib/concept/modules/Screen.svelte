@@ -84,7 +84,7 @@
 </script>
 
 <!-- SCREEN -->
-<section class="mod graphite screen" class:focused={device.focus === "editor"} aria-label="Screen module">
+<section class="mod graphite r-scr screen" class:focused={device.focus === "editor"} aria-label="Screen module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="glass" class:writing={device.editing && !showList} class:browsing={!device.editing || showList}>
@@ -191,7 +191,7 @@
     <div class="ab" class:away={device.focus === "bay"}>
       <span><i class="pip a">A</i>{device.labels.a}</span>
       <span><i class="pip b">B</i>{device.labels.b}</span>
-      <span><i class="pip st">≡</i>{device.labels.start}</span>
+      <span><i class="pip st">SRT</i>{device.labels.start}</span>
     </div>
 
     <!-- Secondary strip: paged with ◀ ▶ (format · details) -->
@@ -200,7 +200,7 @@
         {#snippet act(f)}
           <button
             class="key act"
-            disabled={!device.canFormat || !f.ok(device)}
+            disabled={!device.canAct(f)}
             aria-label={f.key}
             onmousedown={(e) => e.preventDefault()}
             onclick={() => device.format(f.key)}>{typeof f.label === "function" ? f.label(device) : f.label}</button>
@@ -254,6 +254,20 @@
             onclick={() => device.chooseMenuItem(i)}
           >
             <span class="ov-caret">{i === device.overlay.index ? "▸" : ""}</span>{typeof item.label === "function" ? item.label() : item.label}
+            {#if item.choices}
+              <!-- Choices side by side: the picked one is boxed; a click runs it -->
+              <span class="ov-choices">
+                {#each item.choices as c, j}
+                  <span
+                    class="ov-choice"
+                    class:pick={j === item.pick}
+                    role="menuitem"
+                    tabindex="-1"
+                    onclick={(e) => (e.stopPropagation(), device.chooseMenuItem(i, j))}
+                    onkeydown={() => {}}>{c.label}</span>
+                {/each}
+              </span>
+            {/if}
           </button>
         {/each}
       </div>
@@ -264,7 +278,7 @@
         <div class="ov-keys">
           <span><i class="pip a">A</i>{device.overlay.yes}</span>
           <span><i class="pip b">B</i>{device.overlay.no}</span>
-          {#if device.overlay.alt}<span><i class="pip st">≡</i>{device.overlay.alt.label}</span>{/if}
+          {#if device.overlay.alt}<span><i class="pip st">SRT</i>{device.overlay.alt.label}</span>{/if}
         </div>
       </div>
     {/if}
@@ -371,11 +385,36 @@
   }
   .ov-item.sel {
     color: #fff;
-    background: rgba(255, 106, 26, 0.14);
+    background: color-mix(in srgb, var(--signal) 14%, transparent);
   }
   .ov-caret {
     width: 10px;
     color: var(--signal);
+  }
+  .ov-choices {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+  .ov-choice {
+    padding: 0 6px;
+    border-radius: 3px;
+    color: var(--phosphor-dim);
+    box-shadow: inset 0 0 0 1px rgba(213, 228, 198, 0.14);
+  }
+  /* The picked choice: boxed in the accent while its row is selected */
+  .ov-choice.pick {
+    color: inherit;
+  }
+  .ov-item.sel .ov-choice.pick {
+    color: var(--signal);
+    box-shadow: inset 0 0 0 1px var(--signal);
+  }
+  @media (hover: hover) {
+    .ov-choice:hover {
+      color: #fff;
+      box-shadow: inset 0 0 0 1px var(--phosphor);
+    }
   }
   .confirm .ov-title {
     color: #ff9ea3;
@@ -718,7 +757,9 @@
     margin: 6px 3px;
     background: rgba(213, 228, 198, 0.12);
   }
-  .keys.off {
+  /* Dimmed key by key: IMG stays live on a picked image (it replaces it) */
+  .keys.off .key:disabled,
+  .keys.off .gap {
     opacity: 0.45;
   }
   .key:disabled {
@@ -729,7 +770,7 @@
   }
   .key.on {
     color: var(--signal);
-    border-color: rgba(255, 106, 26, 0.45);
+    border-color: color-mix(in srgb, var(--signal) 45%, transparent);
   }
   .details {
     display: flex;

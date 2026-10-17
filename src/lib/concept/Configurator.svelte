@@ -2,6 +2,7 @@
   // The Configure gear, docked at the nameplate's left end in every
   // arrangement; its panel opens downward. View and which modules are slotted.
   import { useDevice } from "./device.svelte.js";
+  import { THEMES, swatch } from "./themes.js";
   let {
     view = "landscape", // the arrangement showing now
     orient = $bindable("auto"), // auto (follows the window) | landscape | portrait
@@ -10,12 +11,15 @@
     showSpeaker = $bindable(true),
     showChassis = $bindable(false),
     showGlare = $bindable(false),
+    theme = $bindable("workshop"),
     showList = $bindable(true),
     showDpad = $bindable(true),
     showCtl = $bindable(true),
   } = $props();
   const device = useDevice();
   let panelOpen = $state(false);
+  // Two tabs: LAYOUT (what's slotted, where) and LOOK (colours and finish).
+  let tab = $state("layout");
 
   // When the panel closes, hand focus back: to the editor if a note is open,
   // otherwise to the device (so the arrow keys drive the D-pad again).
@@ -57,9 +61,16 @@
 
 <svelte:window onkeydown={handleKeydown} onclick={handleWindowClick} />
 
-<div class="config">
+<!-- Set in the nameplate: the panel and the key's well take the plate's colours -->
+<div class="config r-plate">
   {#if panelOpen}
     <div class="config-panel" role="dialog" aria-label="Configure the device">
+      <div class="seg tabs" role="tablist" aria-label="Configure">
+        {#each [["layout", "LAYOUT"], ["look", "LOOK"]] as [key, label]}
+          <button role="tab" class:on={tab === key} aria-selected={tab === key} onclick={() => (tab = key)}>{label}</button>
+        {/each}
+      </div>
+      {#if tab === "layout"}
       <p class="cfg-h">ORIENTATION</p>
       <div class="seg orient" role="group" aria-label="Orientation">
         {#each [["auto", "AUTO"], ["landscape", "LANDSCAPE"], ["portrait", "PORTRAIT"]] as [key, label]}
@@ -102,16 +113,26 @@
       <button class="toggle" aria-pressed={device.spellCheck} onclick={() => (device.spellCheck = !device.spellCheck)}>
         <span class="sw" class:on={device.spellCheck}></span> SPELL CHECK
       </button>
-      <button class="toggle" aria-pressed={showGlare} onclick={() => (showGlare = !showGlare)}>
-        <span class="sw" class:on={showGlare}></span> SCREEN GLARE
-      </button>
-      <p class="cfg-h">BODY</p>
-      <button class="toggle" aria-pressed={showChassis} onclick={() => (showChassis = !showChassis)}>
-        <span class="sw" class:on={showChassis}></span> ENCLOSURE
-      </button>
       <p class="cfg-note">
         {view === "landscape" ? "Without the List module, the list opens full screen. Without controls, the keyboard and mouse drive the device." : "In portrait the list opens full screen, unless the bay holds it."}
       </p>
+      {:else}
+      <p class="cfg-h">THEME</p>
+      <div class="themes" role="group" aria-label="Theme">
+        {#each THEMES as t}
+          <button class="theme" class:on={theme === t.key} aria-pressed={theme === t.key} onclick={() => (theme = t.key)}>
+            <span class="chips">{#each swatch(t) as c}<i style:background={c}></i>{/each}</span>{t.label}
+          </button>
+        {/each}
+      </div>
+      <p class="cfg-h">FINISH</p>
+      <button class="toggle" aria-pressed={showGlare} onclick={() => (showGlare = !showGlare)}>
+        <span class="sw" class:on={showGlare}></span> SCREEN GLARE
+      </button>
+      <button class="toggle" aria-pressed={showChassis} onclick={() => (showChassis = !showChassis)}>
+        <span class="sw" class:on={showChassis}></span> ENCLOSURE
+      </button>
+      {/if}
     </div>
   {/if}
   <!-- A pill key in a recessed well, like Select and Start: it sits in the
@@ -149,7 +170,7 @@
     display: flex;
     padding: 6px 7px 9px;
     border-radius: 18px;
-    background: color-mix(in oklab, var(--bone), black 9%);
+    background: color-mix(in oklab, var(--face), black 9%);
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2), 0 1px 0 rgba(255, 255, 255, 0.6);
   }
   .config-btn {
@@ -189,15 +210,15 @@
     width: 250px;
     padding: 16px;
     border-radius: 12px;
-    background: linear-gradient(165deg, var(--bone-hi), var(--bone));
-    box-shadow: 0 5px 0 var(--bone-side), 0 18px 28px -8px rgba(40, 36, 24, 0.5), inset 0 1px 0 #fff;
+    background: linear-gradient(165deg, var(--face-hi), var(--face));
+    box-shadow: 0 5px 0 var(--side), 0 18px 28px -8px rgba(40, 36, 24, 0.5), inset 0 1px 0 rgb(255 255 255 / var(--rim));
   }
   .cfg-h {
     margin: 0 0 8px;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.18em;
-    color: rgba(43, 45, 44, 0.55);
+    color: var(--ink);
   }
   .cfg-h:not(:first-child) {
     margin-top: 16px;
@@ -206,7 +227,7 @@
     display: flex;
     padding: 3px;
     border-radius: 8px;
-    background: color-mix(in oklab, var(--bone), black 10%);
+    background: color-mix(in oklab, var(--face), black 10%);
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
   }
   .seg button {
@@ -217,7 +238,7 @@
     font-weight: 700;
     font-size: 11px;
     letter-spacing: 0.12em;
-    color: rgba(43, 45, 44, 0.6);
+    color: var(--ink);
     background: transparent;
   }
   .seg button.on {
@@ -258,7 +279,7 @@
     font-weight: 600;
     font-size: 12px;
     letter-spacing: 0.1em;
-    color: var(--graphite);
+    color: var(--ink-hard);
     background: none;
     text-align: left;
   }
@@ -289,10 +310,53 @@
   .sw.on::after {
     transform: translateX(16px);
   }
+  .tabs {
+    margin-bottom: 14px;
+  }
+  .tabs + .cfg-h {
+    margin-top: 0;
+  }
+  /* Themes: three swatch chips (plate, D-pad, screen body) and a name */
+  .themes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .theme {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 7px;
+    font-family: var(--label);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--ink-hard);
+    background: none;
+    text-align: left;
+  }
+  .theme.on {
+    background: color-mix(in oklab, var(--face), black 8%);
+    box-shadow: inset 0 0 0 1.5px var(--signal);
+  }
+  .chips {
+    display: flex;
+  }
+  .chips i {
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.5px var(--face-hi), inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+  }
+  .chips i + i {
+    margin-left: -4px;
+  }
   .cfg-note {
     margin: 14px 0 0;
     font-size: 11px;
     line-height: 1.5;
-    color: rgba(43, 45, 44, 0.6);
+    color: var(--ink);
   }
 </style>

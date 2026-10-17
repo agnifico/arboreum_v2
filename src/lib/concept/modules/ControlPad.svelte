@@ -15,7 +15,7 @@
 </script>
 
 <!-- CONTROL PAD: Select, Start, B, A in one straight row (narrow portrait: B A, Select Start under) -->
-<section class="mod bone ctl" aria-label="Control pad">
+<section class="mod bone r-ctl ctl" aria-label="Control pad">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="ctl-row">
@@ -72,7 +72,7 @@
     gap: 10px;
     padding: 9px 12px 12px;
     border-radius: 22px;
-    background: color-mix(in oklab, var(--bone), black 9%);
+    background: color-mix(in oklab, var(--face), black 9%);
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2), 0 1px 0 rgba(255, 255, 255, 0.6);
   }
   .start {
@@ -99,7 +99,7 @@
     gap: 20px;
     padding: 10px 16px 16px;
     border-radius: 44px;
-    background: color-mix(in oklab, var(--bone), black 9%);
+    background: color-mix(in oklab, var(--face), black 9%);
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2), 0 1px 0 rgba(255, 255, 255, 0.6);
   }
   .round {
@@ -113,7 +113,7 @@
   }
   .round.a {
     color: #fff3ea;
-    background: radial-gradient(circle at 40% 30%, #ff9a5c, var(--signal) 55%, #e2560c);
+    background: radial-gradient(circle at 40% 30%, var(--signal-hi), var(--signal) 55%, var(--signal-lo));
     box-shadow: 0 5px 0 var(--signal-side), 0 8px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
   }

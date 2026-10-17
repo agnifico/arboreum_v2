@@ -6,7 +6,7 @@
 </script>
 
 <!-- CAMERA: doubles as the media button (adds images to the open note) -->
-<section class="mod alu cam" aria-label="Camera module">
+<section class="mod alu r-cam cam" aria-label="Camera module">
   <span class="screw s-tl"></span><span class="screw s-br"></span>
   <button class="lens" aria-label="Camera: add an image" onmousedown={keepFocus} onclick={() => device.pickImages()}>
     <span class="lens-glass"></span>
@@ -30,7 +30,7 @@
     box-shadow:
       0 0 0 3px #9aa09c,
       0 0 0 4px rgba(0, 0, 0, 0.35),
-      0 3px 0 4px var(--alu-side),
+      0 3px 0 4px var(--side),
       0 6px 10px 2px rgba(0, 0, 0, 0.35);
     display: grid;
     place-items: center;
@@ -38,7 +38,7 @@
   }
   .lens:active {
     transform: translateY(2px);
-    box-shadow: 0 0 0 3px #9aa09c, 0 0 0 4px rgba(0, 0, 0, 0.35), 0 1px 0 4px var(--alu-side);
+    box-shadow: 0 0 0 3px #9aa09c, 0 0 0 4px rgba(0, 0, 0, 0.35), 0 1px 0 4px var(--side);
   }
   .lens-glass {
     width: 34px;

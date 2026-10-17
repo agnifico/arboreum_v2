@@ -68,13 +68,13 @@
   .knob {
     position: absolute;
     top: 3px;
-    right: -0px;
-    width: 6px;
+    right: -1px;
+    width: 7px;
     height: 20px;
-    border-radius: 3px 0 0 3px;
+    border-radius: 3px 1px 1px 3px;
     background:
       repeating-linear-gradient(180deg, transparent 0 4px, rgba(0, 0, 0, 0.22) 4px 5px) 3px 5px / 6px 11px no-repeat,
-      linear-gradient(90deg, #ff9a5c, var(--signal) 55%, #e2560c);
+      linear-gradient(90deg, var(--signal-hi), var(--signal) 55%, var(--signal-lo));
     box-shadow: 1px 0 0 var(--signal-side), 0 2px 3px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
     transition: top 0.12s ease;
   }

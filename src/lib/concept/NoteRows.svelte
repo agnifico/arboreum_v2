@@ -111,7 +111,7 @@
     border-left: 3px solid transparent;
   }
   .list-rows li.sel {
-    background: rgba(255, 106, 26, 0.12);
+    background: color-mix(in srgb, var(--signal) 12%, transparent);
     border-left-color: var(--signal);
     color: #fff;
   }

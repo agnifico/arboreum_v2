@@ -14,6 +14,7 @@
   import Speaker from "$lib/concept/modules/Speaker.svelte";
   import Configurator from "$lib/concept/Configurator.svelte";
   import { Device, provideDevice } from "$lib/concept/device.svelte.js";
+  import { lookStyle } from "$lib/concept/themes.js";
 
   const device = provideDevice(new Device());
   $effect(() => {
@@ -101,6 +102,7 @@
   let showSpeaker = $state(true);
   let showChassis = $state(false); // optional enclosure behind the modules
   let showGlare = $state(false); // reflections on the screens
+  let theme = $state("workshop"); // Configure → LOOK: the console's colours (themes.js)
   let showList = $state(true); // landscape's left dock; otherwise the list is a full screen
   // There's one List module: in the bay, it isn't on the left.
   let leftList = $derived(showList && !(showBay && bayModule === "list"));
@@ -260,7 +262,7 @@
 <main
   class="stage arb"
   bind:clientWidth={stageW}
-  style="padding: {pad.top}px {pad.x}px {pad.bottom}px;"
+  style="padding: {pad.top}px {pad.x}px {pad.bottom}px; {lookStyle(theme)}"
 >
   <!-- While typing, pinned to the visible area: Safari scrolls the page to
        keep the caret in view, and the console stays on the keyboard -->
@@ -284,7 +286,7 @@
       <!-- Configure: always the gear at the nameplate's left end, in every
            arrangement; its panel opens downward -->
       <div class="plate-dock">
-        <Configurator {view} bind:orient bind:showBay={() => showBay, (v) => (bays[view].show = v)} bind:bayModule={() => bayModule, (v) => (bays[view].module = v)} bind:showSpeaker bind:showChassis bind:showGlare bind:showList bind:showDpad bind:showCtl />
+        <Configurator {view} bind:orient bind:showBay={() => showBay, (v) => (bays[view].show = v)} bind:bayModule={() => bayModule, (v) => (bays[view].module = v)} bind:showSpeaker bind:showChassis bind:showGlare bind:theme bind:showList bind:showDpad bind:showCtl />
       </div>
       {#if view === "landscape" && leftList}<ListModule />{/if}
       <Screen />

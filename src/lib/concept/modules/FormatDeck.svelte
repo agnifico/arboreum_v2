@@ -25,7 +25,7 @@
 </script>
 
 <!-- FORMAT DECK: physical keys for the formatting; swaps with the control pad -->
-<section class="mod graphite deck" class:off={!device.canFormat} class:two={rows === 2} style:--per={Math.max(...LAYOUTS[rows].map((r) => r.length))} aria-label="Format deck module">
+<section class="mod graphite r-deck deck" class:off={!device.canFormat} class:two={rows === 2} style:--per={Math.max(...LAYOUTS[rows].map((r) => r.length))} aria-label="Format deck module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="deck-keys">
@@ -115,7 +115,7 @@
   .cap-italic span { font-style: italic; }
   .cap-underline span { text-decoration: underline; text-underline-offset: 2px; }
   .cap-strike span { text-decoration: line-through; }
-  .cap-highlight span { padding: 0 3px; border-radius: 2px; background: rgba(255, 106, 26, 0.25); }
+  .cap-highlight span { padding: 0 3px; border-radius: 2px; background: color-mix(in srgb, var(--signal) 25%, transparent); }
   .led {
     position: absolute;
     top: 4px;
