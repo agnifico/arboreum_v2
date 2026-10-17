@@ -180,12 +180,13 @@
     });
     // The device moves the caret with the on-screen D-pad through this.
     device.editorApi = {
-      move(dir) {
+      // extend: Select is held, so the D-pad grows the selection instead.
+      move(dir, extend = false) {
         if (!editor.isEditable) return;
         editor.commands.focus();
         const sel = window.getSelection();
         const map = { up: ["backward", "line"], down: ["forward", "line"], left: ["backward", "character"], right: ["forward", "character"] };
-        sel?.modify?.("move", ...map[dir]);
+        sel?.modify?.(extend ? "extend" : "move", ...map[dir]);
       },
       focus: () => editor.commands.focus(),
       focusEnd: () => requestAnimationFrame(() => editor.isEditable && editor.commands.focus("end")),

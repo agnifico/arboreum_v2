@@ -442,8 +442,12 @@ export class Device {
     if (!cancel && !this.#selectUsed) this.press("select");
   }
 
-  press(button) {
-    if (this.selectHeld && ["up", "down", "left", "right"].includes(button)) this.#selectUsed = true;
+  // extend: the D-pad grows a selection (Select held, or Shift on the keyboard).
+  #extend = false;
+  press(button, { extend = false } = {}) {
+    const arrow = ["up", "down", "left", "right"].includes(button);
+    if (this.selectHeld && arrow) this.#selectUsed = true;
+    this.#extend = arrow && (extend || this.selectHeld);
     this.light(button);
     if (this.overlay?.kind === "menu") return this.#menuInput(button);
     if (this.overlay?.kind === "confirm") return this.#confirmInput(button);
@@ -1062,11 +1066,21 @@ export class Device {
   #listInput = (button) => {
     const n = this.notes.length;
     if (button === "select") return this.picking ? this.stopPicking() : n && this.startPicking();
-    if (button === "up" && n) this.index = (this.index - 1 + n) % n;
-    if (button === "down" && n) this.index = (this.index + 1) % n;
+    // Select held with the D-pad: pick a run of notes, from here to where it lands.
+    const from = this.index;
+    if (this.#extend && n && !this.picking) this.startPicking();
+    // Up/down wrap round, except while extending a run (it stops at the ends).
+    if (button === "up" && n) this.index = this.#extend ? Math.max(0, this.index - 1) : (this.index - 1 + n) % n;
+    if (button === "down" && n) this.index = this.#extend ? Math.min(n - 1, this.index + 1) : (this.index + 1) % n;
     // Left/right page through the list, five rows at a time.
     if (button === "left" && n) this.index = Math.max(0, this.index - 5);
     if (button === "right" && n) this.index = Math.min(n - 1, this.index + 5);
+    if (this.#extend && this.picking) {
+      const [lo, hi] = from < this.index ? [from, this.index] : [this.index, from];
+      const run = this.notes.slice(lo, hi + 1).map((x) => x.noteid);
+      this.picked = [...new Set([...this.picked, ...run])];
+      return;
+    }
     if (this.picking) {
       if (button === "a") this.togglePick();
       if (button === "b") this.stopPicking();
@@ -1079,7 +1093,7 @@ export class Device {
   };
 
   #editorInput = (button) => {
-    if (["up", "down", "left", "right"].includes(button)) this.editorApi?.move(button);
+    if (["up", "down", "left", "right"].includes(button)) this.editorApi?.move(button, this.#extend);
     if (button === "a") this.save();
     if (button === "b") this.newNote();
     if (button === "start") this.openMenu();
@@ -1122,7 +1136,7 @@ export class Device {
     if (LOOSE_KEYS.has(event.key) && this.focus === "editor" && !this.overlay) return false;
     // Keys on page controls (e.g. Configure) keep their normal behaviour.
     if (!typing && t?.closest?.(".config")) return false;
-    this.press(button);
+    this.press(button, { extend: event.shiftKey }); // Shift with the arrows is holding Select
     return true;
   }
 }
