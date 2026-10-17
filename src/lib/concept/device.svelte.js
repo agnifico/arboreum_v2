@@ -111,6 +111,7 @@ export class Device {
   words = $state(0);
   /** Configure → Show markup: draw markers (#, **, _) instead of styling. */
   showMarkup = $state(false);
+  showLines = $state(true); // Configure: line numbers in the gutter
   /** Bottom strip page: "format" or "details". */
   stripPage = $state("format");
   /** What sits in the control slot: the control pad ("pad") or the Format

@@ -57,7 +57,7 @@ The one list of what's left, in working order. Details live in the sections link
 - **Mobile:** a portrait stack: camera and nameplate, then the screen, the D-pad with the control pad, the bay (optional), and the speaker (optional). On mobile the list opens full screen unless the bay holds it.
 - **Control pad:** Start, B and A in one straight row.
 - **Configure button:** the only thing on the page besides the console (no caption).
-  - Modules: list (landscape), D-pad, control pad, bay, speaker. Screen: show markup, screen glare (off by default). Body: enclosure.
+  - Modules: list (landscape), D-pad, control pad, bay, speaker. Screen: show markup, line numbers (on by default; off leaves a slim margin and the current-line band), screen glare (off by default). Body: enclosure.
   - It also overrides the orientation (Auto / Landscape / Portrait; Auto follows the window's shape).
   - Turning modules off follows the placement rules: no List module means the list opens full screen; a lone control module takes the bottom row; no controls means the screen takes the height.
   - Landscape: a small pill at the bottom right.
