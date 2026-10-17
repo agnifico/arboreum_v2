@@ -15,18 +15,18 @@ The one list of what's left, in working order. Details live in the sections link
 - [x] **Saving when the phone leaves.** Save the draft on `visibilitychange` / `pagehide`. Today only `beforeunload` guards, and phones often skip it (app switch, tab killed), so a draft can be lost. *Done: hidden or pagehide saves quietly, as leaving a note does.*
 - [x] **Touch basics on every key:** `touch-action: manipulation` (fast taps on the D-pad or A can zoom the page on iOS), no text selection or iOS callout on a long press, no grey tap highlight. Press states: iOS often skips `:active`; the strip's `.key:hover` sticks after a tap (needs `@media (hover: hover)`). D-pad arms need `pointercancel`. *Done in code; press states still to check on the phone.*
 - [x] **D-pad hold-to-repeat** (from the interaction pass; on a phone it's the only way to keep moving). *Done: the press lands on touch-down, repeats after 380 ms, every 70 ms.*
-- [ ] **Typing posture** (step 16, decided 17 Oct). The keyboard is allowed up (no keyboard on demand); while it's up in portrait, only the screen and the controls row show above it. Covers the viewport item too.
-- [ ] **Viewport:** `viewport-fit=cover` and safe areas (notch, home indicator). The height while typing comes from `visualViewport` (above).
-- [ ] **iOS checks:** the first tap on a note opens it with the caret in place (tap-to-edit runs on mousedown); Safari zooms in when focusing text under 16px (the console is scaled to about 0.85); map tap-tap planting on a real iPhone; HEIC photos through the Camera.
+- [x] **Typing posture** (step 16, decided 17 Oct). The keyboard is allowed up (no keyboard on demand); while it's up in portrait, only the screen and the controls row show above it. Covers the viewport item too. *Done; checked on Android.*
+- [x] **Viewport.** The height while typing comes from `visualViewport` (above). `viewport-fit=cover` and safe areas are left out on purpose: in the browser Safari already keeps the page clear of the notch and paints the mat behind it. They only matter for a home-screen app, so they go with the manifest (iOS storage, below).
+- [ ] **iOS checks:** the first tap on a note opens it with the caret in place (tap-to-edit runs on mousedown); ~~Safari zooms in when focusing text under 16px~~ (fixed: `maximum-scale=1`, on iOS only, where pinch zoom still works); map tap-tap planting on a real iPhone; HEIC photos through the Camera.
 - [ ] **Touch-only gaps in the three ways:** without a hardware keyboard there's no way to indent list items (Tab / Shift+Tab) or to undo and redo.
 - [ ] **iOS storage:** Safari can clear IndexedDB and OPFS after 7 days without a visit unless the site is on the home screen. A web app manifest would fix it; `persist()` is only asked on the image path.
-- [ ] Treemoji's tree grid has small tiles in the short portrait bay row.
+- [x] Treemoji's tree grid has small tiles in the short portrait bay row. *Done: a filled tree grid takes 6 a row when its screen is wide and short; the D-pad steps by the same.*
 
-**2 · Deploy the concept.** `concept/f16o` isn't merged or deployed yet ("desktop first, then deploy" in the working plan). It lives at `/concept` and doesn't touch the classic app. Deploying also gives phone tests HTTPS: OPFS, `storage.persist()` and the VirtualKeyboard API need a secure context, so the Camera won't work over plain `http://` on the LAN.
+**2 · Deploy the concept.** *Done 17 Oct:* merged to `main` and live at arboreum-v2.vercel.app/concept, beside the classic app (which it doesn't touch). Phone tests now have HTTPS, which OPFS and `storage.persist()` need.
 
-**3 · Interaction consistency pass** (see its section): mouse on menus, confirms and the drawer, one focus rule between modules, one overflow rule for strips, undo granularity, marks at word level.
+**3 · Interaction consistency pass** (see its section): clickable confirms (open question), one focus rule between modules, undo granularity, marks at word level.
 
-**4 · Visual pass** (see its section): screen colour theme (Everforest as a base), spell check toggle, D-pad feel. From the backlog: the Map viewer's cut-out screen in portrait, and the wells rule everywhere.
+**4 · Visual pass** (see its section): screen colour theme (Everforest as a base), D-pad feel. From the backlog: the Map viewer's cut-out screen in portrait, and the wells rule everywhere.
 
 **5 · Images, the rest:** the link dot, "Save to a folder on my computer", images in backups (an image-aware export format).
 
@@ -196,7 +196,8 @@ One pass over menus, context, focus and highlight across the whole device: list,
 **Open vs closed must be obvious.** *Done (the glass):* writing a note is a warm moss glass; browsing (the list, or a note in preview) a cool slate one, so where you are reads at a glance. The status line already says PREVIEW for a note that isn't open.
 
 **Mouse everywhere on desktop:**
-- menu items and confirm choices are clickable;
+- menu items are clickable (*done*: a click chooses, a mouse hover moves the caret);
+- confirm choices: *open question.* They show A/B pips like the context strip, which stays labels (Design philosophy, §2), so making them clickable needs a call;
 - the drawer is clickable too;
 - A/B context chips stay labels, not buttons (see Design philosophy, §2).
 
@@ -206,13 +207,13 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 **Multi-select and delete in the list.** *Done (selection mode).* In by Select, Start → SELECT NOTES, the List module's slider (the classic app's Select/Exit switch stood on end, under the sort tabs: switched on, it rises and uncovers a red delete key; its edge turns orange) or a long press on a row. Rows show `[ ]` / `[x]`; the D-pad moves, A (or a tap) picks, B or Select leaves, Start (or Delete) deletes the picked notes after a confirm that names them. The full-screen list shows a DELETE n chip in its status line while picking, for touch without a Start key.
 
-**One overflow rule for strips.** Format keys and details both overflow on the right. Use one rule for both: content fades at the edge and scrolls; when the D-pad moves along a strip, the item under the cursor scrolls into view.
+**One overflow rule for strips.** *Done:* both scroll, and an edge fades only while there's more past it. (Nothing moves the D-pad along a strip yet.) Format keys and details both overflowed on the right. Use one rule for both: content fades at the edge and scrolls; when the D-pad moves along a strip, the item under the cursor scrolls into view.
 
 **Undo granularity.** One formatting action should be one undo step. *Fixed already:* undo right after opening a note emptied it, so each note now starts with a fresh undo history.
 
 **Marks at word level.** Treat the word as the unit. With the caret just before or after a bold, italic or underlined word, its key lights up, as it already does at the start of a line. Spaces carry no marks.
 
-**D-pad hold-to-repeat.** Holding a D-pad arm repeats: a short delay, then the repeat speeds up the longer it's held. It applies to the caret, the list and the map cursor. Physical keyboard arrows keep the system's own repeat.
+**D-pad hold-to-repeat.** *Done.* Holding a D-pad arm repeats: a short delay, then the repeat speeds up the longer it's held. It applies to the caret, the list and the map cursor. Physical keyboard arrows keep the system's own repeat.
 
 **Delete confirm names the note and shows its tree.** *Done*, and the delete is locked to that note even if you switch notes while the box is open.
 
@@ -220,7 +221,7 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 **Screen colour theme.** A cohesive palette for every kind of text on the screen. A candidate base is Everforest, a soft green-earth editor theme that suits the moss palette.
 
-**Spell check.** Off by default, with a Configure toggle. When it's on, the squiggles get soft pastel colours where the browser allows (`::spelling-error` / `::grammar-error` in Chromium and Safari).
+**Spell check.** *Done.* Off by default, with a Configure toggle. When it's on, the squiggles get soft pastel colours where the browser allows (`::spelling-error` / `::grammar-error` in Chromium and Safari).
 
 **D-pad feel:** more tuning.
 
