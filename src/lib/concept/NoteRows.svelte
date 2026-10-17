@@ -56,7 +56,7 @@
   {#if device.isNew}
     <!-- The note being written, before its first save -->
     <li class="sel draft">
-      <span class="li-num">··</span>
+      <!-- <span class="li-num">··</span> -->
       {#if device.draftIcon}<img class="li-tree" src={device.draftIcon} alt="" />{:else}<span class="li-tree li-none">?</span>{/if}
       <span class="li-title">{device.draftTitle.trim() || "untitled"}</span>
       <span class="li-when">new</span>
@@ -77,7 +77,7 @@
       oncontextmenu={(e) => e.preventDefault()}
     >
       {#if device.picking}<span class="li-pick" aria-label={picked ? "picked" : "not picked"}>{picked ? "[x]" : "[ ]"}</span>{/if}
-      <span class="li-num">{String(i + 1).padStart(2, "0")}</span>
+      <!-- <span class="li-num">{String(i + 1).padStart(2, "0")}</span> -->
       <img class="li-tree" src={n.tree} alt="" />
       <span class="li-title">{n.title}</span>
       <span class="li-when">{n.when}</span>
