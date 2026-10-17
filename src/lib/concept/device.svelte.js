@@ -1043,6 +1043,13 @@ export class Device {
 
   // --- Input per screen -----------------------------------------------
 
+  /** A click or tap on a menu item: the same as moving to it and pressing A. */
+  chooseMenuItem(i) {
+    if (this.overlay?.kind !== "menu") return;
+    this.overlay.index = i;
+    this.#menuInput("a");
+  }
+
   #menuInput = (button) => {
     const m = this.overlay;
     const n = m.items.length;

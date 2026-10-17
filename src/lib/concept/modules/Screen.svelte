@@ -24,6 +24,25 @@
   // With the Format deck slotted, the strip's format page steps aside.
   let pages = $derived(device.stripPages);
   let stripPage = $derived(pages.includes(device.stripPage) ? device.stripPage : pages[0]);
+  // One overflow rule for strips: the content scrolls sideways, and an edge
+  // fades only while there's more past it.
+  function lane(node) {
+    const update = () => {
+      node.classList.toggle("more-l", node.scrollLeft > 1);
+      node.classList.toggle("more-r", node.scrollLeft + node.clientWidth < node.scrollWidth - 1);
+    };
+    const ro = new ResizeObserver(update);
+    ro.observe(node);
+    for (const child of node.children) ro.observe(child); // details change width as they update
+    node.addEventListener("scroll", update, { passive: true });
+    return {
+      destroy() {
+        ro.disconnect();
+        node.removeEventListener("scroll", update);
+      },
+    };
+  }
+
   function page(step) {
     const i = pages.indexOf(stripPage);
     device.stripPage = pages[(i + step + pages.length) % pages.length];
@@ -163,7 +182,7 @@
       <span class="strip-label">{stripPage === "format" ? "FORMAT" : "DETAILS"}</span>
       <button class="pg" class:gone={pages.length < 2} aria-label="Next strip page" onclick={() => page(1)}>▶</button>
       {#if stripPage === "format"}
-        <span class="keys" class:off={!device.canFormat}>
+        <span class="keys lane" class:off={!device.canFormat} use:lane>
           {#each Device.FORMATS as f}
             <button
               class="key"
@@ -177,7 +196,7 @@
         </span>
       {:else}
         {@const d = device.details}
-        <span class="details">
+        <span class="details lane" use:lane>
           <span><i>WORDS</i>{d.words}</span>
           <span><i>MADE</i>{fmtDate(d.made)}</span>
           <span><i>SAVED</i>{d.saved ? ago(d.saved) : "—"}</span>
@@ -192,9 +211,17 @@
       <div class="overlay" role="menu" aria-label={device.overlay.title}>
         <div class="ov-title"><span>{device.overlay.title}</span>{#if device.overlay.hint}<span class="ov-hint">{device.overlay.hint}</span>{/if}</div>
         {#each device.overlay.items as item, i}
-          <div class="ov-item" class:sel={i === device.overlay.index} role="menuitem">
+          <!-- Screen content is clickable: a click chooses, hovering with a mouse moves the caret -->
+          <button
+            class="ov-item"
+            class:sel={i === device.overlay.index}
+            role="menuitem"
+            onmousedown={(e) => e.preventDefault()}
+            onpointermove={(e) => e.pointerType === "mouse" && (device.overlay.index = i)}
+            onclick={() => device.chooseMenuItem(i)}
+          >
             <span class="ov-caret">{i === device.overlay.index ? "▸" : ""}</span>{typeof item.label === "function" ? item.label() : item.label}
-          </div>
+          </button>
         {/each}
       </div>
     {:else if device.overlay?.kind === "confirm"}
@@ -303,7 +330,10 @@
   .ov-item {
     display: flex;
     gap: 8px;
+    width: 100%;
     padding: 6px 18px;
+    background: none;
+    text-align: left;
     color: #a9bb9d;
   }
   .ov-item.sel {
@@ -633,14 +663,20 @@
     text-align: center;
     color: var(--phosphor-dim);
   }
+  .lane {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    --fade: 24px;
+  }
+  .lane::-webkit-scrollbar { display: none; }
+  .lane:global(.more-r) { mask-image: linear-gradient(90deg, #000 calc(100% - var(--fade)), transparent); }
+  .lane:global(.more-l) { mask-image: linear-gradient(90deg, transparent, #000 var(--fade)); }
+  .lane:global(.more-l.more-r) { mask-image: linear-gradient(90deg, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent); }
   .keys {
     display: flex;
     gap: 6px;
     margin-left: 10px;
-    min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-    mask-image: linear-gradient(90deg, #000 85%, transparent);
   }
   .keys.off {
     opacity: 0.45;
@@ -656,8 +692,6 @@
     display: flex;
     gap: 16px;
     margin-left: 10px;
-    min-width: 0;
-    overflow: hidden;
     white-space: nowrap;
     color: var(--phosphor);
     font-weight: 500;
