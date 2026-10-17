@@ -1,6 +1,6 @@
 # Brief: SPK-01 becomes a music player
 
-You're working in a SvelteKit app (Svelte 5, runes). The home page (`/`) is **Arboreum 1610F**, a note-taking app built to look like a piece of modular hardware: a console made of separate modules (camera, nameplate, screen, D-pad, control pad, speaker, and so on). `CONCEPT.md` at the repo root explains the whole project. Read its sections "Modules", "Look" and "Design philosophy" before you start.
+You're working in a SvelteKit app (Svelte 5, runes). The home page (`/`) is **Arboreum ARB-16A**, a note-taking app built to look like a piece of modular hardware: a console made of separate modules (camera, nameplate, screen, D-pad, control pad, speaker, and so on). `CONCEPT.md` at the repo root explains the whole project. Read its sections "Modules", "Look" and "Design philosophy" before you start.
 
 Your job is one module: the **speaker** (`src/lib/concept/modules/Speaker.svelte`). Today it's decoration: a dark body with a grille of vertical slots, a PWR LED and the label SPK-01. Make it a small music player for the user's own audio files, hidden behind the grille.
 

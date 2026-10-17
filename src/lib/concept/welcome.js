@@ -1,6 +1,6 @@
-// The note a new 1610F starts with: every kind of formatting the screen can
+// The note a new ARB-16A starts with: every kind of formatting the screen can
 // show (no images or links), plus the keys you need.
-export const WELCOME_ID = "welcome-1610f";
+export const WELCOME_ID = "welcome-JXF26-ARB-16A";
 
 export const WELCOME = {
   noteid: WELCOME_ID,

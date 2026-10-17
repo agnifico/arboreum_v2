@@ -1,4 +1,4 @@
-// The 1610F's shared state: one place every module reads from and every
+// The ARB-16A's shared state: one place every module reads from and every
 // input (on-screen keys or the keyboard) goes through. See CONCEPT.md, "Inputs".
 import { getContext, setContext } from "svelte";
 import { liveQuery } from "dexie";
@@ -379,7 +379,7 @@ export class Device {
 
   /** Add the welcome note once per browser (deleting it doesn't bring it back). */
   async #seedWelcome() {
-    const FLAG = "arb-1610f-welcome";
+    const FLAG = "JXF26-ARB-16A-welcome";
     try {
       if (localStorage.getItem(FLAG)) return;
       localStorage.setItem(FLAG, "1");

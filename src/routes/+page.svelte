@@ -73,7 +73,7 @@
   const eject = (_, { y = false } = {}) => ({ duration: 200, easing: cubicIn, css: (t, u) => `${shift(u, y)} opacity: ${t};` });
   const insert = (_, { y = false } = {}) => ({ delay: 170, duration: 340, easing: backOut, css: (t, u) => `${shift(u, y)} opacity: ${Math.min(1, t * 2)};` });
 
-  // Look test 01: free-standing modules that together make the 1610F.
+  // Look test 01: free-standing modules that together make the ARB-16A.
   // Landscape and portrait arrangements, fitted FIXED. See CONCEPT.md.
 
   let orient = $state("auto"); // Configure: auto | landscape | portrait
@@ -256,7 +256,7 @@
 <svelte:document onvisibilitychange={() => document.visibilityState === "hidden" && device.saveOnLeave()} />
 
 <svelte:head>
-  <title>Arboreum 1610F · look test</title>
+  <title>JXF26-ARB-16A · look test</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap"

@@ -5,7 +5,7 @@
 <p class="kicker">ABOUT · THE APP</p>
 <h1>Classic note taking, reimagined.</h1>
 <p class="lead">
-  Arboreum is a notebook where every note grows into a tree on a little map. The 1610F presents it as a
+  Arboreum is a notebook where every note grows into a tree on a little map. <br>The <i>JXF26-ARB-16A</i> presents it as a
   piece of modular hardware: a console of modules you can slot in and out, with a screen for writing in the middle.
 </p>
 

@@ -1,4 +1,4 @@
-/* Shared materials for the 1610F modules: bodies, screws, etched labels, glass.
+/* Shared materials for the ARB-16A modules: bodies, screws, etched labels, glass.
    Scoped to the .arb root with :where() so each module's own styles win. */
 
 :where(.arb) .mod {
