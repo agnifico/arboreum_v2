@@ -379,7 +379,7 @@ export class Device {
 
   /** Add the welcome note once per browser (deleting it doesn't bring it back). */
   async #seedWelcome() {
-    const FLAG = "JXF26-ARB-16A-welcome";
+    const FLAG = "arb-1610f-welcome"; // stored in every browser that's seen it: keep the old name
     try {
       if (localStorage.getItem(FLAG)) return;
       localStorage.setItem(FLAG, "1");
