@@ -23,14 +23,15 @@
   let held = $state(null);
 
   // Hold to repeat (on a phone it's the only way to keep moving): the press
-  // lands on touch-down, then repeats after a pause, like a held arrow key.
+  // lands on touch-down, then repeats after a pause, like a held arrow key,
+  // and speeds up the longer it's held.
   let timer;
   function down(e, dir) {
     if (e.button !== 0) return;
     held = dir;
     device.press(dir);
-    const again = (wait) => (timer = setTimeout(() => (device.press(dir), again(70)), wait));
-    again(380);
+    const again = (wait, next) => (timer = setTimeout(() => (device.press(dir), again(next, Math.max(35, next * 0.88))), wait));
+    again(380, 100);
   }
   function up() {
     held = null;

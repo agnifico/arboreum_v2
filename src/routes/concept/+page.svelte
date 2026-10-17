@@ -28,6 +28,13 @@
     // listens for touchstart; a passive no-op is enough.
     const noop = () => {};
     document.addEventListener("touchstart", noop, { passive: true });
+    // iOS Safari zooms in when focusing text under 16px (the editor's is 15px,
+    // then scaled); maximum-scale stops that, and iOS still allows pinch zoom.
+    // Only on iOS: elsewhere it would block pinch zoom.
+    const meta = document.querySelector('meta[name="viewport"]');
+    const metaWas = meta?.content;
+    const iOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (meta && iOS) meta.content = `${metaWas}, maximum-scale=1`;
     // The typing posture follows the visible area (the keyboard's top).
     const v = window.visualViewport;
     const read = () =>
@@ -46,6 +53,7 @@
       document.removeEventListener("touchstart", noop);
       v?.removeEventListener("resize", read);
       v?.removeEventListener("scroll", read);
+      if (meta) meta.content = metaWas;
     };
   });
 
