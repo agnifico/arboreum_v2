@@ -37,6 +37,7 @@
 :where(.arb) .r-plate { --face: var(--plate); --face-hi: var(--plate-hi); --side: var(--plate-side); --ink: var(--plate-ink); --ink-hard: var(--plate-ink-hard); --ink-sh: var(--plate-ink-sh); --rim: var(--plate-rim); }
 :where(.arb) .r-cam { --face: var(--cam); --face-hi: var(--cam-hi); --side: var(--cam-side); --ink: var(--cam-ink); --ink-hard: var(--cam-ink-hard); --ink-sh: var(--cam-ink-sh); --rim: var(--cam-rim); }
 :where(.arb) .r-scr { --face: var(--scr); --face-hi: var(--scr-hi); --side: var(--scr-side); --ink: var(--scr-ink); --ink-hard: var(--scr-ink-hard); --ink-sh: var(--scr-ink-sh); --rim: var(--scr-rim); }
+:where(.arb) .r-lst { --face: var(--lst); --face-hi: var(--lst-hi); --side: var(--lst-side); --ink: var(--lst-ink); --ink-hard: var(--lst-ink-hard); --ink-sh: var(--lst-ink-sh); --rim: var(--lst-rim); }
 :where(.arb) .r-dpad { --face: var(--dpad); --face-hi: var(--dpad-hi); --side: var(--dpad-side); --ink: var(--dpad-ink); --ink-hard: var(--dpad-ink-hard); --ink-sh: var(--dpad-ink-sh); --rim: var(--dpad-rim); }
 :where(.arb) .r-ctl { --face: var(--ctl); --face-hi: var(--ctl-hi); --side: var(--ctl-side); --ink: var(--ctl-ink); --ink-hard: var(--ctl-ink-hard); --ink-sh: var(--ctl-ink-sh); --rim: var(--ctl-rim); }
 :where(.arb) .r-bay { --face: var(--bay); --face-hi: var(--bay-hi); --side: var(--bay-side); --ink: var(--bay-ink); --ink-hard: var(--bay-ink-hard); --ink-sh: var(--bay-ink-sh); --rim: var(--bay-rim); }

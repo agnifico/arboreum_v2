@@ -112,7 +112,7 @@
     transition: transform 0.06s ease, box-shadow 0.06s ease;
   }
   .round.a {
-    color: #fff3ea;
+    color: var(--signal-ink);
     background: radial-gradient(circle at 40% 30%, var(--signal-hi), var(--signal) 55%, var(--signal-lo));
     box-shadow: 0 5px 0 var(--signal-side), 0 8px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);

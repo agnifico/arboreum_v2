@@ -13,7 +13,7 @@
 </script>
 
 <!-- LIST: notes as a numbered list with index tabs (left dock, or the bay) -->
-<section class="mod graphite r-scr list" class:focused={device.focus === "list"} aria-label="List module">
+<section class="mod graphite r-lst list" class:focused={device.focus === "list"} aria-label="List module">
   <span class="screw s-tl"></span><span class="screw s-bl"></span>
   <div class="list-glass">
     <div class="list-head">

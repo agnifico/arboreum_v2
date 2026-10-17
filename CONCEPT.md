@@ -30,9 +30,9 @@ The one list of what's left, in working order. Details live in the sections link
 
 **5 · Images, the rest:** *done 17 Oct:* replace and remove on the picked image (REPLACE and a ✕ that asks in place; Start → IMAGE menu; the Camera and IMG replace it). Still open: the link dot, "Save to a folder on my computer", images in backups (an image-aware export format).
 
-**6 · The concept page and finishing** (build order E): the page around the device and the design philosophy pages, motion and click sounds, accessibility and performance, a console sweep, and a regression check of the classic app.
+**6 · The concept page and finishing** (build order E): the page around the device (the blueprint view, spec sheets), motion and click sounds, accessibility and performance, a console sweep, and a regression check of the classic app. *Pages done 17 Oct:* `/about` (the app), `/help` (the manual: keys, A/B by screen, tutorials, questions) and `/story` (design and philosophy, from the section below), in the `(pages)` route group: printed sheets on the mat under a nameplate-shaped strip (◂ DEVICE, ABOUT · HELP · STORY tabs).
 
-**7 · The port.** *Routes done 17 Oct:* the device is `/`, the classic app lives under `/classic` (its own layout, links and routes moved with it), `/concept` redirects. Still open from the classic polish pass (POLISH.md): sanitise imported HTML, and remove the dead files and old config. Pages beyond the app (about, the project's idea, a portfolio) are still to place: where their links live on a page that's all console is open.
+**7 · The port.** *Routes done 17 Oct:* the device is `/`, the classic app lives under `/classic` (its own layout, links and routes moved with it), `/concept` redirects. Still open from the classic polish pass (POLISH.md): sanitise imported HTML, and remove the dead files and old config. Pages beyond the app: *placed 17 Oct* in the nameplate's printing, each line opening what it says: ARBOREUM and "Classic note taking, reimagined" → `/about`, "Customisation within structure" → `/story`, the model number → `/help` (a product's manual is found by its model number). Portrait hides the printed lines, so there the name and the model number are the ways in, and every page links to the others. Following one saves the open note first (`beforeNavigate` → `saveOnLeave`, since an in-app navigation has no pagehide); Enter on a focused link is the link's, not A.
 
 **8 · The speaker as a music player** (briefed to Grok as an isolated test, `briefs/speaker-player.md`): tap the grille and SPK-01 flips over to a small player for the user's own MP3/WAV files; Chrome and Edge remember the folder. Once it's in, give it a console route (a Start menu line) so it meets the three ways. Spotify is out for now: the Web Playback SDK needs Premium for every listener and has no iOS support, and a Development Mode app is capped at five allowlisted users (extended quota is only for registered businesses with 250k monthly users).
 
@@ -45,7 +45,7 @@ The one list of what's left, in working order. Details live in the sections link
 | Module | What it is | Notes |
 |---|---|---|
 | **Camera** | Top-left. The media button: adds an image to the note. | Its LED lights while an image comes in. |
-| **Nameplate** | Fixed hardware title bar: ARBOREUM at the right end with 1610F under it, stripes at the left (landscape adds the line "Classic note taking, reimagined / Customisation within structure"). | Branding only, not customisable. Model numbers are hexadecimal: 1610F is `0x1610F`. |
+| **Nameplate** | Fixed hardware title bar: ARBOREUM at the right end with 1610F under it, stripes at the left (landscape adds the line "Classic note taking, reimagined / Customisation within structure"). | Branding, not customisable; its printing links to the pages (about, story, the manual; see the port). Model numbers are hexadecimal: 1610F is `0x1610F`. |
 | **Screen** | Where writing happens. The notes list is a full screen here too, not a drawer. | |
 | **Bay** | Swappable slot: **Map viewer**, **Treemoji** or **List**. | Picked in Configure; the old module ejects and the new one slides in. Whatever is slotted does its job; the drawer covers the rest. |
 | **D-pad** | Moves through the list and the text. | |
@@ -224,14 +224,16 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 ## Visual pass
 
-**Themes (done 17 Oct, Configure → LOOK).** Themes only, never per-module colour picks: a theme sets every module's colour and the accent together, so the contrast between modules is designed, not left to chance. Five, in `themes.js`:
+**Themes (done 17 Oct, Configure → LOOK; retuned the same day).** Themes only, never per-module colour picks: a theme sets every module's colour and the accent together, so the contrast between modules is designed, not left to chance. Every theme but WORKSHOP colours the screen and list bodies too. Seven, in `themes.js`:
 - **WORKSHOP:** today's moss, bone, aluminium and graphite, signal orange (exactly as before).
-- **ARCADE:** bright blocks, one colour each: blue D-pad, yellow controls, green bay, purple speaker, red deck, a red-orange accent.
-- **HANDHELD:** one warm mustard top to bottom (screen bezel included) on a dark mat, a red accent.
-- **SORBET:** pastel shells (peach, mint, lemon, lilac, pink) around a deep purple screen, a teal accent.
-- **MIDNIGHT:** dark bodies (indigo D-pad, teal bay, plum speaker), a cyan accent, a dark mat.
+- **STUDIO:** white-centric: white bodies, black screen, list, speaker and deck, a cobalt accent.
+- **CARBON:** black-centric: black bodies, a white camera, D-pad and bay, a volt (lime) accent with a dark A letter.
+- **ARCADE:** a cabinet's primaries: red nameplate (the marquee) and speaker, blue screen and list, a black control panel (D-pad, controls, deck), cream camera and bay, a yellow accent. (Was one bright colour per module; too much.)
+- **HANDHELD:** one warm mustard top to bottom (screen bezel included) on a dark mat; the accent is white, so A is a white key with a red letter and the model number prints red.
+- **SORBET:** pastel shells around a deep purple screen, a teal accent. The white sits on the camera and the control pad, not the nameplate (now peach), so it reads as relief.
+- **MIDNIGHT:** dark bodies with the colour spread across the console: plum camera and bay, teal list and speaker, an indigo D-pad, a midnight-blue screen; a cyan accent, a dark mat.
 
-How it works: each module has a **role** (`r-plate`, `r-cam`, `r-scr` for the screen and list, `r-dpad`, `r-ctl`, `r-bay` shared by the Map viewer and Treemoji, `r-spk`, `r-deck`) that sets its body from the theme. A theme gives one colour per role; its highlight, side and **ink** are worked out from it (dark labels on a light body, light on a dark one, firmer on saturated colours), so a theme can make any module bright or dark and its etched labels stay readable. The accent covers everything signal: the nameplate stripe, the model number, A, LEDs, latches, the cursor, the map cursor. The keys, keycaps and the screens' glass stay the same in every theme. The Configure panel takes the plate's colours. Like the rest of Configure, the theme isn't remembered between visits.
+How it works: each module has a **role** (`r-plate`, `r-cam`, `r-scr` for the screen, `r-lst` for the List module (the screen's colour unless the theme sets it), `r-dpad`, `r-ctl`, `r-bay` shared by the Map viewer and Treemoji, `r-spk`, `r-deck`) that sets its body from the theme. A theme gives one colour per role; its highlight, side and **ink** are worked out from it (dark labels on a light body, light on a dark one, firmer on saturated colours), so a theme can make any module bright or dark and its etched labels stay readable. The accent covers everything signal: the nameplate stripe, the model number, A, LEDs, latches, the cursor, the map cursor. It comes with two inks: `--signal-ink`, the letter on the A key (dark on a light accent), and `--signal-text`, the accent printed on a body (the model number). A theme can set either (an accent is a colour or `[colour, { ink, text }]`). The keys, keycaps and the screens' glass stay the same in every theme. The Configure panel takes the plate's colours. Like the rest of Configure, the theme isn't remembered between visits.
 
 **Screen colour theme.** A cohesive palette for every kind of text on the screen. A candidate base is Everforest, a soft green-earth editor theme that suits the moss palette.
 

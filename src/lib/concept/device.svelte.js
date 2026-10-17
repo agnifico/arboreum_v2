@@ -1267,8 +1267,8 @@ export class Device {
     // While typing, only Esc leaves the field; everything else is text editing.
     if (typing && event.key !== "Escape") return false;
     if (LOOSE_KEYS.has(event.key) && this.focus === "editor" && !this.overlay) return false;
-    // Keys on page controls (e.g. Configure) keep their normal behaviour.
-    if (!typing && t?.closest?.(".config")) return false;
+    // Keys on page controls (Configure, the nameplate's links) keep their normal behaviour.
+    if (!typing && t?.closest?.(".config, a[href]")) return false;
     this.press(button, { extend: event.shiftKey }); // Shift with the arrows is holding Select
     return true;
   }

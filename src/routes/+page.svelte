@@ -1,5 +1,6 @@
 <script>
   import { onMount, untrack } from "svelte";
+  import { beforeNavigate } from "$app/navigation";
   import { cubicIn, backOut } from "svelte/easing";
   import "$lib/concept/materials.css";
   import Camera from "$lib/concept/modules/Camera.svelte";
@@ -57,6 +58,10 @@
       if (meta) meta.content = metaWas;
     };
   });
+
+  // The nameplate's links leave for the pages around the device inside the
+  // app, so no pagehide: the open note saves as it would on leaving.
+  beforeNavigate(() => device.saveOnLeave());
 
   function handleKeydown(event) {
     if (device.handleKey(event)) event.preventDefault();

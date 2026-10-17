@@ -1,17 +1,20 @@
 <!-- NAMEPLATE: fixed hardware branding; the name sits at the right end so
-     the plate reads across the whole width -->
+     the plate reads across the whole width. Its printing is also the way to
+     the pages around the device: each line opens what it says (the name and
+     the first line: about; the second: the story; the model number: the
+     manual, as on a real product). -->
 <section class="mod bone r-plate plate" aria-label="Nameplate">
   <span class="screw s-tl"></span><span class="screw s-bl"></span>
   <div class="plate-stripe" aria-hidden="true"></div>
   <div class="plate-print">
-    <span>CLASSIC NOTE TAKING, REIMAGINED</span>
-    <span>CUSTOMISATION WITHIN STRUCTURE</span>
+    <a href="/about">CLASSIC NOTE TAKING, REIMAGINED</a>
+    <a href="/story">CUSTOMISATION WITHIN STRUCTURE</a>
   </div>
   <div class="plate-name">
-    <span class="brand">ARBOREUM</span>
+    <a class="brand" href="/about" title="About Arboreum">ARBOREUM</a>
     <span class="sub">
       <a class="byline" href="https://junesforge.com" target="_blank" rel="noopener">by JUNESFORGE</a>
-      <span class="model">JXF26-ARB-16A</span>
+      <a class="model" href="/help" title="The manual">JXF26-ARB-16A</a>
     </span>
   </div>
 </section>
@@ -31,6 +34,10 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+  }
+  .plate a {
+    text-decoration: none;
+    transition: color 0.12s ease;
   }
   .brand {
     font-weight: 700;
@@ -59,9 +66,22 @@
     text-shadow: var(--ink-sh);
     transition: color 0.12s ease;
   }
+  .plate-print a {
+    color: inherit;
+  }
+  .plate-print a:hover,
+  .plate-print a:focus-visible,
+  .brand:hover,
+  .brand:focus-visible,
   .byline:hover,
   .byline:focus-visible {
-    color: var(--signal);
+    color: var(--signal-text);
+  }
+  /* The model number is already in the accent: it underlines instead */
+  .model:hover,
+  .model:focus-visible {
+    text-decoration: underline 1.5px;
+    text-underline-offset: 3px;
   }
   .model {
     font-family: var(--mono); /* model numbers are hex, set in mono */
@@ -69,7 +89,7 @@
     font-size: 18px;
     line-height: 1;
     letter-spacing: 0.08em;
-    color: var(--signal);
+    color: var(--signal-text);
     text-shadow: var(--ink-sh);
   }
   .plate-print {
