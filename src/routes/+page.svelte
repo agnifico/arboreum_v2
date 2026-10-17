@@ -16,8 +16,17 @@
   import Configurator from "$lib/concept/Configurator.svelte";
   import { Device, provideDevice } from "$lib/concept/device.svelte.js";
   import { lookStyle } from "$lib/concept/themes.js";
+  import { defaults, loadSettings, saveSettings } from "$lib/concept/settings.js";
 
   const device = provideDevice(new Device());
+  // Configure's choices are remembered in this browser (settings.js). The
+  // page renders only in the browser (+page.js), so they're there from the
+  // first frame.
+  const saved = loadSettings();
+  device.controls = saved.controls;
+  device.showMarkup = saved.showMarkup;
+  device.showLines = saved.showLines;
+  device.spellCheck = saved.spellCheck;
   $effect(() => {
     const bay = bayOn ? bayModule : null;
     device.hasListModule = (view === "landscape" && leftList) || bay === "list";
@@ -25,6 +34,7 @@
     device.ctlSlotted = showCtl;
   });
   onMount(() => {
+    document.documentElement.style.background = ""; // app.html's mat while loading; the stage paints its own
     const stop = device.start();
     // iOS Safari only shows :active (every key's press state) once something
     // listens for touchstart; a passive no-op is enough.
@@ -76,12 +86,12 @@
   // Look test 01: free-standing modules that together make the ARB-16A.
   // Landscape and portrait arrangements, fitted FIXED. See CONCEPT.md.
 
-  let orient = $state("auto"); // Configure: auto | landscape | portrait
+  let orient = $state(saved.orient); // Configure: auto | landscape | portrait
   let shape = $state(null); // the window's shape, for auto
   let view = $derived(orient === "auto" ? (shape ?? "landscape") : orient); // landscape | portrait (arrangements, not devices)
   // Each arrangement keeps its own bay (CONCEPT.md, "Layout system"): portrait
   // starts without one, so the screen gets the room, and brought back it holds the List.
-  let bays = $state({ landscape: { show: true, module: "map" }, portrait: { show: false, module: "list" } });
+  let bays = $state(saved.bays);
   let showBay = $derived(bays[view].show);
   // Typing posture (CONCEPT.md, step 16): while the keyboard is up in
   // portrait, only the screen and the controls row show above it. The
@@ -104,23 +114,51 @@
     return () => cancelAnimationFrame(raf);
   });
   let bayModule = $derived(bays[view].module); // what's in the bay: map | treemoji | list
-  let showSpeaker = $state(true);
-  let showChassis = $state(false); // optional enclosure behind the modules
-  let showGlare = $state(false); // reflections on the screens
-  let theme = $state("workshop"); // Configure → LOOK: the console's colours (themes.js)
-  let showList = $state(true); // landscape's left dock; otherwise the list is a full screen
+  let showSpeaker = $state(saved.showSpeaker);
+  let showChassis = $state(saved.showChassis); // optional enclosure behind the modules
+  let showGlare = $state(saved.showGlare); // reflections on the screens
+  let theme = $state(saved.theme); // Configure → LOOK: the console's colours (themes.js)
+  let showList = $state(saved.showList); // landscape's left dock; otherwise the list is a full screen
   // There's one List module: in the bay, it isn't on the left.
   let leftList = $derived(showList && !(showBay && bayModule === "list"));
-  let showDpad = $state(true);
-  let showCtl = $state(true);
+  let showDpad = $state(saved.showDpad);
+  let showCtl = $state(saved.showCtl);
   // The D-pad follows the control slot: on with the control pad, off with the
   // Format deck or no controls. A manual toggle holds until the slot changes.
+  // (The first run only notes the slot, so a remembered deck keeps its D-pad.)
   let lastSlot = null;
   $effect(() => {
     const slot = showCtl ? device.controls : "none";
     if (lastSlot !== null && slot !== lastSlot) showDpad = slot === "pad";
     lastSlot = slot;
   });
+
+  // Remember every change; Configure's RESET puts the factory settings back.
+  const current = () => ({
+    orient,
+    bays: $state.snapshot(bays),
+    showList,
+    showDpad,
+    showCtl,
+    controls: device.controls,
+    showSpeaker,
+    showMarkup: device.showMarkup,
+    showLines: device.showLines,
+    spellCheck: device.spellCheck,
+    theme,
+    showGlare,
+    showChassis,
+  });
+  $effect(() => saveSettings(current()));
+  function resetSettings() {
+    const d = defaults();
+    ({ orient, bays, showList, showCtl, showSpeaker, theme, showGlare, showChassis } = d);
+    device.controls = d.controls;
+    device.showMarkup = d.showMarkup;
+    device.showLines = d.showLines;
+    device.spellCheck = d.spellCheck;
+    showDpad = d.showDpad;
+  }
 
   let stageW = $state(1440); // the page's own width, so overflow can't inflate it
   let winH = $state(900);
@@ -291,7 +329,7 @@
       <!-- Configure: always the gear at the nameplate's left end, in every
            arrangement; its panel opens downward -->
       <div class="plate-dock">
-        <Configurator {view} bind:orient bind:showBay={() => showBay, (v) => (bays[view].show = v)} bind:bayModule={() => bayModule, (v) => (bays[view].module = v)} bind:showSpeaker bind:showChassis bind:showGlare bind:theme bind:showList bind:showDpad bind:showCtl />
+        <Configurator {view} bind:orient bind:showBay={() => showBay, (v) => (bays[view].show = v)} bind:bayModule={() => bayModule, (v) => (bays[view].module = v)} bind:showSpeaker bind:showChassis bind:showGlare bind:theme bind:showList bind:showDpad bind:showCtl onreset={resetSettings} />
       </div>
       {#if view === "landscape" && leftList}<ListModule />{/if}
       <Screen />

@@ -15,6 +15,7 @@
     showList = $bindable(true),
     showDpad = $bindable(true),
     showCtl = $bindable(true),
+    onreset = () => {}, // put the factory settings back (the page owns them)
   } = $props();
   const device = useDevice();
   let panelOpen = $state(false);
@@ -50,6 +51,25 @@
     ["treemoji", "TREEMOJI"],
     ["list", "LIST"],
   ];
+
+  // Settings are remembered, so RESET puts them back; it asks in place, as
+  // the image ✕ does: the first press arms it, a second resets, and it
+  // disarms after 3 s or when the panel closes.
+  let armed = $state(false);
+  let disarm = 0;
+  function reset() {
+    clearTimeout(disarm);
+    if (!armed) {
+      armed = true;
+      disarm = setTimeout(() => (armed = false), 3000);
+      return;
+    }
+    armed = false;
+    onreset();
+  }
+  $effect(() => {
+    if (!panelOpen) armed = false;
+  });
 
   function handleKeydown(event) {
     if (event.key === "Escape") panelOpen = false;
@@ -133,6 +153,10 @@
         <span class="sw" class:on={showChassis}></span> ENCLOSURE
       </button>
       {/if}
+      <div class="remember">
+        <span>REMEMBERED IN THIS BROWSER</span>
+        <button class="reset" class:armed onclick={reset}>{armed ? "RESET? PRESS AGAIN" : "RESET"}</button>
+      </div>
     </div>
   {/if}
   <!-- A pill key in a recessed well, like Select and Start: it sits in the
@@ -352,6 +376,36 @@
   }
   .chips i + i {
     margin-left: -4px;
+  }
+  /* Remembered settings, and the way back to the factory ones */
+  .remember {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--ink-hard) 15%, transparent);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+  }
+  .reset {
+    padding: 5px 9px;
+    border-radius: 6px;
+    font-family: var(--label);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--ink-hard);
+    background: color-mix(in oklab, var(--face), black 8%);
+    transition: color 0.12s ease, background 0.12s ease;
+  }
+  .reset:hover { background: color-mix(in oklab, var(--face), black 14%); }
+  .reset.armed {
+    color: #fff3ea;
+    background: var(--alert, #e5323b);
   }
   .cfg-note {
     margin: 14px 0 0;

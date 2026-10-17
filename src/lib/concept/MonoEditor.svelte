@@ -457,12 +457,6 @@
   .mono :global([style*="text-align"]) { text-align: left !important; }
   .mono :global(img) { display: none; }
 
-  /* Empty note */
-  .mono :global(.ProseMirror > p:only-child:has(> br:only-child)::before) {
-    content: "start typing…";
-    color: #3d4b3b;
-  }
-
   :global(.portrait) .host { padding: 10px 14px 10px 0; }
   :global(.portrait) .num { right: 13px; font-size: 13px; line-height: 22px; }
   :global(.portrait) .tick { right: 2px; width: 5px; }
