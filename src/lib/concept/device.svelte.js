@@ -493,6 +493,8 @@ export class Device {
       e && { label: "CLOSE NOTE", run: () => this.leave() },
       { label: "SAVE BACKUP", run: () => this.saveBackup() },
       { label: "LOAD BACKUP", run: () => this.loadBackup() },
+      // A way out that doesn't need B (it closes like B and Start do).
+      { label: "CLOSE MENU", run: () => {} },
     ].filter(Boolean);
     this.overlay = { kind: "menu", title: "MENU", hint: "CTRL/⌘ K", items, index: 0 };
   }
@@ -932,14 +934,41 @@ export class Device {
     { key: "code", label: "</>", run: (c) => c.toggleCode() },
   ];
 
+  /** Keys that do something once rather than staying on: on the strip, and
+      undo/redo on the Format deck too. `ok` says whether it can run now. */
+  static ACTIONS = [
+    { key: "undo", label: "↶", ok: (d) => d.can.undo, run: (c) => c.undo() },
+    { key: "redo", label: "↷", ok: (d) => d.can.redo, run: (c) => c.redo() },
+    { key: "outdent", label: "⇤", ok: (d) => d.can.outdent, run: (c) => c.command(({ commands: k }) => k.liftListItem("listItem") || k.liftListItem("taskItem")) },
+    { key: "indent", label: "⇥", ok: (d) => d.can.indent, run: (c) => c.command(({ commands: k }) => k.sinkListItem("listItem") || k.sinkListItem("taskItem")) },
+    { key: "image", label: "IMG", ok: () => true, act: (d) => d.pickImages() },
+    // The note's image edge, as the image's place beside the text: ▄ bottom, ▀ top, ▌ left, ▐ right.
+    { key: "edge", label: (d) => ({ bottom: "▄", top: "▀", left: "▌", right: "▐" })[d.media.edge], ok: (d) => d.media.images.length > 0, act: (d) => d.cycleEdge() },
+  ];
+  /** What the action keys can do at the caret (the editor reports it). */
+  can = $state({});
+
+  /** Marks apply to the whole word when there's only a caret (the word is the unit). */
+  static MARKS = ["bold", "italic", "underline", "strike", "highlight", "code"];
+
   get canFormat() {
     return this.focus === "editor" && !this.overlay && !!this.editorApi;
   }
 
   format(key) {
     if (!this.canFormat) return;
+    const action = Device.ACTIONS.find((x) => x.key === key);
+    if (action) {
+      if (!action.ok(this)) return;
+      return action.act ? action.act(this) : action.run(this.editorApi.commands()).run();
+    }
     const f = Device.FORMATS.find((x) => x.key === key);
-    f.run(this.editorApi.commands()).run();
+    const word = Device.MARKS.includes(key) ? this.editorApi.wordRange() : null;
+    let c = this.editorApi.commands();
+    if (word) c = c.setTextSelection({ from: word.from, to: word.to });
+    c = f.run(c);
+    if (word) c = c.setTextSelection(word.caret);
+    c.run();
   }
 
   /** What the details page shows for the note on screen. */

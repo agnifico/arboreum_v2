@@ -20,6 +20,7 @@
   import Image from "@tiptap/extension-image";
   import { useDevice } from "./device.svelte.js";
   import NoteImages from "./NoteImages.svelte";
+  import { WordMarks, wordRange } from "./word-marks.js";
 
   const device = useDevice();
 
@@ -64,6 +65,13 @@
     for (const f of [["bold"], ["italic"], ["underline"], ["strike"], ["highlight"], ["bulletList"], ["orderedList"], ["taskList"], ["blockquote"], ["code"]]) a[f[0]] = editor.isActive(f[0]);
     for (const l of [1, 2, 3]) a[`h${l}`] = editor.isActive("heading", { level: l });
     device.active = a;
+    const can = editor.can();
+    device.can = {
+      undo: can.undo(),
+      redo: can.redo(),
+      indent: can.sinkListItem("listItem") || can.sinkListItem("taskItem"),
+      outdent: can.liftListItem("listItem") || can.liftListItem("taskItem"),
+    };
     // Separate blocks with a space, so "three" + "four" isn't one word.
     const doc = editor.state.doc;
     const text = doc.textBetween(0, doc.content.size, " ", " ").trim();
@@ -167,6 +175,7 @@
         Color,
         TextAlign.configure({ types: ["heading", "paragraph"] }),
         Image,
+        WordMarks,
       ],
       editable: false,
       content: "",
@@ -200,6 +209,7 @@
       revealCaret: () => editor.isFocused && editor.commands.scrollIntoView(),
       focusEnd: () => requestAnimationFrame(() => editor.isEditable && editor.commands.focus("end")),
       getHTML: () => editor.getHTML(),
+      wordRange: () => wordRange(editor.state),
       reload: () => (loadedKey = null),
       commands: () => editor.chain().focus(),
       isActive: (...a) => editor.isActive(...a),

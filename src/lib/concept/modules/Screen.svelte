@@ -35,10 +35,28 @@
     ro.observe(node);
     for (const child of node.children) ro.observe(child); // details change width as they update
     node.addEventListener("scroll", update, { passive: true });
+    // With a mouse: the wheel scrolls it sideways, and a key that's partly
+    // hidden under the fade slides fully into view when it's used.
+    const wheel = (e) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX) || node.scrollWidth <= node.clientWidth) return;
+      e.preventDefault();
+      node.scrollLeft += e.deltaY;
+    };
+    const reveal = (e) => {
+      const key = e.target.closest?.("button");
+      if (!key) return;
+      const l = key.offsetLeft - node.offsetLeft;
+      if (l < node.scrollLeft) node.scrollTo({ left: l - 24, behavior: "smooth" });
+      else if (l + key.offsetWidth > node.scrollLeft + node.clientWidth) node.scrollTo({ left: l + key.offsetWidth - node.clientWidth + 24, behavior: "smooth" });
+    };
+    node.addEventListener("wheel", wheel, { passive: false });
+    node.addEventListener("click", reveal);
     return {
       destroy() {
         ro.disconnect();
         node.removeEventListener("scroll", update);
+        node.removeEventListener("wheel", wheel);
+        node.removeEventListener("click", reveal);
       },
     };
   }
@@ -178,11 +196,18 @@
 
     <!-- Secondary strip: paged with ◀ ▶ (format · details) -->
     <div class="strip">
-      <button class="pg" class:gone={pages.length < 2} aria-label="Previous strip page" onclick={() => page(-1)}>◀</button>
-      <span class="strip-label">{stripPage === "format" ? "FORMAT" : "DETAILS"}</span>
-      <button class="pg" class:gone={pages.length < 2} aria-label="Next strip page" onclick={() => page(1)}>▶</button>
       {#if stripPage === "format"}
+        {#snippet act(f)}
+          <button
+            class="key act"
+            disabled={!device.canFormat || !f.ok(device)}
+            aria-label={f.key}
+            onmousedown={(e) => e.preventDefault()}
+            onclick={() => device.format(f.key)}>{typeof f.label === "function" ? f.label(device) : f.label}</button>
+        {/snippet}
         <span class="keys lane" class:off={!device.canFormat} use:lane>
+          {#each Device.ACTIONS.slice(0, 2) as f}{@render act(f)}{/each}
+          <i class="gap"></i>
           {#each Device.FORMATS as f}
             <button
               class="key"
@@ -193,6 +218,8 @@
               onmousedown={(e) => e.preventDefault()}
               onclick={() => device.format(f.key)}>{f.label}</button>
           {/each}
+          <i class="gap"></i>
+          {#each Device.ACTIONS.slice(2) as f}{#if f.key !== "edge" || f.ok(device)}{@render act(f)}{/if}{/each}
         </span>
       {:else}
         {@const d = device.details}
@@ -205,7 +232,13 @@
           <span class:warn={!d.plot}><i>PLOT</i>{d.plot ? d.plot.map(pad2).join(",") : "NONE"}</span>
         </span>
       {/if}
-      <span class="pages">{#each pages as p}<i class:on={stripPage === p}></i>{/each}</span>
+      <!-- The page switcher sits at the right, so the strip starts with its keys -->
+      <span class="pager">
+        <button class="pg" class:gone={pages.length < 2} aria-label="Previous strip page" onclick={() => page(-1)}>◀</button>
+        <span class="strip-label">{stripPage === "format" ? "FORMAT" : "DETAILS"}</span>
+        <button class="pg" class:gone={pages.length < 2} aria-label="Next strip page" onclick={() => page(1)}>▶</button>
+        <span class="pages">{#each pages as p}<i class:on={stripPage === p}></i>{/each}</span>
+      </span>
     </div>
     {#if device.overlay?.kind === "menu"}
       <div class="overlay" role="menu" aria-label={device.overlay.title}>
@@ -664,6 +697,7 @@
     color: var(--phosphor-dim);
   }
   .lane {
+    flex: 0 1 auto;
     min-width: 0;
     overflow-x: auto;
     scrollbar-width: none;
@@ -676,13 +710,22 @@
   .keys {
     display: flex;
     gap: 6px;
-    margin-left: 10px;
+  }
+  /* A small break between groups: undo/redo, formats, then the rest */
+  .keys .gap {
+    flex: none;
+    width: 1px;
+    margin: 6px 3px;
+    background: rgba(213, 228, 198, 0.12);
   }
   .keys.off {
     opacity: 0.45;
   }
   .key:disabled {
     cursor: default;
+  }
+  .key.act:disabled {
+    opacity: 0.35;
   }
   .key.on {
     color: var(--signal);
@@ -691,7 +734,6 @@
   .details {
     display: flex;
     gap: 16px;
-    margin-left: 10px;
     white-space: nowrap;
     color: var(--phosphor);
     font-weight: 500;
@@ -727,8 +769,15 @@
       border-color: rgba(213, 228, 198, 0.22);
     }
   }
-  .pages {
+  .pager {
     margin-left: auto;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pages {
+    margin-left: 4px;
     display: flex;
     gap: 5px;
     flex-shrink: 0;
@@ -753,7 +802,7 @@
   :global(.portrait) .ab { right: 10px; bottom: 50px; gap: 10px; padding: 6px 9px; font-size: 10px; }
   :global(.portrait) .strip { padding: 0 10px; gap: 6px; font-size: 10px; }
   :global(.portrait) .strip-label { width: 50px; }
-  :global(.portrait) .keys { margin-left: 4px; gap: 4px; }
+  :global(.portrait) .keys { gap: 4px; }
   :global(.portrait) .key { min-width: 20px; padding: 2px 4px; }
   @keyframes pulse {
     50% { box-shadow: 0 0 2px rgba(229, 50, 59, 0.3); }

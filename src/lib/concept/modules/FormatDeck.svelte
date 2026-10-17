@@ -6,19 +6,21 @@
   // Hardware keys don't take keyboard focus on click, so typing carries on
   // in the editor (keyboard users can still Tab to them).
   const keepFocus = (e) => e.preventDefault();
-  const by = (keys) => keys.map((k) => Device.FORMATS.find((f) => f.key === k));
-  // Inline marks on top, line kinds below.
+  const KEYS = [...Device.FORMATS, ...Device.ACTIONS];
+  const by = (keys) => keys.map((k) => KEYS.find((f) => f.key === k));
+  // Inline marks on top, line kinds below; undo and redo lead the rows.
   const LAYOUTS = {
     2: [
-      by(["bold", "italic", "underline", "strike", "highlight", "code"]),
-      by(["h1", "h2", "h3", "bulletList", "orderedList", "taskList", "blockquote"]),
+      by(["undo", "bold", "italic", "underline", "strike", "highlight", "code"]),
+      by(["redo", "h1", "h2", "h3", "bulletList", "orderedList", "taskList", "blockquote"]),
     ],
     3: [
       by(["bold", "italic", "underline", "strike", "highlight"]),
-      by(["code", "h1", "h2", "h3"]),
-      by(["bulletList", "orderedList", "taskList", "blockquote"]),
+      by(["undo", "code", "h1", "h2", "h3"]),
+      by(["redo", "bulletList", "orderedList", "taskList", "blockquote"]),
     ],
   };
+  const isAction = (f) => Device.ACTIONS.includes(f);
 </script>
 
 <!-- FORMAT DECK: physical keys for the formatting; swaps with the control pad -->
@@ -32,7 +34,9 @@
           <!-- A key stays down, its LED lit, while that format is under the caret -->
           <button
             class="cap cap-{f.key}"
+            class:act={isAction(f)}
             class:on={device.canFormat && device.active[f.key]}
+            disabled={isAction(f) && device.canFormat && !f.ok(device)}
             aria-label={f.key}
             aria-pressed={device.canFormat && !!device.active[f.key]}
             onmousedown={keepFocus}
@@ -84,8 +88,19 @@
     transform: translateY(3px);
     box-shadow: 0 1px 0 var(--bone-side), inset 0 1px 0 #fff;
   }
-  .off .cap span {
+  .off .cap span,
+  .cap:disabled span {
     opacity: 0.4;
+  }
+  .cap:disabled {
+    cursor: default;
+  }
+  /* Undo and redo: one-shot keys, a darker cap with no LED */
+  .cap.act {
+    background: linear-gradient(180deg, #d9d2bf, #c9c1ab 70%);
+  }
+  .cap.act .led {
+    display: none;
   }
   .cap-bold span { font-weight: 800; }
   .cap-italic span { font-style: italic; }
