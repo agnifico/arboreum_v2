@@ -5,7 +5,7 @@ A conceptual design project. Arboreum's notes, presented as a piece of swappable
 - **Writing** is classic plain-text editing, Sublime-style: monospace and evenly spaced.
 - **The interface** is a console built from hardware-like modules you can slot in and out.
 
-It is built at `/concept` inside the working app, on the same notes (IndexedDB `arboreum`), and leaves the existing app untouched. Once it's complete, it gets ported to become the main interface, and the current ("classic") interface is archived. It may grow into its own project later.
+It is the app's home page (`/`), on the same notes (IndexedDB `arboreum`) as the classic interface, which is archived at `/classic` (kept working for screenshots and the project's story). `/concept`, where it was built, redirects to `/`. It may grow into its own project later.
 
 ## Open items (start here)
 
@@ -19,7 +19,7 @@ The one list of what's left, in working order. Details live in the sections link
 - [x] **Viewport.** The height while typing comes from `visualViewport` (above). `viewport-fit=cover` and safe areas are left out on purpose: in the browser Safari already keeps the page clear of the notch and paints the mat behind it. They only matter for a home-screen app, so they go with the manifest (iOS storage, below).
 - [ ] **iOS checks:** the first tap on a note opens it with the caret in place (tap-to-edit runs on mousedown); ~~Safari zooms in when focusing text under 16px~~ (fixed: `maximum-scale=1`, on iOS only, where pinch zoom still works); map tap-tap planting on a real iPhone; HEIC photos through the Camera.
 - [x] **Touch-only gaps in the three ways:** without a hardware keyboard there's no way to indent list items (Tab / Shift+Tab) or to undo and redo. *Done: the format strip has ↶ ↷ (first) and ⇤ ⇥; the Format deck has ↶ ↷ leading its rows.*
-- [ ] **iOS storage** (later; fine for the prototype): Safari can clear IndexedDB and OPFS after 7 days without a visit unless the site is on the home screen. A web app manifest would fix it; `persist()` is only asked on the image path.
+- [ ] **iOS storage** (next, now that the device is the home page): Safari can clear IndexedDB and OPFS after 7 days without a visit unless the site is on the home screen, and a home-screen app keeps its own storage, apart from Safari's. Plan: a web app manifest (`start_url: /`, standalone, icons; safe areas go in with it), `persist()` asked at the first save (today only on the image path) with its answer shown in Configure, and a one-time "Add to Home Screen" hint in iPhone Safari, early, before much is written.
 - [x] Treemoji's tree grid has small tiles in the short portrait bay row. *Done: a filled tree grid takes 6 a row when its screen is wide and short; the D-pad steps by the same.*
 
 **2 · Deploy the concept.** *Done 17 Oct:* merged to `main` and live at arboreum-v2.vercel.app/concept, beside the classic app (which it doesn't touch). Phone tests now have HTTPS, which OPFS and `storage.persist()` need.
@@ -32,7 +32,7 @@ The one list of what's left, in working order. Details live in the sections link
 
 **6 · The concept page and finishing** (build order E): the page around the device and the design philosophy pages, motion and click sounds, accessibility and performance, a console sweep, and a regression check of the classic app.
 
-**7 · The port:** the concept becomes the main interface and the classic one is archived. Before then, two open questions from the classic polish pass (POLISH.md) still apply: sanitise imported HTML, and remove the dead files and old config.
+**7 · The port.** *Routes done 17 Oct:* the device is `/`, the classic app lives under `/classic` (its own layout, links and routes moved with it), `/concept` redirects. Still open from the classic polish pass (POLISH.md): sanitise imported HTML, and remove the dead files and old config. Pages beyond the app (about, the project's idea, a portfolio) are still to place: where their links live on a page that's all console is open.
 
 **Next after mobile:** the extended format deck (Ideas for later).
 
@@ -47,7 +47,7 @@ The one list of what's left, in working order. Details live in the sections link
 | **Screen** | Where writing happens. The notes list is a full screen here too, not a drawer. | |
 | **Bay** | Swappable slot: **Map viewer**, **Treemoji** or **List**. | Picked in Configure; the old module ejects and the new one slides in. Whatever is slotted does its job; the drawer covers the rest. |
 | **D-pad** | Moves through the list and the text. | |
-| **Control pad** | **A**, **B**, **Start**, **Select**. | Swaps with the **Format deck** (FMT-01): physical keys for bold, italic, headings, lists and so on. The orange ⇄ latch in either module's label swaps them; so does Configure. |
+| **Control pad** | **A**, **B**, **Start**, **Select**. | Swaps with the **Format deck** (FMT-01): physical keys for bold, italic, headings, lists and so on. The orange slide switch set into either module's right edge (top half, the same place on both; up PAD, down FMT) swaps them; so does Configure. |
 
 ## Structure (decided after look test 00)
 
@@ -72,7 +72,7 @@ The one list of what's left, in working order. Details live in the sections link
 - **Enclosure:** an optional dark frame behind the modules. It's off by default.
 - **Bay:** holds one of three modules, picked in Configure (BAY switch, then MAP · TREEMOJI · LIST).
   - **Map viewer (MAP-01):** plot and tree. Desktop has its two keys side by side; portrait stacks them on one side.
-  - **Treemoji (TRM-01):** the tree buddy. A small screen shows the note's tree with a speech bubble (the classic app's lines, plus reactions to saving, planting and new trees; asleep while browsing). Three keys, pocket-pet style: ◀ and ▶ flip straight through the trees, and TREE opens the tree grid on its screen (tapping the buddy does the same). It handles the tree; the drawer handles the plot.
+  - **Treemoji (TRM-01):** the tree buddy. A small screen shows the note's tree with a speech bubble (the classic app's lines, plus reactions to saving, planting and new trees; asleep while browsing). Three keys, pocket-pet style: ◀ and ▶ flip straight through the trees, and TREE opens the tree grid on its screen (tapping the buddy does the same). It handles the tree; the drawer handles the plot. It's a writing buddy too: it bobs along while you type, dozes after two quiet minutes (and wakes when you type again), greets you by the time of day when a note opens, cheers word milestones (first words, then 100, 250, 500, 1000, 2000), and has a cheeky line for formatting from any route (bold, strike, headings, lists, three quick undos). A drop in its screen's corner waters it: drops fall, hearts float up.
   - **List (LST-01):** there is one List module. Putting it in the bay takes it off the left dock, and in portrait it gives the list a module under the controls instead of a full screen.
   - **Who does what:** each job (tree, plot) goes to the slotted module that can do it; the drawer slides out only for the jobs nothing slotted handles. With the Map viewer: no drawer. With Treemoji: the drawer has the plot. With the List or an empty bay: the drawer has both.
 
@@ -115,7 +115,7 @@ Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the pa
 
 ## Code structure
 
-- `src/routes/concept/+page.svelte`: the stage, the device grid (desktop and mobile layouts) and the module toggles.
+- `src/routes/+page.svelte`: the stage, the device grid (desktop and mobile layouts) and the module toggles. The classic app is everything under `src/routes/classic/`.
 - `src/lib/concept/modules/*.svelte`: one component per module (Camera, Nameplate, ListModule, Screen, MapViewer, Treemoji, DPad, ControlPad, FormatDeck, Speaker). Mobile tweaks sit beside each module's own styles.
 - `src/lib/concept/materials.css`: shared materials (module bodies, screws, etched labels, glass, pips). It's scoped to the `.arb` root with `:where()`, so module styles win and nothing leaks into the main app.
 - `src/lib/concept/Configurator.svelte`: the page-level Configure panel.
@@ -148,7 +148,7 @@ What that gives: desktop gets a big screen; a portrait phone gets an edge-to-edg
 2. **Controls** always sit below the screen.
 3. **Beside the screen** (landscape only), at most one dock per side: the **list on the left**, the **bay (map viewer) on the right**.
 4. **The bottom row is a pair:** either **D-pad + A/B**, or **List + something else**. A/B never appears without the D-pad.
-   - **The D-pad follows the control slot:** whenever the slot changes (latch or Configure), the D-pad turns on for the control pad and off for the Format deck or no controls. A manual toggle in Configure holds until the slot changes again. (This settles the old "D-pad without controls" question.)
+   - **The D-pad follows the control slot:** whenever the slot changes (edge switch or Configure), the D-pad turns on for the control pad and off for the Format deck or no controls. A manual toggle in Configure holds until the slot changes again. (This settles the old "D-pad without controls" question.)
    - **Portrait sizes:** the controls row is 144px with a slightly smaller D-pad (160px when the Format deck's three rows sit beside it). The control pad stacks B A over Start only when its cell is narrow; with room (an upright tablet, or no D-pad) Start, B and A are one row again. It decides from its own width (a container query).
    - **Split:** D-pad + control pad share the row half and half. D-pad + Format deck: the deck takes two thirds (it matters more there). In portrait the deck beside the D-pad has three rows of wide keys; without the D-pad it spans the row in two rows of thumb-sized keys.
 5. **No controls row:** the screen goes full screen (touch and keyboard only).
@@ -175,7 +175,7 @@ Every action has three complete routes, and each one works on its own:
 They are deliberately, heavily redundant, and users can mix them mid-action: press MOVE, nudge with the arrow keys, finish with the mouse. Whatever hand is already moving should just work. The aim is a device that feels smooth in a way nobody can quite explain.
 
 How that plays out, with the Map viewer as the worked example:
-- **Mouse only:** click a tile: you're in move mode with the cursor there. Click other tiles to move it. Hover the cursor's own tile and the crosshair becomes a green cross; click it again to plant. Leave by pressing MOVE again.
+- **Mouse only:** click a tile: you're in move mode with the cursor there. Click other tiles to move it. Hover the cursor's own tile and the crosshair becomes a green cross; click it again to plant. Leave by pressing MOVE again. Hovering any tree shows its note's title; clicking another note's tree opens that note (the open one is saved first, as B does). The cursor's highlight sits on the ground, under the trees.
 - **Keyboard only:** arrows, then Enter / Space / A to accept, Esc / B to back out.
 - **Console only:** MOVE, D-pad, A / B.
 
@@ -282,7 +282,7 @@ Each step is small, checked in the browser, and committed on its own.
     - The bay swaps between Map, Treemoji and List, with slide-in/eject motion.
 12. ✅ **Format deck.** A module that swaps with the control pad.
     - Bone keycaps on a dark deck: marks on top (B, I, U, S, HL, code), line kinds below (H1–H3, bullets, numbers, tasks, quote). A key stays down with its LED lit while that format is under the caret.
-    - Swapped by the orange ⇄ latch in either module's label, or in Configure (CONTROLS, then CONTROL PAD · FORMAT DECK). The control slot slides down and up.
+    - Swapped by the orange slide switch on either module's right edge, or in Configure (CONTROLS, then CONTROL PAD · FORMAT DECK). The control slot slides down and up.
     - With the deck slotted, the screen strip's FORMAT page steps aside (the strip was the deck's virtual stand-in) and only DETAILS shows. A, B and Start stay on the keyboard.
 13. ✅ **Camera.** Image upload into the note.
     - Three routes in: the Camera (file picker; on phones it offers the camera), pasting or dropping image files into the text, and Start → ADD IMAGE. A brand-new note is saved first, since images live in its folder. Each image lands beside the caret's line.
@@ -353,7 +353,7 @@ How the strip works:
 Input:
 - **Camera module:** adds an image (file picker; on phones it can open the camera).
 - **Start menu:** choose the edge, remove an image. The format strip has IMG and the edge key too.
-- **Moving images:** the D-pad selects an image and moves it along the strip; A confirms, B cancels.
+- **Moving images:** the D-pad selects an image and moves it along the strip; A confirms, B cancels. While a strip image has the D-pad (tapped, dragged or moved with the D-pad), its line is tinted orange and the gutter shows a track: a rail with a tick per line, the target lit. With images on the left, the line numbers stay leftmost, then the images, then the text.
 
 **Default edge** for a new note: bottom (text first, scrapbook after).
 
