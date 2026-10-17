@@ -5,6 +5,7 @@
   import { onMount, onDestroy, untrack } from "svelte";
   import { Editor } from "@tiptap/core";
   import { EditorState } from "@tiptap/pm/state";
+  import { AddMarkStep } from "@tiptap/pm/transform";
   import { StarterKit } from "@tiptap/starter-kit";
   import Underline from "@tiptap/extension-underline";
   import Highlight from "@tiptap/extension-highlight";
@@ -37,6 +38,10 @@
   let narrow = $derived(hostW < 500);
   let thumb = $derived(narrow ? 56 : 92);
   let edge = $derived(device.media.images.length ? device.media.edge : null);
+  // An image in a strip has the D-pad (tapped, dragged or arranged): its line
+  // is lit, and the gutter shows a track of every line it can snap to.
+  let held = $derived(device.focus === "image" && (edge === "left" || edge === "right") ? device.media.images.find((x) => x.id === device.imageSel) : null);
+  let heldLine = $derived(held ? Math.min(held.line, gutter.length) : 0);
 
   // Desktop basics: clicking the text while previewing opens it right there.
   function clickToEdit(e) {
@@ -189,9 +194,14 @@
       onUpdate: () => {
         device.html = editor.getHTML();
       },
-      onTransaction: () => {
+      onTransaction: ({ transaction: tr }) => {
         measure();
         report();
+        // For Treemoji: a mark put on, or an undo / redo.
+        const added = tr.steps.find((s) => s instanceof AddMarkStep);
+        if (added) device.nudge(`mark:${added.mark.type.name}`);
+        const history = tr.getMeta("history$");
+        if (history) device.nudge(history.redo ? "redo" : "undo");
       },
     });
     // The device moves the caret with the on-screen D-pad through this.
@@ -242,9 +252,15 @@
   onmousedowncapture={clickToEdit}
 >
   <div class="gutter" aria-hidden="true">
+    {#if held && gutter.length}
+      {@const last = gutter[gutter.length - 1]}
+      <span class="rail" style="top:{gutter[0].top + gutter[0].lh / 2}px; height:{last.top - gutter[0].top + last.lh / 2 - gutter[0].lh / 2}px"></span>
+    {/if}
     {#each gutter as g}
       {#if g.current}<span class="curline" style="top:{g.top}px; height:{g.height}px"></span>{/if}
-      <span class="num" class:cur={g.current} style="top:{g.top}px; line-height:{g.lh}px">{g.n}</span>
+      {#if g.n === heldLine}<span class="imgline" style="top:{g.top}px; height:{g.height}px"></span>{/if}
+      {#if held}<span class="tick" class:on={g.n === heldLine} style="top:{g.top + g.lh / 2}px"></span>{/if}
+      <span class="num" class:cur={g.current} class:held={g.n === heldLine} style="top:{g.top}px; line-height:{g.lh}px">{g.n}</span>
     {/each}
   </div>
   {#if edge === "top"}<div class="book-wrap"><NoteImages mode="book" rowHeight={narrow ? 72 : 120} onmeasure={measure} /></div>{/if}
@@ -266,12 +282,9 @@
   .book-wrap {
     margin-left: var(--gut);
   }
-  /* Left strip: outside the line numbers, so they stay beside their text */
+  /* Left strip: line numbers first, then the images, then the text */
   .host.strip-l .mono {
     margin-left: calc(var(--gut) + var(--thumb) + 14px);
-  }
-  .host.strip-l .gutter {
-    left: calc(var(--thumb) + 14px);
   }
   :global(.device) .host.strip-r {
     padding-right: calc(var(--thumb) + 24px);
@@ -301,6 +314,36 @@
     left: 0;
     width: 200vw;
     background: rgba(213, 228, 198, 0.04);
+  }
+  /* The held image's line, and the track of lines it snaps to */
+  .imgline {
+    position: absolute;
+    left: 0;
+    width: 200vw;
+    background: rgba(255, 106, 26, 0.1);
+  }
+  .num.held {
+    color: var(--signal);
+  }
+  .rail {
+    position: absolute;
+    right: 6px;
+    width: 1px;
+    background: rgba(213, 228, 198, 0.12);
+  }
+  .tick {
+    position: absolute;
+    right: 3px;
+    width: 7px;
+    height: 1px;
+    background: rgba(213, 228, 198, 0.3);
+  }
+  .tick.on {
+    right: 1px;
+    width: 11px;
+    height: 2px;
+    margin-top: -0.5px;
+    background: var(--signal);
   }
   .mono {
     margin-left: var(--gut);
@@ -421,7 +464,10 @@
   }
 
   :global(.portrait) .host { padding: 10px 14px 10px 0; }
-  :global(.portrait) .num { right: 10px; font-size: 13px; line-height: 22px; }
+  :global(.portrait) .num { right: 13px; font-size: 13px; line-height: 22px; }
+  :global(.portrait) .tick { right: 2px; width: 5px; }
+  :global(.portrait) .tick.on { right: 0; width: 8px; }
+  :global(.portrait) .rail { right: 4px; }
   :global(.portrait) .mono { font-size: 13px; }
   :global(.portrait) .mono :global(.ProseMirror *) { line-height: 22px; }
 </style>

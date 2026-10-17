@@ -7,13 +7,14 @@
 
   let {
     cursor = null, // { x, y } or null
-    plots = [], // [{ x, y, icon, mine }]
+    plots = [], // [{ x, y, icon, title, noteid, mine }]
     cols = 12,
     rows = 9,
     blink = true,
     onpick = null, // ({ x, y }) when a tile is tapped
     onaccept = null, // when the cursor's own tile is tapped again (e.g. plant here)
     acceptable = true, // false: the cursor's tile can't be accepted (taken)
+    onopen = null, // (plot) when another note's tree is tapped: open that note
   } = $props();
 
   // Mouse: tap a tile to put the cursor there, tap it again to accept.
@@ -28,6 +29,10 @@
   };
   const same = (a, b) => a && b && a.x === b.x && a.y === b.y;
   let onCursor = $derived(!!onaccept && same(hover, cursor));
+  // The tree under the pointer: its title shows over it, and (if it's
+  // another note's) a tap opens that note, since its plot can't be taken.
+  let hoverPlot = $derived(hover ? (plots.find((p) => same(p, hover)) ?? null) : null);
+  let openable = $derived(!!onopen && !!hoverPlot && !hoverPlot.mine && !!hoverPlot.noteid);
 
   // Taps come from pointer events, not click: iOS is unreliable with clicks
   // on non-button elements. A press that slides more than a few pixels isn't a tap.
@@ -37,6 +42,8 @@
     down = null;
     if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8) return;
     const t = tileAt(e);
+    const tree = plots.find((p) => same(p, t));
+    if (onopen && tree && !tree.mine && tree.noteid) return onopen(tree);
     if (onaccept && same(t, cursor)) return onaccept();
     if (!onpick) return;
     tapped = true;
@@ -99,7 +106,26 @@
         if (img) ctx.drawImage(img, x * T, y * T, T, T);
       }
     }
-    for (const p of plots) {
+    // Marks sit on the ground, under the trees: a tree stands over its own
+    // tile's highlight and sticks up past it, as it does past the grass.
+    // Hover: a faint outline on the tile you'd move to
+    if (onpick && hover && !same(hover, cursor) && !openable) {
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect((hover.x - cam.x) * T + 0.5, (hover.y - cam.y) * T + 0.5, T - 1, T - 1);
+    }
+    // The cursor holds still while you point at it (about to accept)
+    if (cursor && (on || !blink || onCursor)) {
+      const x = (cursor.x - cam.x) * T;
+      const y = (cursor.y - cam.y) * T;
+      ctx.fillStyle = "rgba(255, 106, 26, 0.3)";
+      ctx.fillRect(x, y, T, T);
+      ctx.strokeStyle = "#ff6a1a";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 1, y + 1, T - 2, T - 2);
+    }
+    // Back to front, so a tree further down stands in front of the one above it
+    for (const p of [...plots].sort((a, b) => a.y - b.y)) {
       const img = trees[p.icon];
       const x = p.x - cam.x;
       const y = p.y - cam.y;
@@ -110,25 +136,11 @@
       ctx.drawImage(img, x * T - 2, y * T - 6, T + 4, T + 4);
       ctx.globalAlpha = 1;
     }
-    // Hover: a faint outline on the tile you'd move to
-    if (onpick && hover && !same(hover, cursor)) {
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect((hover.x - cam.x) * T + 0.5, (hover.y - cam.y) * T + 0.5, T - 1, T - 1);
-    }
-    // The cursor holds still while you point at it (about to accept)
-    if (cursor && (on || !blink || onCursor)) {
-      const x = (cursor.x - cam.x) * T;
-      const y = (cursor.y - cam.y) * T;
-      ctx.strokeStyle = "#ff6a1a";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x + 1, y + 1, T - 2, T - 2);
-    }
   }
 
   $effect(() => {
     // Redraw whenever what's shown changes.
-    cursor; plots; cam; on; ready; hover; onCursor; cols; rows;
+    cursor; plots; cam; on; ready; hover; onCursor; openable; cols; rows;
     draw();
   });
   $effect(() => {
@@ -142,6 +154,7 @@
   });
 </script>
 
+<div class="gmap">
 <canvas
   bind:this={canvas}
   width={cols * T}
@@ -149,15 +162,64 @@
   style="aspect-ratio: {cols} / {rows};"
   class:tappable={!!onpick}
   class:accept={onCursor && acceptable}
-  class:refuse={onCursor && !acceptable}
+  class:refuse={onCursor && !acceptable && !openable}
+  class:open={openable}
   aria-hidden="true"
   onpointerdown={(e) => e.button === 0 && (down = { x: e.clientX, y: e.clientY })}
   onpointerup={tap}
-  onpointermove={(e) => (onpick || onaccept) && (hover = tileAt(e))}
+  onpointermove={(e) => (hover = tileAt(e))}
   onpointerleave={() => (hover = null)}
 ></canvas>
+{#if hoverPlot}
+  {@const fx = (hoverPlot.x - cam.x + 0.5) / cols}
+  {@const fy = (hoverPlot.y - cam.y) / rows}
+  <!-- The tree's title, over it (under it on the top row); kept inside the map at the sides -->
+  <span
+    class="tag"
+    class:below={hoverPlot.y - cam.y < 1}
+    class:at-l={fx < 0.2}
+    class:at-r={fx > 0.8}
+    style="left:{fx * 100}%; top:{(hoverPlot.y - cam.y + (hoverPlot.y - cam.y < 1 ? 1 : 0)) / rows * 100}%"
+    aria-hidden="true">{hoverPlot.title}</span>
+{/if}
+</div>
 
 <style>
+  .gmap {
+    position: relative;
+  }
+  .tag {
+    position: absolute;
+    transform: translate(-50%, calc(-100% - 6px));
+    max-width: 70%;
+    padding: 2px 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--phosphor);
+    background: rgba(5, 8, 6, 0.88);
+    border: 1px solid rgba(213, 228, 198, 0.25);
+    border-radius: 3px;
+    pointer-events: none;
+  }
+  .tag.below {
+    transform: translate(-50%, 4px);
+  }
+  .tag.at-l {
+    transform: translate(-12px, calc(-100% - 6px));
+  }
+  .tag.at-r {
+    transform: translate(calc(-100% + 12px), calc(-100% - 6px));
+  }
+  .tag.below.at-l {
+    transform: translate(-12px, 4px);
+  }
+  .tag.below.at-r {
+    transform: translate(calc(-100% + 12px), 4px);
+  }
   canvas {
     display: block;
     width: 100%;
@@ -175,5 +237,9 @@
   }
   .refuse {
     cursor: not-allowed;
+  }
+  /* Another note's tree: a tap opens it */
+  .open {
+    cursor: pointer;
   }
 </style>

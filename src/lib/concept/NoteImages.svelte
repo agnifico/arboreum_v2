@@ -158,7 +158,7 @@
     pointer-events: none;
   }
   .strip.left {
-    left: 8px;
+    left: calc(var(--gut) + 2px); /* just past the line numbers */
   }
   .strip.right {
     right: calc(var(--thumb) + 12px); /* its thumbs hang off to the right */

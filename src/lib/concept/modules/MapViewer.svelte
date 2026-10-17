@@ -66,6 +66,7 @@
           onpick={device.editing ? (t) => device.enterBay("plot", t) : null}
           onaccept={focused && !treeMode ? () => device.plant() : null}
           acceptable={!readout.endsWith("TAKEN")}
+          onopen={(p) => device.openNote(p.noteid)}
         />
       {/if}
     </div>

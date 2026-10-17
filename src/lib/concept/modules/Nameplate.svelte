@@ -9,14 +9,17 @@
   </div>
   <div class="plate-name">
     <span class="brand">ARBOREUM</span>
-    <span class="model">1610F</span>
+    <span class="sub">
+      <a class="byline" href="https://junesforge.com" target="_blank" rel="noopener">by JUNESFORGE</a>
+      <span class="model">JXF-ARB-16A</span>
+    </span>
   </div>
 </section>
 
 <style>
   .plate { grid-area: plate; }
   .plate {
-    --stripe-x: 66px; /* room for the Configure gear at the left end */
+    --stripe-x: 72px; /* room for the Configure key at the left end */
     display: flex;
     align-items: center;
     gap: 36px;
@@ -38,8 +41,29 @@
     color: #2b2d2c;
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 -1px 0 rgba(0, 0, 0, 0.12);
   }
-  .model {
+  /* Under the name: the maker's mark, then the model number */
+  .sub {
+    display: flex;
+    align-items: baseline;
+    align-items: center;
+    gap: 10px;
     margin-top: 4px;
+  }
+  .byline {
+    font-family: var(--label);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: rgba(43, 45, 44, 0.55);
+    text-decoration: none;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+    transition: color 0.12s ease;
+  }
+  .byline:hover,
+  .byline:focus-visible {
+    color: var(--signal);
+  }
+  .model {
     font-family: var(--mono); /* model numbers are hex, set in mono */
     font-weight: 700;
     font-size: 18px;
@@ -67,9 +91,11 @@
     width: 150px;
     background: linear-gradient(115deg, transparent 0 34%, var(--signal) 34% 52%, transparent 52% 60%, #2b2d2c 60% 66%, transparent 66%);
   }
-  :global(.portrait) .plate { --stripe-x: 58px; padding: 0 22px 0 0; gap: 0; }
+  :global(.portrait) .plate { --stripe-x: 66px; padding: 0 22px 0 0; gap: 0; }
   :global(.portrait) .brand { font-size: 26px; }
-  :global(.portrait) .model { margin-top: 3px; font-size: 12px; }
+  :global(.portrait) .sub { margin-top: 3px; gap: 7px; }
+  :global(.portrait) .model { font-size: 12px; }
+  :global(.portrait) .byline { font-size: 6.5px; letter-spacing: 0.12em; }
   :global(.portrait) .plate-print { display: none; }
   :global(.portrait) .plate-stripe { width: 80px; }
 </style>

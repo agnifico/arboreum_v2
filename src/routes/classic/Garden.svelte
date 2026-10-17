@@ -152,7 +152,7 @@
     } else {
       for (const item of notesOnMap) {
         if (x >= item.x && x <= item.x + item.width && y >= item.y && y <= item.y + item.height) {
-          goto(`${base}/read/${item.note.noteid}`);
+          goto(`${base}/classic/read/${item.note.noteid}`);
           break;
         }
       }

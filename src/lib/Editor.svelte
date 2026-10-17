@@ -427,7 +427,7 @@
         const id = await db.notes.add(noteData);
         savedNote = { ...noteData, id };
         // Later saves (and reloads) now edit this note instead of making copies.
-        replaceState(`${base}/newleaf?noteid=${noteData.noteid}`, {});
+        replaceState(`${base}/classic/newleaf?noteid=${noteData.noteid}`, {});
       }
     } catch (error) {
       console.error("Failed to save note:", error);

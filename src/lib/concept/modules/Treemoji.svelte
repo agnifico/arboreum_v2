@@ -1,4 +1,5 @@
 <script>
+  import { untrack } from "svelte";
   import { useDevice } from "../device.svelte.js";
   import TreeGrid from "../TreeGrid.svelte";
   import { TREES, treeName } from "../trees.js";
@@ -26,6 +27,12 @@
   // It reacts to what just happened, for a moment.
   let reaction = $state("");
   let reactTimer;
+  function react(r, ms = 2600) {
+    reaction = r;
+    clearTimeout(reactTimer);
+    reactTimer = setTimeout(() => (reaction = ""), ms);
+  }
+  $effect(() => () => clearTimeout(reactTimer));
   $effect(() => {
     const m = device.message;
     const r = m.startsWith("SAVED")
@@ -37,12 +44,116 @@
           : TREES.some((t) => t.name.toUpperCase() === m)
             ? "ooh, new look ✿"
             : "";
-    if (!r) return;
-    reaction = r;
-    clearTimeout(reactTimer);
-    reactTimer = setTimeout(() => (reaction = ""), 2600);
+    if (r) untrack(() => react(r));
   });
-  $effect(() => () => clearTimeout(reactTimer));
+
+  // Formatting, from any route (keys, strip, deck, shortcuts).
+  const CHEEK = {
+    "mark:bold": "BOLD move (•̀ᴗ•́)و",
+    "mark:italic": "ooh, fancy ~",
+    "mark:underline": "noted. underlined.",
+    "mark:strike": "(¬_¬) changed your mind?",
+    "mark:highlight": "✦ that bit matters",
+    "mark:code": "beep boop </>",
+    "block:h1": "a big heading! (ᵔᴥᵔ)",
+    "block:h2": "organised ✿",
+    "block:h3": "organised ✿",
+    "block:bulletList": "list-maker ✓",
+    "block:orderedList": "step by step…",
+    "block:taskList": "a to-do list? you got this",
+    "block:blockquote": "who said that? (・・ )",
+  };
+  let undos = [];
+  $effect(() => {
+    const e = device.buddyEvent;
+    if (!e) return;
+    untrack(() => {
+      if (e.kind === "undo") {
+        // Three undos in a few seconds is a rewind
+        undos = [...undos.filter((t) => e.at - t < 4000), e.at];
+        if (undos.length >= 3) react("rewind rewind ⟲");
+      } else if (CHEEK[e.kind]) react(CHEEK[e.kind]);
+    });
+  });
+
+  // Word milestones: only crossing one while writing counts, so the count
+  // starts over whenever a note is loaded or saved (the baseline changes).
+  const MILESTONES = [100, 250, 500, 1000, 2000];
+  let wordsFrom = null;
+  let wordsBase = 0;
+  $effect(() => {
+    const w = device.words;
+    const from = device.baseline;
+    untrack(() => {
+      if (from !== wordsFrom || !device.editing) {
+        wordsFrom = from;
+        wordsBase = w;
+        return;
+      }
+      if (w <= wordsBase) return; // the high mark: deleting and retyping doesn't cheer twice
+      const hit = wordsBase === 0 && w > 0 ? 0 : MILESTONES.findLast((m) => wordsBase < m && w >= m);
+      wordsBase = w;
+      if (hit === 0) react("first words! ✿");
+      else if (hit) react(`${hit} words!! ٩(◕‿◕)۶`, 3200);
+    });
+  });
+
+  // Watching you write: it bobs along while you type and dozes off after a
+  // couple of quiet minutes (waking up when you start again).
+  const DOZE = 120_000;
+  let typing = $state(false);
+  let dozing = $state(false);
+  let typeTimer, dozeTimer;
+  let lastHtml = null;
+  function restartDoze() {
+    clearTimeout(dozeTimer);
+    dozeTimer = setTimeout(() => (dozing = true), DOZE);
+  }
+  $effect(() => {
+    const html = device.html;
+    const editing = device.editing;
+    untrack(() => {
+      if (!editing) {
+        dozing = false;
+        lastHtml = null;
+        return clearTimeout(dozeTimer);
+      }
+      const typed = lastHtml !== null && html !== lastHtml;
+      lastHtml = html;
+      if (typed) {
+        if (dozing) react("oh! you're back ✿");
+        dozing = false;
+        typing = true;
+        clearTimeout(typeTimer);
+        typeTimer = setTimeout(() => (typing = false), 1200);
+      }
+      restartDoze();
+    });
+  });
+  $effect(() => () => (clearTimeout(typeTimer), clearTimeout(dozeTimer)));
+
+  // Opening a note wakes it up, with a word for the time of day.
+  function greeting() {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 12) return "good morning ☀";
+    if (h < 17 && h >= 12) return "afternoon writing? nice";
+    if (h < 22 && h >= 17) return "evening thoughts ✿";
+    return "it's late… sleep soon? (－.－)";
+  }
+  let wasEditing = false;
+  $effect(() => {
+    const editing = device.editing;
+    if (editing && !wasEditing) untrack(() => react(greeting(), 3000));
+    wasEditing = editing;
+  });
+
+  // Watering: a tap on the drop waters it, and it's happy about it.
+  let watered = $state(0);
+  const THANKS = ["ahh, thank you ♥", "(˘ᵕ˘) refreshing", "growing! ✿", "glug glug ♥"];
+  function water() {
+    watered++;
+    react(THANKS[watered % THANKS.length], 2400);
+  }
 
   let asleep = $derived(!device.editing);
   // A tall screen has room for the trees under the buddy: tap one to pick it
@@ -50,7 +161,7 @@
   let stageW = $state(0);
   let stageH = $state(0);
   let roomy = $derived(!treeMode && stageH > stageW * 1.4);
-  let say = $derived(reaction || (asleep ? "(－_－) zzZ" : !device.draftIcon ? "pick me a tree?" : line));
+  let say = $derived(reaction || (asleep || dozing ? "(－_－) zzZ" : !device.draftIcon ? "pick me a tree?" : line));
 </script>
 
 <!-- BAY: Treemoji, the tree buddy. It chooses the note's tree. -->
@@ -63,13 +174,23 @@
         <div class="grid-wrap"><TreeGrid fill={!tall} /></div>
       {:else}
         <!-- Tapping the buddy opens the tree grid, as TREE does -->
-        <button class="buddy" class:asleep aria-label="Choose this note's tree" onmousedown={keepFocus} onclick={() => device.enterBay("tree")}>
+        <button class="buddy" class:asleep={asleep || dozing} class:typing aria-label="Choose this note's tree" onmousedown={keepFocus} onclick={() => device.enterBay("tree")}>
           <span class="bubble" aria-live="polite">{say}</span>
           <span class="sprite">
             {#if tree}<img src={tree} alt="" />{:else}<span class="none">?</span>{/if}
+            {#if watered}
+              {#key watered}
+                <!-- Drops fall on it, then it glows back -->
+                <span class="fx" aria-hidden="true">
+                  <i class="drop d1">💧</i><i class="drop d2">💧</i><i class="drop d3">💧</i>
+                  <i class="joy j1">♥</i><i class="joy j2">✦</i><i class="joy j3">♥</i>
+                </span>
+              {/key}
+            {/if}
           </span>
           <span class="ground" aria-hidden="true"></span>
         </button>
+        <button class="water" aria-label="Water the tree" onmousedown={keepFocus} onclick={water}>💧</button>
         {#if roomy}<div class="shelf"><TreeGrid cursor={false} live={!asleep} /></div>{/if}
       {/if}
     </div>
@@ -149,7 +270,8 @@
   /* Speech bubble, with a tail pointing down at the tree */
   .bubble {
     position: relative;
-    max-width: 92%;
+    flex-shrink: 0; /* overflow: hidden would otherwise let it squash on a short screen */
+    max-width: calc(100% - 76px); /* clear of the water drop in the corner */
     margin-bottom: 14px;
     padding: 6px 10px;
     font-size: 13px;
@@ -203,6 +325,69 @@
   .asleep .sprite {
     animation: none;
     opacity: 0.55;
+  }
+  /* Typing: it bobs along, quicker */
+  .typing .sprite {
+    animation-duration: 0.45s;
+  }
+  /* The watering can: a drop in the screen's corner */
+  .water {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 13px;
+    line-height: 1;
+    background: rgba(143, 211, 255, 0.08);
+    border: 1px solid rgba(143, 211, 255, 0.25);
+    filter: saturate(0.8);
+    transition: transform 0.08s ease;
+  }
+  .water:active {
+    transform: translateY(1px) scale(0.92);
+  }
+  .sprite {
+    position: relative;
+  }
+  .fx {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .fx i {
+    position: absolute;
+    font-style: normal;
+    opacity: 0;
+  }
+  .drop {
+    top: -10%;
+    font-size: 10px;
+    animation: drip 0.55s ease-in forwards;
+  }
+  .d1 { left: 30%; }
+  .d2 { left: 50%; animation-delay: 0.12s; }
+  .d3 { left: 66%; animation-delay: 0.24s; }
+  .joy {
+    top: 30%;
+    font-size: 12px;
+    color: #ff9ea3;
+    animation: float 1s ease-out 0.6s forwards;
+  }
+  .j1 { left: 18%; }
+  .j2 { left: 46%; color: #ffd166; animation-delay: 0.72s; }
+  .j3 { left: 74%; animation-delay: 0.84s; }
+  @keyframes drip {
+    0% { opacity: 0; transform: translateY(0); }
+    20% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(40px); }
+  }
+  @keyframes float {
+    0% { opacity: 0; transform: translateY(0) scale(0.6); }
+    25% { opacity: 1; transform: translateY(-6px) scale(1); }
+    100% { opacity: 0; transform: translateY(-26px) scale(1); }
   }
   .asleep .bubble {
     color: var(--phosphor-dim);

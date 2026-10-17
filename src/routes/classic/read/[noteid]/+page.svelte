@@ -9,7 +9,7 @@
   <div class="note-view-container">
     <div class="note-header">
       <h1 class="note-title">{note.title?.trim() || 'Untitled'}</h1>
-      <Button variant="primary" href={`/newleaf?noteid=${note.noteid}`}>Edit</Button>
+      <Button variant="primary" href={`/classic/newleaf?noteid=${note.noteid}`}>Edit</Button>
     </div>
     <div class="note-body">
       {@html note.text}
@@ -19,7 +19,7 @@
   <div class="not-found">
     <p class="not-found-title">This note isn't here anymore.</p>
     <p>It may have been deleted, or the link is out of date.</p>
-    <Button variant="primary" href="/">Back to your notes</Button>
+    <Button variant="primary" href="/classic">Back to your notes</Button>
   </div>
 {:else}
   <p>Loading note...</p>

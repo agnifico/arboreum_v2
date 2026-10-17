@@ -21,7 +21,7 @@
     </div>
   </button>
 {:else}
-  <a class="file" href="/read/{note.noteid}" title={title}>
+  <a class="file" href="/classic/read/{note.noteid}" title={title}>
     <div class="xp">
       <p>{title}</p>
       <div class="right-box">

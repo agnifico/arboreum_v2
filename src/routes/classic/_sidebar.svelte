@@ -65,9 +65,9 @@
   // Is the page we're on showing (or editing) one of these notes?
   function isShowingAny(noteids) {
     const { pathname, searchParams } = page.url;
-    const current = pathname.startsWith("/read/")
-      ? decodeURIComponent(pathname.slice("/read/".length))
-      : pathname === "/newleaf"
+    const current = pathname.startsWith("/classic/read/")
+      ? decodeURIComponent(pathname.slice("/classic/read/".length))
+      : pathname === "/classic/newleaf"
         ? searchParams.get("noteid")
         : null;
     return current !== null && noteids.includes(current);
@@ -79,7 +79,7 @@
     await db.notes.bulkDelete(idsToDelete);
     if (leaveCurrent) {
       skipUnsavedGuard.set(true);
-      await goto("/", { replaceState: true });
+      await goto("/classic", { replaceState: true });
       skipUnsavedGuard.set(false);
     }
     to_del = [];

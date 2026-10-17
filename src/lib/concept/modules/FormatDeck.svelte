@@ -1,5 +1,6 @@
 <script>
   import { useDevice, Device } from "../device.svelte.js";
+  import EdgeSwitch from "./EdgeSwitch.svelte";
   // rows: 2 (marks over line kinds), or 3 when it's narrow (portrait, beside the D-pad)
   let { rows = 2 } = $props();
   const device = useDevice();
@@ -24,7 +25,7 @@
 </script>
 
 <!-- FORMAT DECK: physical keys for the formatting; swaps with the control pad -->
-<section class="mod graphite deck" class:off={!device.canFormat} class:two={rows === 2} aria-label="Format deck module">
+<section class="mod graphite deck" class:off={!device.canFormat} class:two={rows === 2} style:--per={Math.max(...LAYOUTS[rows].map((r) => r.length))} aria-label="Format deck module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
   <div class="deck-keys">
@@ -46,13 +47,13 @@
       </div>
     {/each}
   </div>
-  <span class="etch-dark deck-label">
-    <span class="model">FMT-01 · </span><button class="latch" aria-label="Swap for the control pad" onmousedown={keepFocus} onclick={() => device.swapControls()}><i>⇄</i>CONTROL PAD</button>
-  </span>
+  <EdgeSwitch down etch="etch-dark" label="Swap for the control pad" onflip={() => device.swapControls()} />
+  <span class="etch-dark deck-label">FMT-01</span>
 </section>
 
 <style>
   .deck {
+    container-type: inline-size; /* caps size from the deck's own width */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -63,15 +64,23 @@
     gap: 10px;
     margin-top: -14px;
   }
+  /* Every cap is one width, set by the longest row: as wide as it can be up
+     to --cap-max, with the longest row clear of the screws at both ends */
+  .deck-keys {
+    --gap: 8px;
+    --cap-max: 50px;
+    --cap: min(var(--cap-max), (100cqw - 56px - (var(--per) - 1) * var(--gap)) / var(--per));
+  }
   .deck-row {
     display: flex;
     justify-content: center;
-    gap: 8px;
+    gap: var(--gap);
   }
   /* Bone keycaps on the dark deck */
   .cap {
     position: relative;
-    min-width: 50px;
+    flex: none;
+    width: var(--cap);
     height: 38px;
     padding: 0 6px;
     border-radius: 6px;
@@ -128,13 +137,12 @@
     text-align: center;
   }
   /* Portrait: thumb-sized caps (two big rows across the width, or three
-     beside the D-pad); the label keeps only the latch */
+     beside the D-pad) */
   :global(.portrait) .deck-keys { gap: 7px; margin-top: -14px; }
-  :global(.portrait) .deck-row { gap: 6px; }
-  :global(.portrait) .model { display: none; }
-  :global(.portrait) .two .deck-keys { gap: 10px; }
-  :global(.portrait) .two .cap { min-width: 44px; height: 38px; font-size: 14px; }
-  :global(.portrait) .cap { min-width: 40px; height: 30px; padding: 0 3px; font-size: 12px; border-radius: 5px; box-shadow: 0 3px 0 var(--bone-side), 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 #fff; }
+  :global(.portrait) .deck-keys { --gap: 6px; --cap-max: 40px; }
+  :global(.portrait) .two .deck-keys { gap: 10px; --cap-max: 44px; }
+  :global(.portrait) .two .cap { height: 36px; font-size: 13px; }
+  :global(.portrait) .cap { height: 30px; padding: 0 3px; font-size: 12px; border-radius: 5px; box-shadow: 0 3px 0 var(--bone-side), 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 #fff; }
   :global(.portrait) .cap:active,
   :global(.portrait) .cap.on { transform: translateY(2px); box-shadow: 0 1px 0 var(--bone-side), inset 0 1px 0 #fff; }
   :global(.portrait) .led { top: 3px; right: 3px; width: 3px; height: 3px; }

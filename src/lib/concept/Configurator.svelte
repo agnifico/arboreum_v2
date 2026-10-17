@@ -114,17 +114,22 @@
       </p>
     </div>
   {/if}
+  <!-- A pill key in a recessed well, like Select and Start: it sits in the
+       plate instead of floating on it -->
+  <span class="config-well">
   <button
     class="config-btn"
+    class:on={panelOpen}
     aria-expanded={panelOpen}
     aria-label="Configure the device"
     title="Configure"
     onclick={() => (panelOpen = !panelOpen)}
   >
     <svg class="gear" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M10.3 2h3.4l.5 2.6c.6.2 1.2.5 1.7.9l2.5-.9 1.7 2.9-2 1.7c.1.6.1 1.3 0 1.9l2 1.7-1.7 2.9-2.5-.9c-.5.4-1.1.7-1.7.9l-.5 2.6h-3.4l-.5-2.6c-.6-.2-1.2-.5-1.7-.9l-2.5.9-1.7-2.9 2-1.7c-.1-.6-.1-1.3 0-1.9l-2-1.7 1.7-2.9 2.5.9c.5-.4 1.1-.7 1.7-.9zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z" />
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M12.7848 0.449982C13.8239 0.449982 14.7167 1.16546 14.9122 2.15495L14.9991 2.59495C15.3408 4.32442 17.1859 5.35722 18.9016 4.7794L19.3383 4.63233C20.3199 4.30175 21.4054 4.69358 21.9249 5.56605L22.7097 6.88386C23.2293 7.75636 23.0365 8.86366 22.2504 9.52253L21.9008 9.81555C20.5267 10.9672 20.5267 13.0328 21.9008 14.1844L22.2504 14.4774C23.0365 15.1363 23.2293 16.2436 22.7097 17.1161L21.925 18.4339C21.4054 19.3064 20.3199 19.6982 19.3382 19.3676L18.9017 19.2205C17.1859 18.6426 15.3408 19.6754 14.9991 21.405L14.9122 21.845C14.7167 22.8345 13.8239 23.55 12.7848 23.55H11.2152C10.1761 23.55 9.28331 22.8345 9.08781 21.8451L9.00082 21.4048C8.65909 19.6754 6.81395 18.6426 5.09822 19.2205L4.66179 19.3675C3.68016 19.6982 2.59465 19.3063 2.07505 18.4338L1.2903 17.1161C0.770719 16.2436 0.963446 15.1363 1.74956 14.4774L2.09922 14.1844C3.47324 13.0327 3.47324 10.9672 2.09922 9.8156L1.74956 9.52254C0.963446 8.86366 0.77072 7.75638 1.2903 6.8839L2.07508 5.56608C2.59466 4.69359 3.68014 4.30176 4.66176 4.63236L5.09831 4.77939C6.81401 5.35722 8.65909 4.32449 9.00082 2.59506L9.0878 2.15487C9.28331 1.16542 10.176 0.449982 11.2152 0.449982H12.7848ZM12 15.3C13.8225 15.3 15.3 13.8225 15.3 12C15.3 10.1774 13.8225 8.69998 12 8.69998C10.1774 8.69998 8.69997 10.1774 8.69997 12C8.69997 13.8225 10.1774 15.3 12 15.3Z"/>
     </svg>
   </button>
+  </span>
 </div>
 
 <style>
@@ -139,30 +144,44 @@
     left: 0;
     top: calc(100% + 10px);
   }
+  /* Bottom padding = top + the key's 3px drop, so the well looks even */
+  .config-well {
+    display: flex;
+    padding: 6px 7px 9px;
+    border-radius: 18px;
+    background: color-mix(in oklab, var(--bone), black 9%);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2), 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
   .config-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 22px;
     padding: 0;
-    border-radius: 50%;
-    color: var(--bone-hi);
-    background: linear-gradient(180deg, var(--graphite-hi), var(--graphite));
-    box-shadow: 0 3px 0 var(--graphite-side), 0 8px 12px -4px rgba(40, 36, 24, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    border-radius: 11px;
+    background: linear-gradient(180deg, #4a4e4c, #2c2f2e);
+    box-shadow: 0 3px 0 #141615, inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transition: transform 0.06s ease, box-shadow 0.06s ease;
   }
-  /* Landscape's taller nameplate takes a bigger gear */
+  /* Landscape's taller nameplate takes a bigger key */
   :global(.landscape) .config-btn {
-    width: 36px;
-    height: 36px;
+    width: 48px;
+    height: 26px;
+    border-radius: 13px;
   }
-  .config-btn:active {
+  :global(.landscape) .config-well {
+    border-radius: 20px;
+  }
+  /* Pressed, and held down while the panel is open */
+  .config-btn:active,
+  .config-btn.on {
     transform: translateY(2px);
-    box-shadow: 0 1px 0 var(--graphite-side);
+    box-shadow: 0 1px 0 #141615, inset 0 1px 3px rgba(0, 0, 0, 0.4);
   }
   .gear {
-    width: 18px;
-    height: 18px;
+    width: 15px;
+    height: 15px;
     fill: var(--signal);
     fill-rule: evenodd;
   }

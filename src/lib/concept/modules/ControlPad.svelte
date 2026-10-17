@@ -1,5 +1,6 @@
 <script>
   import { useDevice } from "../device.svelte.js";
+  import EdgeSwitch from "./EdgeSwitch.svelte";
   const device = useDevice();
   // Hardware keys don't take keyboard focus on click, so typing carries on
   // in the editor (keyboard users can still Tab to them).
@@ -41,9 +42,8 @@
       </div>
     </div>
   </div>
-  <span class="etch ctl-label">
-    <span class="model">CTL-01 · </span><button class="latch" aria-label="Swap for the Format deck" onmousedown={keepFocus} onclick={() => device.swapControls()}><i>⇄</i>FORMAT DECK</button>
-  </span>
+  <EdgeSwitch label="Swap for the Format deck" onflip={() => device.swapControls()} />
+  <span class="etch ctl-label">CTL-01</span>
 </section>
 
 <style>
@@ -137,15 +137,15 @@
     bottom: 12px;
     text-align: center;
   }
-  /* Portrait: B and A on one row, Start on its own row under them */
-  :global(.portrait) .ctl-row { flex-direction: column-reverse; gap: 10px; margin-top: -14px; }
-  :global(.portrait) .start-well { gap: 8px; padding: 7px 8px 10px; }
-  :global(.portrait) .start { width: 48px; height: 20px; font-size: 7.5px; letter-spacing: 0.1em; }
+  /* Portrait: B and A on one row, Start on its own row under them, a size
+     down so the label has room under them */
+  :global(.portrait) .ctl-row { flex-direction: column-reverse; gap: 8px; margin-top: -14px; }
+  :global(.portrait) .start-well { gap: 8px; padding: 6px 8px 9px; }
+  :global(.portrait) .start { width: 46px; height: 18px; font-size: 7px; letter-spacing: 0.1em; }
   /* Wells: bottom padding = top + the key's drop (round 5px, Start 3px) */
-  :global(.portrait) .ab-pad { gap: 12px; padding: 8px 10px 13px; border-radius: 34px; }
-  :global(.portrait) .round { width: 44px; height: 44px; font-size: 15px; }
-  :global(.portrait) .ctl-label { font-size: 8.5px; letter-spacing: 0.12em; bottom: 10px; }
-  :global(.portrait) .model { display: none; } /* the label keeps only the latch */
+  :global(.portrait) .ab-pad { gap: 12px; padding: 7px 9px 12px; border-radius: 32px; }
+  :global(.portrait) .round { width: 42px; height: 42px; font-size: 15px; }
+  :global(.portrait) .ctl-label { font-size: 8.5px; letter-spacing: 0.12em; bottom: 11px; }
   /* Portrait with room (an upright tablet, or no D-pad beside it): Start, B, A
      back in one row, as in landscape, with the portrait-sized keys */
   @container (min-width: 300px) {

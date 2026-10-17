@@ -111,6 +111,10 @@ export class Device {
   /** Formatting under the caret (for lit format keys) and the word count. */
   active = $state({});
   words = $state(0);
+  /** The last thing Treemoji might react to ({ kind, at }): "mark:bold",
+      "block:h1", "undo", "redo". Marks and undo come from the editor, so
+      every route (keys, strip, deck, shortcuts) counts. */
+  buddyEvent = $state.raw(null);
   /** Configure → Show markup: draw markers (#, **, _) instead of styling. */
   showMarkup = $state(false);
   showLines = $state(true); // Configure: line numbers in the gutter
@@ -118,7 +122,7 @@ export class Device {
   /** Bottom strip page: "format" or "details". */
   stripPage = $state("format");
   /** What sits in the control slot: the control pad ("pad") or the Format
-      deck ("deck"). Its latch, or Configure, swaps them. */
+      deck ("deck"). Its edge switch, or Configure, swaps them. */
   controls = $state("pad");
   /** Whether the control slot is filled at all (set by the page from Configure). */
   ctlSlotted = $state(true);
@@ -208,7 +212,7 @@ export class Device {
     const out = [];
     for (const n of this.raw) {
       if (this.editing && n.noteid === this.editingId) continue;
-      if (n.mapX != null && n.mapY != null) out.push({ x: n.mapX, y: n.mapY, icon: n.icon || "/Tree2.png", title: n.title?.trim() || "untitled" });
+      if (n.mapX != null && n.mapY != null) out.push({ x: n.mapX, y: n.mapY, icon: n.icon || "/Tree2.png", title: n.title?.trim() || "untitled", noteid: n.noteid });
     }
     return out;
   }
@@ -696,6 +700,17 @@ export class Device {
     if (closed.saved) this.say(`SAVED “${closed.title}”`);
   }
 
+  /** A tree tapped on the map: open its note, as B opens a new one (the
+      open note is saved first). */
+  openNote(noteid) {
+    const i = this.notes.findIndex((n) => n.noteid === noteid);
+    if (i < 0) return;
+    if (this.editing) return this.switchTo(i);
+    this.index = i;
+    this.open();
+    this.editorApi?.focusEnd();
+  }
+
   // --- The bay module: plant the open note's tree, or choose it ---------
   /** Hand the D-pad to the bay module: its map ("plot") or tree grid ("tree"). */
   enterBay(mode = "plot", at = null) {
@@ -969,6 +984,11 @@ export class Device {
     c = f.run(c);
     if (word) c = c.setTextSelection(word.caret);
     c.run();
+    if (!word && this.active[key]) this.nudge(`block:${key}`); // switched on, not off
+  }
+
+  nudge(kind) {
+    this.buddyEvent = { kind, at: Date.now() };
   }
 
   /** What the details page shows for the note on screen. */
