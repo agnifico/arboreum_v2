@@ -24,7 +24,7 @@ The one list of what's left, in working order. Details live in the sections link
 
 **2 · Deploy the concept.** *Done 17 Oct:* merged to `main` and live at arboreum-v2.vercel.app/concept, beside the classic app (which it doesn't touch). Phone tests now have HTTPS, which OPFS and `storage.persist()` need.
 
-**3 · Interaction consistency pass** (see its section): clickable confirms (open question), one focus rule between modules, undo granularity.
+**3 · Interaction consistency pass** (see its section): ~~clickable confirms~~ (decided 18 Oct), one focus rule between modules, undo granularity.
 
 **4 · Visual pass** (see its section): screen colour theme (Everforest as a base), D-pad feel. From the backlog: the Map viewer's cut-out screen in portrait, and the wells rule everywhere.
 
@@ -201,7 +201,7 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 **Mouse everywhere on desktop:**
 - menu items are clickable (*done*: a click chooses, a mouse hover moves the caret);
-- confirm choices: *open question.* They show A/B pips like the context strip, which stays labels (Design philosophy, §2), so making them clickable needs a call. A candidate answer from the image keys: the mouse confirms in place (a ✕ that turns into CONFIRM on the first press), and the box stays for the console and keyboard;
+- confirm choices: *decided 18 Oct.* The box on the main screen has clickable choices (DELETE, KEEP, the Start choice); the context strips stay labels. Deleting picked notes with a List module present asks in the module itself, not on the main screen: a bar rises over its foot (which reads A DELETE · B KEEP) with the same words, and the red delete key, pressed again, deletes (it glows while asking; confirm in place, like the image ✕). B, Esc or EXIT keeps them. So console users stay on D-pad and A, and the mouse doesn't travel. With no List module (the full-screen list) it's the box;
 - the drawer is clickable too;
 - A/B context chips stay labels, not buttons (see Design philosophy, §2).
 

@@ -1,7 +1,17 @@
 <script>
+  import { fly } from "svelte/transition";
   import { useDevice, SORTS } from "../device.svelte.js";
   import NoteRows from "../NoteRows.svelte";
   const device = useDevice();
+  // Deleting picked notes asks here, in a bar that rises over the foot: the
+  // foot already reads A DELETE · B KEEP, and the delete key, pressed again,
+  // is the mouse's yes (it confirms in place, like the image ✕). The foot
+  // stays a label.
+  let asking = $derived(device.overlay?.kind === "confirm" && device.overlay.where === "list");
+  function del() {
+    if (asking) device.press("a");
+    else device.askDeletePicked();
+  }
   const keepFocus = (e) => e.preventDefault();
   // The selection switch: the classic app's Select/Exit slider, stood on end.
   // Switched on, the slider rises and uncovers the delete key.
@@ -21,7 +31,16 @@
       <span class="list-sort">{device.sortLabel} ▾</span>
     </div>
     <NoteRows />
-    <div class="list-foot"><i class="pip a">A</i>{device.picking ? device.labels.a : "OPEN"} <i class="pip b">B</i>{device.picking ? "DONE" : "NEW"}</div>
+    <div class="foot-wrap">
+      {#if asking}
+        <div class="ask" role="alertdialog" aria-label={device.overlay.title} transition:fly={{ y: 24, duration: 160 }}>
+          <div class="ask-title">{device.overlay.title}</div>
+          <p class="ask-text">{#if device.overlay.icon}<img class="ask-icon" src={device.overlay.icon} alt="" />{/if}{device.overlay.text}</p>
+          <p class="ask-hint" aria-label="Press the delete key again to delete">PRESS <svg class="bin" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 1.5h4l.5 1.5H14v1.5H2V3h3.5zM3.5 6h9l-.8 8.5H4.3z" /></svg> AGAIN TO DELETE</p>
+        </div>
+      {/if}
+      <div class="list-foot"><i class="pip a">A</i>{asking || device.picking ? device.labels.a : "OPEN"} <i class="pip b">B</i>{asking ? device.labels.b : device.picking ? "DONE" : "NEW"}</div>
+    </div>
     <div class="glare" aria-hidden="true"></div>
   </div>
   <!-- Physical index tabs: sort the list -->
@@ -30,7 +49,7 @@
       <button class="tab" class:on={device.sort === t.key} aria-pressed={device.sort === t.key} onclick={() => device.setSort(t.key)}>{t.label}</button>
     {/each}
     <div class="sel-switch" class:on={device.picking}>
-      <button class="sel-del" disabled={!device.picking || !device.pickedNotes.length} aria-label="Delete the picked notes" onmousedown={keepFocus} onclick={() => device.askDeletePicked()}>
+      <button class="sel-del" class:armed={asking} disabled={!device.picking || !device.pickedNotes.length} aria-label={asking ? "Confirm: delete the picked notes" : "Delete the picked notes"} onmousedown={keepFocus} onclick={del}>
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 1.5h4l.5 1.5H14v1.5H2V3h3.5zM3.5 6h9l-.8 8.5H4.3z" /></svg>
       </button>
       <button class="sel-slide" aria-pressed={device.picking} aria-label={device.picking ? "Stop selecting notes" : "Select notes to delete"} onmousedown={keepFocus} onclick={toggleSelect}>{device.picking ? "EXIT" : "SELECT"}</button>
@@ -75,6 +94,58 @@
   }
   .list-foot .pip.b {
     margin-left: 8px;
+  }
+  /* The delete warning: a bar across the glass, risen over the foot, a shade
+     lighter than the glass around it */
+  .foot-wrap {
+    position: relative;
+  }
+  .ask {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    z-index: 2;
+    padding: 10px 12px 9px;
+    background: #1c2a21;
+    border-top: 1px solid rgba(255, 158, 163, 0.35);
+    box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.45);
+  }
+  .ask-title {
+    margin-bottom: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #ff9ea3;
+  }
+  .ask-text {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--phosphor);
+  }
+  .ask-icon {
+    float: left;
+    width: 22px;
+    height: 22px;
+    margin: 0 8px 0 0;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+  .ask-hint {
+    clear: both;
+    margin: 7px 0 0;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--phosphor-dim);
+  }
+  .bin {
+    width: 10px;
+    height: 10px;
+    margin: 0 2px;
+    vertical-align: -1px;
+    fill: #ff8a86;
   }
   .tabs {
     position: absolute;
@@ -156,6 +227,14 @@
   }
   .sel-del:disabled {
     filter: saturate(0.4) brightness(0.7);
+  }
+  /* Asking: the key glows, waiting for its second press */
+  .sel-del.armed {
+    box-shadow: 0 0 0 1.5px #ffd2d0, 0 0 10px var(--alert);
+    animation: armed 0.9s ease-in-out infinite alternate;
+  }
+  @keyframes armed {
+    to { box-shadow: 0 0 0 1.5px #ffd2d0, 0 0 3px var(--alert); }
   }
   .sel-del:not(:disabled):active {
     box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4);

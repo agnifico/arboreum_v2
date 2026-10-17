@@ -75,7 +75,9 @@ export class Device {
   /**
    * Something on top of the current screen:
    *   { kind: "menu", title, items: [{ label, run }], index }
-   *   { kind: "confirm", title, text, yes, no, onYes, onNo }
+   *   { kind: "confirm", title, text, yes, no, onYes, onNo, where }
+   *   (where: "screen", a box on the main screen, or "list", a bar in the
+   *   List module, beside its delete key)
    */
   overlay = $state(null);
   /** Landscape has a List module; in portrait the list is a full screen. */
@@ -506,9 +508,10 @@ export class Device {
     this.overlay = { kind: "menu", title: "MENU", hint: "CTRL/⌘ K", items, index: 0 };
   }
 
-  /** A yes/no box; `alt` adds a third choice on Start ({ label, run }). */
-  confirm({ title, text, yes, no, onYes = () => {}, onNo = () => {}, alt = null, icon = null }) {
-    this.overlay = { kind: "confirm", title, text, yes, no, onYes, onNo, alt, icon };
+  /** A yes/no box; `alt` adds a third choice on Start ({ label, run }).
+      `where` is the screen that shows it (the main screen, or the List module's). */
+  confirm({ title, text, yes, no, onYes = () => {}, onNo = () => {}, alt = null, icon = null, where = "screen" }) {
+    this.overlay = { kind: "confirm", title, text, yes, no, onYes, onNo, alt, icon, where };
   }
 
   /** Save the open note (creates it on first save). Returns true on success. */
@@ -1108,6 +1111,9 @@ export class Device {
       yes: "DELETE",
       no: "KEEP",
       onYes: () => this.deleteNotes(targets),
+      // With a List module, it asks right there, by its delete key (a second
+      // press deletes); the main screen's box is for the full-screen list.
+      where: this.hasListModule ? "list" : "screen",
     });
   }
   async deleteNotes(targets) {

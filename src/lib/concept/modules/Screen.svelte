@@ -271,14 +271,16 @@
           </button>
         {/each}
       </div>
-    {:else if device.overlay?.kind === "confirm"}
+    {:else if device.overlay?.kind === "confirm" && device.overlay.where !== "list"}
+      <!-- The box's choices are clickable too (the mouse's way; A, B and
+           Start still answer). A List module's confirm is drawn there. -->
       <div class="overlay confirm" role="alertdialog" aria-label={device.overlay.title}>
         <div class="ov-title">{device.overlay.title}</div>
         <p class="ov-text">{#if device.overlay.icon}<img class="ov-icon" src={device.overlay.icon} alt="" />{/if}{device.overlay.text}</p>
         <div class="ov-keys">
-          <span><i class="pip a">A</i>{device.overlay.yes}</span>
-          <span><i class="pip b">B</i>{device.overlay.no}</span>
-          {#if device.overlay.alt}<span><i class="pip st">SRT</i>{device.overlay.alt.label}</span>{/if}
+          <button class="ov-key" onmousedown={(e) => e.preventDefault()} onclick={() => device.press("a")}><i class="pip a">A</i>{device.overlay.yes}</button>
+          <button class="ov-key" onmousedown={(e) => e.preventDefault()} onclick={() => device.press("b")}><i class="pip b">B</i>{device.overlay.no}</button>
+          {#if device.overlay.alt}<button class="ov-key" onmousedown={(e) => e.preventDefault()} onclick={() => device.press("start")}><i class="pip st">SRT</i>{device.overlay.alt.label}</button>{/if}
         </div>
       </div>
     {/if}
@@ -439,10 +441,22 @@
     font-size: 11px;
     font-weight: 700;
   }
-  .ov-keys span {
+  .ov-key {
     display: flex;
     align-items: center;
     gap: 6px;
+    margin: 0 -6px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    color: inherit;
+    background: none;
+    letter-spacing: inherit;
+  }
+  @media (hover: hover) {
+    .ov-key:hover {
+      color: #fff;
+      box-shadow: inset 0 0 0 1px var(--phosphor);
+    }
   }
   /* Text stops where the bottom strip (40px) begins */
   .editor-area {
