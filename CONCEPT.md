@@ -7,6 +7,35 @@ A conceptual design project. Arboreum's notes, presented as a piece of swappable
 
 It is built at `/concept` inside the working app, on the same notes (IndexedDB `arboreum`), and leaves the existing app untouched. Once it's complete, it gets ported to become the main interface, and the current ("classic") interface is archived. It may grow into its own project later.
 
+## Open items (start here)
+
+The one list of what's left, in working order. Details live in the sections linked. Tick items off here as they're done, and add new ones here first.
+
+**1 · Finish mobile** (build order D, steps 16–17; needs a real phone)
+- [ ] **Saving when the phone leaves.** Save the draft on `visibilitychange` / `pagehide`. Today only `beforeunload` guards, and phones often skip it (app switch, tab killed), so a draft can be lost. *Do first.*
+- [ ] **Touch basics on every key:** `touch-action: manipulation` (fast taps on the D-pad or A can zoom the page on iOS), no text selection or iOS callout on a long press, no grey tap highlight. Press states: iOS often skips `:active`; the strip's `.key:hover` sticks after a tap (needs `@media (hover: hover)`). D-pad arms need `pointercancel`.
+- [ ] **D-pad hold-to-repeat** (from the interaction pass; on a phone it's the only way to keep moving).
+- [ ] **Keyboard on demand + typing posture** (step 16). The ⌨ key raises the keyboard and can trigger the posture directly, so nothing has to guess from viewport sizes.
+- [ ] **Viewport:** the console's height follows `innerHeight`, which changes as the browser bars show and hide; also `viewport-fit=cover` and safe areas (notch, home indicator).
+- [ ] **iOS checks:** the first tap on a note opens it with the caret in place (tap-to-edit runs on mousedown); Safari zooms in when focusing text under 16px (the console is scaled to about 0.85); map tap-tap planting on a real iPhone; HEIC photos through the Camera.
+- [ ] **Touch-only gaps in the three ways:** without a hardware keyboard there's no way to indent list items (Tab / Shift+Tab) or to undo and redo.
+- [ ] **iOS storage:** Safari can clear IndexedDB and OPFS after 7 days without a visit unless the site is on the home screen. A web app manifest would fix it; `persist()` is only asked on the image path.
+- [ ] Treemoji's tree grid has small tiles in the short portrait bay row.
+
+**2 · Deploy the concept.** `concept/f16o` isn't merged or deployed yet ("desktop first, then deploy" in the working plan). It lives at `/concept` and doesn't touch the classic app. Deploying also gives phone tests HTTPS: OPFS, `storage.persist()` and the VirtualKeyboard API need a secure context, so the Camera won't work over plain `http://` on the LAN.
+
+**3 · Interaction consistency pass** (see its section): open vs closed state (EDITING / PREVIEW), mouse on menus, confirms and the drawer, one focus rule between modules, multi-select and delete, one overflow rule for strips, undo granularity, marks at word level.
+
+**4 · Visual pass** (see its section): screen colour theme (Everforest as a base), spell check toggle, D-pad feel. From the backlog: the Map viewer's cut-out screen in portrait, and the wells rule everywhere.
+
+**5 · Images, the rest:** the link dot, "Save to a folder on my computer", images in backups (an image-aware export format).
+
+**6 · The concept page and finishing** (build order E): the page around the device and the design philosophy pages, motion and click sounds, accessibility and performance, a console sweep, and a regression check of the classic app.
+
+**7 · The port:** the concept becomes the main interface and the classic one is archived. Before then, two open questions from the classic polish pass (POLISH.md) still apply: sanitise imported HTML, and remove the dead files and old config.
+
+**Parked** (Ideas for later): Select key, mini A/B on the Format deck, phone turned sideways, a second bay on upright tablets, a filler module for spare height (an empty expansion port as an Easter egg), a cap on very wide monitors.
+
 ## Modules
 
 | Module | What it is | Notes |
@@ -196,6 +225,9 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 - **Select key, Gboard-style.** A Select button: hold it and move with the D-pad to select a block of text (the usual tap-and-drag selection stays). Needs the input bus to know when a key is held, not just pressed.
 - **Mini A/B on the Format deck (open question).** A small A, B, Start (and Select) on the deck would make D-pad + deck a complete console, and a natural typing posture on phones; the control pad would become the big-buttons choice. To settle: whether the strip's FORMAT page stays while the deck is in (today it steps aside, as the deck's virtual stand-in), and how the keys fit in portrait (three rows, or a small A/B column).
+- **A second bay on upright tablets.** An iPad held upright has the width for two bays side by side (for example Map | List). Needs a second slot in Configure and "who does what" rules for two slotted modules.
+- **A filler module for spare height.** Something like the speaker, real-looking but doing nothing much, for a column with spare height: an empty expansion port ("EXP-01 · NO CARTRIDGE") that ejects a tiny fake cartridge when tapped, or a battery meter that's quietly the storage in use.
+- **A cap on very wide monitors.** One number: past it the console stops growing and the mat shows, so it stays an object rather than an app.
 - **Phone turned sideways.** Today it's landscape zoomed small. A real answer is probably a handheld arrangement (D-pad left, screen centre, A/B right), and it has to work with the on-screen keyboard taking most of the height. Rare; not now.
 
 ## Fine-tuning backlog (component-by-component pass)
