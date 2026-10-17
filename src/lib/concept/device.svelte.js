@@ -14,7 +14,7 @@ const KEY = "arb-device";
 export const provideDevice = (device) => setContext(KEY, device);
 export const useDevice = () => getContext(KEY);
 
-export const BUTTONS = ["up", "down", "left", "right", "a", "b", "start"];
+export const BUTTONS = ["up", "down", "left", "right", "a", "b", "start", "select"];
 
 export const SORTS = [
   { key: "saved", label: "SAVED" },
@@ -38,8 +38,8 @@ export function ago(v, now = Date.now()) {
 }
 
 // Keyboard ↔ hardware. Outside the editor every key maps; inside it only Esc
-// (B), Ctrl/⌘ S (save) and Ctrl/⌘ K (Start) do, so typing stays normal.
-// Start is Ctrl/⌘ K everywhere; Tab stays free for moving keyboard focus.
+// (B), Ctrl/⌘ S (save), Ctrl/⌘ K (Start) and Ctrl/⌘ L (Select) do, so typing
+// stays normal. Tab stays free for moving keyboard focus.
 export const KEYMAP = {
   ArrowUp: "up",
   ArrowDown: "down",
@@ -408,21 +408,38 @@ export class Device {
   /** What A, B and Start do right now (the screen's context strip). */
   get labels() {
     const o = this.overlay;
-    if (o?.kind === "menu") return { a: "SELECT", b: "CLOSE", start: "CLOSE" };
-    if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—" };
-    if (this.focus === "image") return { a: "DONE", b: "CANCEL", start: "REMOVE" };
-    if (this.focus === "bay" && this.bayMode === "tree") return { a: "PICK", b: "BACK", start: "—" };
+    if (o?.kind === "menu") return { a: "CHOOSE", b: "CLOSE", start: "CLOSE", select: "—" };
+    if (o?.kind === "confirm") return { a: o.yes, b: o.no, start: o.alt?.label ?? "—", select: "—" };
+    if (this.focus === "image") return { a: "DONE", b: "CANCEL", start: "REMOVE", select: "—" };
+    if (this.focus === "bay" && this.bayMode === "tree") return { a: "PICK", b: "BACK", start: "—", select: "—" };
     if (this.focus === "bay" || (this.focus === "drawer" && this.drawerSection === "plot")) {
       const at = this.atCursor;
       const other = this.focus === "drawer" ? "TREE" : "—";
-      return { a: at && !at.mine ? "TAKEN" : "PLANT", b: this.focus === "drawer" ? "CLOSE" : "BACK", start: other };
+      return { a: at && !at.mine ? "TAKEN" : "PLANT", b: this.focus === "drawer" ? "CLOSE" : "BACK", start: other, select: "—" };
     }
-    if (this.focus === "drawer") return { a: "PICK", b: "CLOSE", start: this.drawerSections.length > 1 ? "PLOT" : "—" };
-    if (this.focus === "editor") return { a: "SAVE", b: "NEW", start: "MENU" };
-    return { a: "OPEN", b: "NEW", start: "MENU" };
+    if (this.focus === "drawer") return { a: "PICK", b: "CLOSE", start: this.drawerSections.length > 1 ? "PLOT" : "—", select: "—" };
+    if (this.focus === "editor") return { a: "SAVE", b: "NEW", start: "MENU", select: "LIST" };
+    return { a: "OPEN", b: "NEW", start: "MENU", select: "SELECT NOTES" };
+  }
+
+  // Select acts when it's let go, and only if the D-pad wasn't used while it
+  // was held: holding Select with the D-pad extends a selection instead.
+  selectHeld = $state(false);
+  #selectUsed = false;
+  selectDown() {
+    this.selectHeld = true;
+    this.#selectUsed = false;
+    this.lit.select = true;
+  }
+  selectUp({ cancel = false } = {}) {
+    if (!this.selectHeld) return;
+    this.selectHeld = false;
+    this.lit.select = false;
+    if (!cancel && !this.#selectUsed) this.press("select");
   }
 
   press(button) {
+    if (this.selectHeld && ["up", "down", "left", "right"].includes(button)) this.#selectUsed = true;
     this.light(button);
     if (this.overlay?.kind === "menu") return this.#menuInput(button);
     if (this.overlay?.kind === "confirm") return this.#confirmInput(button);
@@ -996,6 +1013,7 @@ export class Device {
     if (button === "a") this.save();
     if (button === "b") this.newNote();
     if (button === "start") this.openMenu();
+    if (button === "select") this.leave(); // Select is the list key: back to the notes
   };
 
   /** Keyboard → hardware. Returns true if the key was handled. */
@@ -1012,9 +1030,13 @@ export class Device {
       }
       return true;
     }
-    // Ctrl/⌘ K is Start everywhere, including while typing.
+    // Ctrl/⌘ K is Start and Ctrl/⌘ L is Select (a tap), everywhere, including while typing.
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
       this.press("start");
+      return true;
+    }
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "l") {
+      this.press("select");
       return true;
     }
     if (event.metaKey || event.ctrlKey || event.altKey) return false;

@@ -45,7 +45,7 @@ The one list of what's left, in working order. Details live in the sections link
 | **Screen** | Where writing happens. The notes list is a full screen here too, not a drawer. | |
 | **Bay** | Swappable slot: **Map viewer**, **Treemoji** or **List**. | Picked in Configure; the old module ejects and the new one slides in. Whatever is slotted does its job; the drawer covers the rest. |
 | **D-pad** | Moves through the list and the text. | |
-| **Control pad** | **A**, **B**, **Start**. | Swaps with the **Format deck** (FMT-01): physical keys for bold, italic, headings, lists and so on. The orange ⇄ latch in either module's label swaps them; so does Configure. |
+| **Control pad** | **A**, **B**, **Start**, **Select**. | Swaps with the **Format deck** (FMT-01): physical keys for bold, italic, headings, lists and so on. The orange ⇄ latch in either module's label swaps them; so does Configure. |
 
 ## Structure (decided after look test 00)
 
@@ -55,7 +55,7 @@ The one list of what's left, in working order. Details live in the sections link
   - Middle row: List module on the left, then the screen, then the bay on the right.
   - Bottom row: D-pad, then the control pad, then the speaker. They stay visible so the device reads at a glance.
 - **Mobile:** a portrait stack: camera and nameplate, then the screen, the D-pad with the control pad, the bay (optional), and the speaker (optional). On mobile the list opens full screen unless the bay holds it.
-- **Control pad:** Start, B and A in one straight row.
+- **Control pad:** Select, Start, B and A in one straight row (Select and Start share a well, as on a handheld).
 - **Configure button:** a gear in the nameplate (no caption); nothing sits on the page outside the console.
   - Modules: list (landscape), D-pad, control pad, bay, speaker. Screen: show markup, line numbers (on by default; off leaves a slim margin and the current-line band), screen glare (off by default). Body: enclosure.
   - It also overrides the orientation (Auto / Landscape / Portrait; Auto follows the window's shape).
@@ -63,7 +63,7 @@ The one list of what's left, in working order. Details live in the sections link
   - Where: always a gear set into the nameplate's left end, in every arrangement, with or without the speaker; its panel opens downward. (It used to float at the bottom right in landscape and move between the speaker column and the nameplate in portrait.)
 - **Portrait arrangement** (formerly "mobile"):
   - The console is shaped to the phone's own screen, and the screen gets every bit of height the other modules don't need.
-  - The D-pad and control pad share the row right under the screen, as in landscape. On the control pad, B and A sit side by side with Start below them.
+  - The D-pad and control pad share the row right under the screen, as in landscape. On the control pad, B and A sit side by side with Select and Start below them.
   - The bay has its own row below the controls, with the Map viewer's Move and Tree keys on one side (in thumb reach at the bottom).
   - The speaker is a thin full-height strip down the right. Without it, the other modules take the full width.
   - The console always spans the window's width; the screen takes whatever height is left (down to a usable minimum, below which the console zooms to fit the height).
@@ -82,18 +82,20 @@ The one list of what's left, in working order. Details live in the sections link
 
 ## Inputs
 
-| Screen | D-pad | A | B | Start |
-|---|---|---|---|---|
-| List | move | open | new note | menu (new, sort, backup) |
-| Editor | cursor | save | new note (the open note is saved and closed first) | menu (save, tree, new, delete, close) |
-| Map viewer · MOVE | cursor | plant here | back (cursor returns to the tree) | — |
-| Map viewer or Treemoji · TREE | tree grid | pick | back | — |
-| Drawer | move | pick / plant | close | switch tree ↔ plot |
-| Confirm | — | yes | no | third choice, if any |
+| Screen | D-pad | A | B | Start | Select (tap) |
+|---|---|---|---|---|---|
+| List | move | open | new note | menu (new, sort, backup) | selection mode |
+| Editor | cursor | save | new note (the open note is saved and closed first) | menu (save, tree, new, delete, close) | to the list (the note is saved) |
+| Map viewer · MOVE | cursor | plant here | back (cursor returns to the tree) | — | — |
+| Map viewer or Treemoji · TREE | tree grid | pick | back | — | — |
+| Drawer | move | pick / plant | close | switch tree ↔ plot | — |
+| Confirm | — | yes | no | third choice, if any | — |
 
-**Leaving a note always saves it:** B, opening another note, or Close note. A brand-new note with nothing in it is simply dropped. Hardware keys don't take keyboard focus when clicked, so typing carries on in the editor.
+**Select is the list key.** A tap means "the list": from a note it goes to the list, in the list it switches selection mode. Holding Select with the D-pad means "extend the selection": text in a note, a run of notes in the list. It acts when it's let go, and only if the D-pad wasn't used while it was held.
 
-On a computer keyboard: arrow keys are the D-pad, **Enter, Space or the letter A** is A, **Esc or the letter B** is B, and **Ctrl/⌘ K** is Start. Space and the letters only count where nothing is typed (the list, the map, the drawer, menus and confirms), never while writing a note. Tab stays free for moving keyboard focus. Inside the editor only Esc (B), Ctrl/⌘ S (save) and Ctrl/⌘ K (Start) map, so typing stays normal.
+**Leaving a note always saves it:** B, Select, opening another note, or Close note. A brand-new note with nothing in it is simply dropped. Hardware keys don't take keyboard focus when clicked, so typing carries on in the editor.
+
+On a computer keyboard: arrow keys are the D-pad, **Enter, Space or the letter A** is A, **Esc or the letter B** is B, **Ctrl/⌘ K** is Start, and **Ctrl/⌘ L** is a tap of Select (Shift with the arrows is holding Select). Space and the letters only count where nothing is typed (the list, the map, the drawer, menus and confirms), never while writing a note. Tab stays free for moving keyboard focus. Inside the editor only Esc (B), Ctrl/⌘ S (save), Ctrl/⌘ K (Start) and Ctrl/⌘ L (Select) map, so typing stays normal.
 - Why not Shift: inside a text editor Shift already means capitals and selection.
 - Why not Ctrl/⌘ M: on a Mac ⌘ M minimises the window.
 
@@ -222,7 +224,6 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 ## Ideas for later
 
-- **Select key, Gboard-style.** A Select button: hold it and move with the D-pad to select a block of text (the usual tap-and-drag selection stays). Needs the input bus to know when a key is held, not just pressed.
 - **Mini A/B on the Format deck (open question).** A small A, B, Start (and Select) on the deck would make D-pad + deck a complete console, and a natural typing posture on phones; the control pad would become the big-buttons choice. To settle: whether the strip's FORMAT page stays while the deck is in (today it steps aside, as the deck's virtual stand-in), and how the keys fit in portrait (three rows, or a small A/B column).
 - **A second bay on upright tablets.** An iPad held upright has the width for two bays side by side (for example Map | List). Needs a second slot in Configure and "who does what" rules for two slotted modules.
 - **A filler module for spare height.** Something like the speaker, real-looking but doing nothing much, for a column with spare height: an empty expansion port ("EXP-01 · NO CARTRIDGE") that ejects a tiny fake cartridge when tapped, or a battery meter that's quietly the storage in use.
