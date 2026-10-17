@@ -1,7 +1,9 @@
 <script>
   // The pages around the device (about, the manual, the story): printed
   // sheets on the device's mat, under a strip shaped like its nameplate. The
-  // nameplate's printing links here; the key at the left goes back.
+  // nameplate's printing links here; the key at the left goes back. A page
+  // that lays out its own panels (the story) sets `wide` in its load and
+  // gets the full width instead of the sheet.
   import { page } from "$app/state";
   let { children } = $props();
   const PAGES = [
@@ -19,7 +21,7 @@
   />
 </svelte:head>
 
-<div class="pages">
+<div class="pages" class:wide={page.data.wide}>
   <header class="plate">
     <span class="well"><a class="back" href="/" title="Back to the device">◂ DEVICE</a></span>
     <span class="stripe" aria-hidden="true"></span>
@@ -28,21 +30,21 @@
         <a {href} class:on={page.url.pathname === href} aria-current={page.url.pathname === href ? "page" : undefined}>{label}</a>
       {/each}
     </nav>
-    <a class="name" href="/">
-      <span class="brand">ARBOREUM</span>
-      <span class="model">JXF26-ARB-16A</span>
-    </a>
+    <!-- The device's name, as on its nameplate: the maker's mark, then the model number -->
+    <div class="name">
+      <a class="brand" href="/" title="Back to the device">ARBOREUM</a>
+      <span class="sub">
+        <a class="byline" href="https://junesforge.com" target="_blank" rel="noopener">by JUNESFORGE</a>
+        <span class="model">JXF26-ARB-16A</span>
+      </span>
+    </div>
   </header>
 
-  <main class="sheet">
-    {@render children()}
-  </main>
-
-  <footer>
-    <span>ARBOREUM · JXF26-ARB-16A</span>
-    <a href="https://junesforge.com" target="_blank" rel="noopener">by JUNESFORGE</a>
-    <a href="/classic">THE CLASSIC APP</a>
-  </footer>
+  {#if page.data.wide}
+    <main class="wide-main">{@render children()}</main>
+  {:else}
+    <main class="sheet">{@render children()}</main>
+  {/if}
 </div>
 
 <style>
@@ -168,10 +170,24 @@
     letter-spacing: 0.06em;
     margin-right: -0.06em;
   }
-  .model {
+  .sub {
+    display: flex;
+    align-items: center;
+    gap: 9px;
     margin-top: 4px;
+  }
+  .byline {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--ink-soft);
+    transition: color 0.12s ease;
+  }
+  .byline:hover,
+  .byline:focus-visible { color: var(--signal-text); }
+  .model {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--signal);
@@ -189,18 +205,26 @@
     line-height: 1.65;
   }
 
-  footer {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px 22px;
-    font-family: var(--label);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    color: var(--ink-soft);
+  /* A wide page fits the window: the header, then the page's own room. Its
+     slides' width (--slide) sets the header's, so their edges line up. If
+     the page can't fit (its carousel overflows), it scrolls instead. */
+  .pages.wide {
+    --slide: min(1320px, calc(100vw - 120px));
+    height: 100dvh;
+    gap: 14px;
+    padding-top: 14px;
+    padding-bottom: 14px;
   }
-  footer a:hover { color: var(--signal-text); }
+  .pages.wide:has(:global(.track[data-overflow])) { height: auto; min-height: 100dvh; }
+  .wide .plate { flex: none; width: min(100%, var(--slide)); padding: 10px 22px 10px 12px; }
+  .wide .stripe { margin: -10px 0; }
+  .wide-main {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
 
   /* Shared print styles for the pages */
   .sheet :global(.kicker) {
@@ -334,6 +358,9 @@
     font-size: 16px;
   }
 
+  @media (max-width: 760px) {
+    .pages.wide { height: auto; }
+  }
   @media (max-width: 640px) {
     .pages { padding: 12px 10px 22px; gap: 16px; }
     .plate { flex-wrap: wrap; gap: 12px; padding: 12px 16px 12px 12px; }
