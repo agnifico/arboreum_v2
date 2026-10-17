@@ -24,7 +24,7 @@ The one list of what's left, in working order. Details live in the sections link
 
 **2 · Deploy the concept.** `concept/f16o` isn't merged or deployed yet ("desktop first, then deploy" in the working plan). It lives at `/concept` and doesn't touch the classic app. Deploying also gives phone tests HTTPS: OPFS, `storage.persist()` and the VirtualKeyboard API need a secure context, so the Camera won't work over plain `http://` on the LAN.
 
-**3 · Interaction consistency pass** (see its section): open vs closed state (EDITING / PREVIEW), mouse on menus, confirms and the drawer, one focus rule between modules, multi-select and delete, one overflow rule for strips, undo granularity, marks at word level.
+**3 · Interaction consistency pass** (see its section): mouse on menus, confirms and the drawer, one focus rule between modules, multi-select and delete, one overflow rule for strips, undo granularity, marks at word level.
 
 **4 · Visual pass** (see its section): screen colour theme (Everforest as a base), spell check toggle, D-pad feel. From the backlog: the Map viewer's cut-out screen in portrait, and the wells rule everywhere.
 
@@ -107,7 +107,7 @@ Ctrl/⌘ K is the usual "command menu" shortcut, and browsers leave it to the pa
 
 - **Hardware:** semi-realistic and lightly skeuomorphic. Layered CSS/SVG, no 3D library: chamfered bodies, screws, seams, soft shadows.
 - **Colour:** each module has its own colour, all from one muted "workshop" family (moss, bone, aluminium, graphite, and a pale lichen for Treemoji). Signal orange is the accent, used only for A, latches, LEDs and stripes.
-- **Screens:** carry the console feel. The main screen is dark glass with monospace text and an orange cursor. The map keeps its pixel art.
+- **Screens:** carry the console feel. The main screen's glass tints by state: warm moss while writing, cool slate while browsing. The main screen is dark glass with monospace text and an orange cursor. The map keeps its pixel art.
 - **Fonts:** Chakra Petch for printing on the hardware; JetBrains Mono on the screens.
 - **Layouts:** two handcrafted ones, landscape for desktop and portrait for mobile.
 
@@ -191,7 +191,7 @@ The physical metaphor decides the rules (one dock per side, controls below the s
 
 One pass over menus, context, focus and highlight across the whole device: list, editor, map, drawer, menus and confirms. Collected from testing (16 Oct):
 
-**Open vs closed must be obvious.** Whether a note is open for editing or just being browsed needs a clear visual state; the proposal is that the screen's background shifts and the status shows EDITING or PREVIEW. Today Close note only moves the caret away.
+**Open vs closed must be obvious.** *Done (the glass):* writing a note is a warm moss glass; browsing (the list, or a note in preview) a cool slate one, so where you are reads at a glance. The status line already says PREVIEW for a note that isn't open.
 
 **Mouse everywhere on desktop:**
 - menu items and confirm choices are clickable;

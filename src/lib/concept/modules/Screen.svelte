@@ -50,7 +50,7 @@
 <section class="mod graphite screen" class:focused={device.focus === "editor"} aria-label="Screen module">
   <span class="screw s-tl"></span><span class="screw s-tr"></span>
   <span class="screw s-bl"></span><span class="screw s-br"></span>
-  <div class="glass">
+  <div class="glass" class:writing={device.editing && !showList} class:browsing={!device.editing || showList}>
     <div class="status">
       {#if showList}
         {#if device.picking}
@@ -228,6 +228,14 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+  }
+  /* Where you are, at a glance: writing a note is a warm moss glass, browsing
+     (the list, or a note in preview) a cool slate one */
+  .glass.writing {
+    background: radial-gradient(120% 90% at 30% 20%, #1a2113, #0d110a 70%);
+  }
+  .glass.browsing {
+    background: radial-gradient(120% 90% at 30% 20%, #10191e, #080d10 70%);
   }
   .status {
     display: flex;
