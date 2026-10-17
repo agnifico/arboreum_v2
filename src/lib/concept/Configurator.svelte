@@ -99,6 +99,9 @@
       <button class="toggle" aria-pressed={device.showLines} onclick={() => (device.showLines = !device.showLines)}>
         <span class="sw" class:on={device.showLines}></span> LINE NUMBERS
       </button>
+      <button class="toggle" aria-pressed={device.spellCheck} onclick={() => (device.spellCheck = !device.spellCheck)}>
+        <span class="sw" class:on={device.spellCheck}></span> SPELL CHECK
+      </button>
       <button class="toggle" aria-pressed={showGlare} onclick={() => (showGlare = !showGlare)}>
         <span class="sw" class:on={showGlare}></span> SCREEN GLARE
       </button>

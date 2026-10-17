@@ -146,6 +146,11 @@
     });
   });
 
+  // Configure → Spell check (off by default).
+  $effect(() => {
+    if (editor) editor.view.dom.spellcheck = device.spellCheck;
+  });
+
   onMount(() => {
     editor = new Editor({
       element: mount,
@@ -316,6 +321,10 @@
     font-weight: 700;
     color: #f3c58a;
   }
+  /* Spell check's squiggles in soft pastels, where the browser allows */
+  .mono :global(::spelling-error) { text-decoration: wavy underline #e3a3a8; }
+  .mono :global(::grammar-error) { text-decoration: wavy underline #a3c4e3; }
+
   /* Markup mode (Configure → Show markup): the markers show as text */
   .mono.markup :global(h1::before) { content: "# "; }
   .mono.markup :global(h2::before) { content: "## "; }
