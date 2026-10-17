@@ -15,8 +15,8 @@ The one list of what's left, in working order. Details live in the sections link
 - [x] **Saving when the phone leaves.** Save the draft on `visibilitychange` / `pagehide`. Today only `beforeunload` guards, and phones often skip it (app switch, tab killed), so a draft can be lost. *Done: hidden or pagehide saves quietly, as leaving a note does.*
 - [x] **Touch basics on every key:** `touch-action: manipulation` (fast taps on the D-pad or A can zoom the page on iOS), no text selection or iOS callout on a long press, no grey tap highlight. Press states: iOS often skips `:active`; the strip's `.key:hover` sticks after a tap (needs `@media (hover: hover)`). D-pad arms need `pointercancel`. *Done in code; press states still to check on the phone.*
 - [x] **D-pad hold-to-repeat** (from the interaction pass; on a phone it's the only way to keep moving). *Done: the press lands on touch-down, repeats after 380 ms, every 70 ms.*
-- [ ] **Keyboard on demand + typing posture** (step 16). The ⌨ key raises the keyboard and can trigger the posture directly, so nothing has to guess from viewport sizes.
-- [ ] **Viewport:** the console's height follows `innerHeight`, which changes as the browser bars show and hide; also `viewport-fit=cover` and safe areas (notch, home indicator).
+- [ ] **Typing posture** (step 16, decided 17 Oct). The keyboard is allowed up (no keyboard on demand); while it's up in portrait, only the screen and the controls row show above it. Covers the viewport item too.
+- [ ] **Viewport:** `viewport-fit=cover` and safe areas (notch, home indicator). The height while typing comes from `visualViewport` (above).
 - [ ] **iOS checks:** the first tap on a note opens it with the caret in place (tap-to-edit runs on mousedown); Safari zooms in when focusing text under 16px (the console is scaled to about 0.85); map tap-tap planting on a real iPhone; HEIC photos through the Camera.
 - [ ] **Touch-only gaps in the three ways:** without a hardware keyboard there's no way to indent list items (Tab / Shift+Tab) or to undo and redo.
 - [ ] **iOS storage:** Safari can clear IndexedDB and OPFS after 7 days without a visit unless the site is on the home screen. A web app manifest would fix it; `persist()` is only asked on the image path.
@@ -34,7 +34,9 @@ The one list of what's left, in working order. Details live in the sections link
 
 **7 · The port:** the concept becomes the main interface and the classic one is archived. Before then, two open questions from the classic polish pass (POLISH.md) still apply: sanitise imported HTML, and remove the dead files and old config.
 
-**Parked** (Ideas for later): Select key, mini A/B on the Format deck, phone turned sideways, a second bay on upright tablets, a filler module for spare height (an empty expansion port as an Easter egg), a cap on very wide monitors.
+**Next after mobile:** the extended format deck (Ideas for later).
+
+**Parked** (Ideas for later): phone turned sideways, a second bay on upright tablets, a filler module for spare height (an empty expansion port as an Easter egg), a cap on very wide monitors.
 
 ## Modules
 
@@ -224,7 +226,7 @@ One pass over menus, context, focus and highlight across the whole device: list,
 
 ## Ideas for later
 
-- **Mini A/B on the Format deck (open question).** A small A, B, Start (and Select) on the deck would make D-pad + deck a complete console, and a natural typing posture on phones; the control pad would become the big-buttons choice. To settle: whether the strip's FORMAT page stays while the deck is in (today it steps aside, as the deck's virtual stand-in), and how the keys fit in portrait (three rows, or a small A/B column).
+- **Extended format deck (next after mobile; settles "mini A/B on the Format deck").** A third choice for the control slot: one unified module with a D-pad on the left, the Format deck's keys in the middle and A, B, Start and Select on the right. It doesn't change the layout (the controls row still holds one thing); it's for someone who wants navigation, the console keys and styling all at once, which matters most in the typing posture. The plain control pad and Format deck stay. To settle: how it fits a portrait phone's width (the D-pad and deck already share that row), and whether the strip's FORMAT page steps aside for it as it does for the deck.
 - **A second bay on upright tablets.** An iPad held upright has the width for two bays side by side (for example Map | List). Needs a second slot in Configure and "who does what" rules for two slotted modules.
 - **A filler module for spare height.** Something like the speaker, real-looking but doing nothing much, for a column with spare height: an empty expansion port ("EXP-01 · NO CARTRIDGE") that ejects a tiny fake cartridge when tapped, or a battery meter that's quietly the storage in use.
 - **A cap on very wide monitors.** One number: past it the console stops growing and the mat shows, so it stays an object rather than an app.
@@ -293,8 +295,11 @@ Each step is small, checked in the browser, and committed on its own.
 
 14. ✅ **The screen stretches.** The console zooms to the tighter direction (up to 125%) and the screen takes what's left in the other. Columns under the screen share extra width in proportion, so the D-pad and control bodies widen with their keys centred and the deck keeps its two thirds; the side docks get taller. Checked from 375 to 2560px wide, both arrangements, with the enclosure, the deck, and without controls, speaker or bay: the console fills the window, nothing scrolls, phones unchanged.
 15. ✅ **Orientation follows the window.** Taller than wide gives portrait on load; after that it switches only 10% past square, so resizing near the line doesn't flicker. Configure's switch is Auto / Landscape / Portrait (not remembered between visits, like the other Configure settings). Checked by resizing one page across the line both ways, rotating a phone size, and overriding in a portrait window.
-16. **Typing posture.** When the on-screen keyboard opens, the lower modules fold into a thin strip; they come back when it closes.
-    - **The keyboard on demand (found in phone testing):** focusing the editor shouldn't raise the phone's keyboard. The editor gets `inputmode="none"` (caret and selection still work, no keyboard), and a keyboard key (⌨) raises it by switching to `inputmode="text"`, then lowers it again. Where Chrome's VirtualKeyboard API exists (Android), use `virtualkeyboardpolicy="manual"` with `navigator.virtualKeyboard.show()` / `hide()`; iOS may need a blur and refocus for the switch to take. Tapping the text moves the caret without raising the keyboard.
+16. **Typing posture** (decided 17 Oct, replaces folding into a strip and the keyboard-on-demand ⌨ key). On a notes app the keyboard is the most important input, so it's allowed up whenever the editor has focus (the hardware keys don't take focus, so it stays up while they're used). There isn't room for three modules beside it, so it's two: the screen and the controls row.
+    - **Where the keyboard is:** `visualViewport` on both phones. The keyboard's top is `offsetTop + height`; the keyboard is up when that's well short of the window's height while the editor has focus (and the page isn't pinch-zoomed). Safari's bar above the keyboard counts as keyboard. No VirtualKeyboard API and no `interactive-widget`, so one path for iOS and Android.
+    - **The posture (portrait only):** the console's bottom edge sits on the keyboard's top, with the controls row right above it. The top row (camera and nameplate) goes up past the top edge: that line is the snapping point, so the screen starts at the top of what's visible. The bay and speaker step out while typing (they'd be behind the keyboard); the drawer stands in for the bay, as it does whenever the bay is empty. The screen gives up the height; the console doesn't zoom down.
+    - **The controls row is the choice:** control pad (D-pad, A/B, Start, Select) or the Format deck (styling, beside the keyboard's letters). Later the extended format deck combines both (Ideas for later).
+    - **iOS:** Safari scrolls the page to keep the caret in view, so the console is pinned to the visible area (`offsetTop`). It reports the keyboard's size when the slide-up ends, so the layout settles a beat after the keyboard.
 17. **Portrait behaviour.** Touch input, the list as a full screen, the drawer, thumb reach, and checks on a real phone and an iPad.
     - Fixed: the gutter's line numbers drifted from the text at any zoom other than 100% (screen rects are zoomed, the gutter isn't).
     - Fixed: on touch the map couldn't plant. In portrait the A/B strip shrank the map when it showed, so the second tap landed on another tile; it now shares the line under the map with the readout. The map also takes taps from pointer events with `touch-action: manipulation`, so tap-tap isn't a double-tap zoom on iOS (not yet checked on a real iPhone).
