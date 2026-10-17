@@ -193,7 +193,9 @@
   onbeforeunload={(e) => {
     if (device.dirty) e.preventDefault();
   }}
+  onpagehide={() => device.saveOnLeave()}
 />
+<svelte:document onvisibilitychange={() => document.visibilityState === "hidden" && device.saveOnLeave()} />
 
 <svelte:head>
   <title>Arboreum 1610F · look test</title>

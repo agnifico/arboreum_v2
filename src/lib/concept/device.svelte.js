@@ -645,6 +645,16 @@ export class Device {
     return { ok, saved: ok, title };
   }
 
+  #leaving = null;
+  /** The page is going away (hidden, app switch, tab closed): keep the draft.
+      Phones often skip beforeunload, so this is the real guard. Hidden and
+      pagehide can fire together; one save covers both, so a new note isn't
+      added twice. */
+  saveOnLeave() {
+    if (!this.dirty || this.isBlank()) return;
+    this.#leaving ??= this.save({ quiet: true }).finally(() => (this.#leaving = null));
+  }
+
   /** B: save and close the open note, then start a new one. */
   async newNote() {
     const closed = await this.closeCurrent();
