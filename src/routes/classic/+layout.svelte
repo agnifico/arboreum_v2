@@ -135,6 +135,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Arboreum Classic</title>
+</svelte:head>
+
 {#if $isMapVisible}
   <Garden notes={$notes} />
 {/if}

@@ -11,14 +11,23 @@
       rel="stylesheet"
     />
     <title>Arboreum</title>
+    <meta name="description" content="A notes app built as a modular retro handheld: swappable modules, clicky keys, and every note grows into a pixel tree." />
+    <meta name="theme-color" content="#ebe8e0" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Arboreum" />
+    <meta property="og:title" content="Arboreum" />
+    <meta property="og:description" content="A notes app built as a modular retro handheld: swappable modules, clicky keys, and every note grows into a pixel tree." />
+    <meta name="twitter:card" content="summary" />
     %sveltekit.head%
     <script>
       // The device (/) renders in the browser only: until it loads, paint its
-      // mat in the remembered theme's colour (settings.js saves it).
+      // mat (and the browser bar) in the remembered theme's colour
+      // (settings.js saves it).
       if (location.pathname === "/") {
         var mat = "#ebe8e0";
         try { mat = JSON.parse(localStorage.getItem("JXF26-ARB-16A-config")).mat || mat; } catch (e) {}
         document.documentElement.style.background = mat;
+        document.querySelector('meta[name="theme-color"]').content = mat;
       }
     </script>
   </head>

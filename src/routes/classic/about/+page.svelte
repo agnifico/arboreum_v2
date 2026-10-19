@@ -40,7 +40,7 @@
   }
 
   .arboreum {
-    color: #a7c957;
+    color: #2a9d8f;
     font-family: "Silkscreen";
     font-size: 2.5rem;
     font-weight: normal;
@@ -70,11 +70,11 @@
     margin-bottom: 1rem;
   }
   .steps li::marker {
-    color: #a7c957;
+    color: #2a9d8f;
     font-family: "Silkscreen";
   }
   .step {
-    color: #a7c957;
+    color: #2a9d8f;
   }
 
   .note {

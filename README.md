@@ -1,38 +1,25 @@
-# sv
+# Arboreum
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A notes app built as a modular retro handheld: swappable modules, clicky keys, and every note grows into a pixel tree.
 
-## Creating a project
+Arboreum is a note-taking app designed as a piece of retro consumer electronics. Its console, the JXF26-ARB-16A, is a set of
+swappable modules around a writing screen: a D-pad, A and B keys, a map viewer, a camera. Slot modules in and out,
+rearrange them and recolour the whole console: the customisation modular hardware promises, without hardware's limits.
+Underneath is a calm monospace editor, and every note you save grows into a pixel tree on a little map, so over time your
+notes become a garden. No account, no server: your notes stay in your browser.
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
+By [JunesForge](https://junesforge.com). The design and its reasoning are in [CONCEPT.md](CONCEPT.md) and on the site's
+Story page.
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Built with SvelteKit and deployed on Vercel.
 
 ```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+npm install
+npm run dev      # the dev server
+npm run build    # a production build
+npm run preview  # preview the build
 ```
 
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+The device lives at `/`; the About, Help and Story pages at `/about`, `/help` and `/story`; the first Arboreum at `/classic`.
