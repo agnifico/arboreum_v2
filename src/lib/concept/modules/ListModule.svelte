@@ -76,7 +76,7 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--phosphor-dim);
-    border-bottom: 1px solid rgba(213, 228, 198, 0.08);
+    border-bottom: 1px solid color-mix(in srgb, var(--phosphor) 8%, transparent);
   }
   .list-sort {
     color: var(--phosphor);
@@ -90,7 +90,7 @@
     font-size: 10.5px;
     font-weight: 700;
     letter-spacing: 0.08em;
-    border-top: 1px solid rgba(213, 228, 198, 0.1);
+    border-top: 1px solid color-mix(in srgb, var(--phosphor) 10%, transparent);
   }
   .list-foot .pip.b {
     margin-left: 8px;
@@ -107,7 +107,7 @@
     bottom: 100%;
     z-index: 2;
     padding: 10px 12px 9px;
-    background: #1c2a21;
+    background: color-mix(in srgb, var(--phosphor) 10%, var(--glass));
     border-top: 1px solid rgba(255, 158, 163, 0.35);
     box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.45);
   }
@@ -167,7 +167,7 @@
     box-shadow: 0 2px 0 #121413, inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
   .tab.on {
-    color: #2b1406;
+    color: var(--signal-ink);
     background: linear-gradient(90deg, var(--signal-hi), var(--signal));
     box-shadow: 0 2px 0 var(--signal-side);
   }

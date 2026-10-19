@@ -122,9 +122,16 @@
     go(index + step);
   }
 
-  // A click on the neighbour peeking at either edge goes to it (not the end of a drag).
+  // A click on the neighbour peeking at either edge goes to it (not the end of
+  // a drag). A key marked data-next goes on from its own slide: to the next
+  // one, or, stacked, scrolls it into view.
   function onClick(e) {
     if (dragged) return void (dragged = false);
+    const next = e.target.closest("[data-next]");
+    if (next) {
+      const i = slides().findIndex((s) => s.contains(next)) + 1;
+      return void (sideways() ? go(i) : slides()[i]?.scrollIntoView({ behavior: "smooth" }));
+    }
     if (e.target.closest("a, button") || !sideways()) return;
     const i = slides().findIndex((s) => s.contains(e.target));
     if (i >= 0 && i !== index) go(i);
@@ -160,7 +167,7 @@
 
 <svelte:window onkeydown={onKey} />
 
-<section class="carousel" aria-roledescription="carousel" aria-label="The story">
+<section class="carousel" aria-roledescription="carousel" aria-label="About Arboreum and its story">
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (pointer shortcuts; the deck and ← → are the keyboard's) -->
   <div
     class="track"
@@ -282,13 +289,13 @@
     box-shadow: 0 4px 0 #121413, inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
   .round.a {
-    color: #fff3ea;
-    background: radial-gradient(circle at 40% 30%, #ff965e, #ff6a1a 55%, #e65d14);
-    box-shadow: 0 4px 0 #b8460b, inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    color: var(--signal-ink);
+    background: radial-gradient(circle at 40% 30%, var(--signal-hi), var(--signal) 55%, color-mix(in srgb, var(--signal), #000 10%));
+    box-shadow: 0 4px 0 var(--signal-side), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   }
   .round:active:not(:disabled) { transform: translateY(3px); }
   .round.b:active:not(:disabled) { box-shadow: 0 1px 0 #121413; }
-  .round.a:active:not(:disabled) { box-shadow: 0 1px 0 #b8460b; }
+  .round.a:active:not(:disabled) { box-shadow: 0 1px 0 var(--signal-side); }
   .round:disabled { opacity: 0.4; cursor: default; }
   .lcd {
     width: min(380px, 52vw);
@@ -310,7 +317,7 @@
     letter-spacing: 0.04em;
     color: #8fa385;
   }
-  .lcd-line b { color: #ff6a1a; font-weight: 700; }
+  .lcd-line b { color: var(--signal); font-weight: 700; }
   .pips {
     display: flex;
     gap: 6px;
@@ -325,8 +332,8 @@
     cursor: pointer;
   }
   .pips button.on {
-    background: #ff6a1a;
-    box-shadow: 0 0 6px #ff6a1a;
+    background: var(--signal);
+    box-shadow: 0 0 6px var(--signal);
   }
 
   /* Phones: the chapters stack, one column of panels, no deck */

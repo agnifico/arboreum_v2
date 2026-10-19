@@ -1,7 +1,7 @@
 <script>
   // A panel on the story's pages: a module body like the console's (screws,
   // an etched label), placed on a 12-column grid. Tones are the console's
-  // WORKSHOP materials plus the accent. span: columns (of 12); rows: 1 or 2.
+  // CLASSIC materials plus the accent. span: columns (of 12); rows: 1 or 2.
   let { tone = "bone", span = 6, rows = 1, label = "", flush = false, children } = $props();
 </script>
 
@@ -40,7 +40,7 @@
   .alu { --face: #c8ccc8; --face-hi: #e6e9e6; --side: #8b908c; }
   .moss { --face: #6d8756; --face-hi: #87a26d; --side: #4a5e3a; --ink: #f4f1e6; --ink-soft: rgba(244, 241, 230, 0.8); --etch: rgba(255, 255, 255, 0.6); --rim: 0.3; }
   .graphite { --face: #2d302f; --face-hi: #3b3f3d; --side: #171918; --ink: #ecebe5; --ink-soft: rgba(236, 235, 229, 0.72); --etch: rgba(210, 214, 210, 0.45); --rim: 0.12; }
-  .signal { --face: #ff6a1a; --face-hi: #ff8d4f; --side: #b8460b; --ink: #2b1406; --ink-soft: rgba(43, 20, 6, 0.78); --etch: rgba(43, 20, 6, 0.55); --rim: 0.35; }
+  .signal { --face: var(--signal); --face-hi: var(--signal-hi); --side: var(--signal-side); --ink: var(--signal-ink); --ink-soft: rgba(255, 243, 234, 0.82); --etch: rgba(255, 255, 255, 0.6); --rim: 0.3; }
 
   .c2 { grid-column: span 2; }
   .c3 { grid-column: span 3; }

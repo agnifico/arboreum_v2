@@ -11,7 +11,7 @@
     showSpeaker = $bindable(true),
     showChassis = $bindable(false),
     showGlare = $bindable(false),
-    theme = $bindable("workshop"),
+    theme = $bindable("woodwork"),
     showList = $bindable(true),
     showDpad = $bindable(true),
     showCtl = $bindable(true),
@@ -312,7 +312,7 @@
     width: 34px;
     height: 18px;
     border-radius: 9px;
-    background: #b9b2a0;
+    background: var(--side);
     box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.25);
     transition: background 0.15s ease;
   }

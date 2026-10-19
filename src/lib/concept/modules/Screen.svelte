@@ -308,10 +308,10 @@
   /* Where you are, at a glance: writing a note is a warm moss glass, browsing
      (the list, or a note in preview) a cool slate one */
   .glass.writing {
-    background: radial-gradient(120% 90% at 30% 20%, #1a2113, #0d110a 70%);
+    background: radial-gradient(120% 90% at 30% 20%, var(--glass-write-hi), var(--glass-write) 70%);
   }
   .glass.browsing {
-    background: radial-gradient(120% 90% at 30% 20%, #10191e, #080d10 70%);
+    background: radial-gradient(120% 90% at 30% 20%, var(--glass-browse-hi), var(--glass-browse) 70%);
   }
   .status {
     display: flex;
@@ -322,7 +322,7 @@
     font-size: 12px;
     letter-spacing: 0.04em;
     color: var(--phosphor-dim);
-    border-bottom: 1px solid rgba(213, 228, 198, 0.08);
+    border-bottom: 1px solid color-mix(in srgb, var(--phosphor) 8%, transparent);
   }
   .status-end {
     display: flex;
@@ -350,8 +350,8 @@
     min-width: 260px;
     max-width: 80%;
     padding: 12px 0 10px;
-    background: #080c09; /* opaque: bright text would ghost through */
-    border: 1px solid rgba(213, 228, 198, 0.25);
+    background: color-mix(in srgb, var(--glass) 75%, #000); /* opaque: bright text would ghost through */
+    border: 1px solid color-mix(in srgb, var(--phosphor) 25%, transparent);
     border-radius: 6px;
     box-shadow: 0 0 0 1px #000, 0 12px 30px rgba(0, 0, 0, 0.6);
     font-size: 13px;
@@ -365,7 +365,7 @@
     font-weight: 700;
     letter-spacing: 0.16em;
     color: var(--phosphor-dim);
-    border-bottom: 1px solid rgba(213, 228, 198, 0.1);
+    border-bottom: 1px solid color-mix(in srgb, var(--phosphor) 10%, transparent);
   }
   .ov-title {
     display: flex;
@@ -373,7 +373,7 @@
     gap: 16px;
   }
   .ov-hint {
-    color: #4f6150;
+    color: var(--phosphor-faint);
     font-weight: 500;
   }
   .ov-item {
@@ -383,7 +383,7 @@
     padding: 6px 18px;
     background: none;
     text-align: left;
-    color: #a9bb9d;
+    color: var(--phosphor-soft);
   }
   .ov-item.sel {
     color: #fff;
@@ -402,7 +402,7 @@
     padding: 0 6px;
     border-radius: 3px;
     color: var(--phosphor-dim);
-    box-shadow: inset 0 0 0 1px rgba(213, 228, 198, 0.14);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--phosphor) 14%, transparent);
   }
   /* The picked choice: boxed in the accent while its row is selected */
   .ov-choice.pick {
@@ -506,8 +506,9 @@
     color: var(--signal);
     font-weight: 700;
   }
+  /* Red, not the accent: green saved, red unsaved, in every theme */
   .dot-unsaved {
-    color: var(--signal);
+    color: var(--alert);
   }
   .sep {
     opacity: 0.4;
@@ -575,8 +576,8 @@
     font-weight: 700;
     letter-spacing: 0.14em;
     color: var(--phosphor);
-    background: #223026;
-    border: 1px solid rgba(213, 228, 198, 0.45);
+    background: color-mix(in srgb, var(--phosphor) 13%, var(--glass));
+    border: 1px solid color-mix(in srgb, var(--phosphor) 45%, transparent);
     border-radius: 4px;
     cursor: pointer;
   }
@@ -628,8 +629,8 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: #0a0f0c;
-    border-left: 1px solid rgba(213, 228, 198, 0.22);
+    background: var(--glass);
+    border-left: 1px solid color-mix(in srgb, var(--phosphor) 22%, transparent);
     box-shadow: -14px 0 24px rgba(0, 0, 0, 0.5);
     animation: slide-in 0.16s ease-out;
     overflow-y: auto;
@@ -651,7 +652,7 @@
     font-weight: 700;
     letter-spacing: 0.12em;
     color: var(--phosphor-dim);
-    border: 1px solid rgba(213, 228, 198, 0.18);
+    border: 1px solid color-mix(in srgb, var(--phosphor) 18%, transparent);
     border-radius: 4px;
     background: none;
   }
@@ -665,7 +666,7 @@
     flex-direction: column;
     gap: 8px;
     padding: 10px;
-    border: 1px dashed rgba(213, 228, 198, 0.3);
+    border: 1px dashed color-mix(in srgb, var(--phosphor) 30%, transparent);
     border-radius: 8px;
   }
   .dr-head {
@@ -691,7 +692,7 @@
   }
   .dr-plant {
     flex: none;
-    color: #fff3ea;
+    color: var(--signal-ink);
     background: var(--signal);
     border-color: var(--signal);
   }
@@ -705,8 +706,8 @@
     font-size: 11.5px;
     font-weight: 700;
     letter-spacing: 0.08em;
-    background: rgba(5, 8, 6, 0.85);
-    border: 1px solid rgba(213, 228, 198, 0.16);
+    background: color-mix(in srgb, var(--glass) 85%, transparent);
+    border: 1px solid color-mix(in srgb, var(--phosphor) 16%, transparent);
     border-radius: 6px;
   }
   .ab.away {
@@ -731,8 +732,8 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--phosphor-dim);
-    background: rgba(213, 228, 198, 0.025);
-    border-top: 1px solid rgba(213, 228, 198, 0.07);
+    background: color-mix(in srgb, var(--phosphor) 2.5%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--phosphor) 7%, transparent);
     overflow: hidden;
   }
   .pg {
@@ -769,7 +770,7 @@
     flex: none;
     width: 1px;
     margin: 6px 3px;
-    background: rgba(213, 228, 198, 0.12);
+    background: color-mix(in srgb, var(--phosphor) 12%, transparent);
   }
   /* Dimmed key by key: IMG stays live on a picked image (it replaces it) */
   .keys.off .key:disabled,
@@ -803,14 +804,14 @@
   .details .warn {
     color: #ffb3a1;
   }
-  /* Quiet by default: dim glyphs, a faint outline; active = orange text */
+  /* Quiet by default: dim glyphs, a faint outline; active = accent text */
   .key {
     flex-shrink: 0;
     min-width: 24px;
     padding: 2px 6px;
     text-align: center;
     background: transparent; /* buttons otherwise get the browser's grey */
-    border: 1px solid rgba(213, 228, 198, 0.08);
+    border: 1px solid color-mix(in srgb, var(--phosphor) 8%, transparent);
     border-radius: 3px;
     color: var(--phosphor-dim);
     font-weight: 500;
@@ -821,7 +822,7 @@
   @media (hover: hover) {
     .key:not(:disabled):hover {
       color: var(--phosphor);
-      border-color: rgba(213, 228, 198, 0.22);
+      border-color: color-mix(in srgb, var(--phosphor) 22%, transparent);
     }
   }
   .pager {
@@ -841,7 +842,7 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #33402f;
+    background: color-mix(in srgb, var(--phosphor) 20%, var(--glass));
   }
   .pages i.on {
     background: var(--phosphor);

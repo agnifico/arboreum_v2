@@ -21,7 +21,7 @@ export const defaults = () => ({
   showMarkup: false,
   showLines: true,
   spellCheck: false,
-  theme: "workshop",
+  theme: "woodwork",
   showGlare: false,
   showChassis: false,
 });

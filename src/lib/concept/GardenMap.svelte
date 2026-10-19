@@ -119,7 +119,7 @@
       const x = (cursor.x - cam.x) * T;
       const y = (cursor.y - cam.y) * T;
       // The theme's accent (read here, so a theme change shows on the next blink)
-      const signal = getComputedStyle(canvas).getPropertyValue("--signal").trim() || "#ff6a1a";
+      const signal = getComputedStyle(canvas).getPropertyValue("--signal").trim() || "#9c6644";
       ctx.fillStyle = signal;
       ctx.globalAlpha = 0.3;
       ctx.fillRect(x, y, T, T);
@@ -204,8 +204,8 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     color: var(--phosphor);
-    background: rgba(5, 8, 6, 0.88);
-    border: 1px solid rgba(213, 228, 198, 0.25);
+    background: color-mix(in srgb, var(--glass) 88%, transparent);
+    border: 1px solid color-mix(in srgb, var(--phosphor) 25%, transparent);
     border-radius: 3px;
     pointer-events: none;
   }

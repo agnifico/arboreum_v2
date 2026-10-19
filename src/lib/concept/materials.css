@@ -115,9 +115,9 @@
   position: relative;
   box-sizing: border-box;
   border-radius: 8px;
-  background: radial-gradient(120% 90% at 30% 20%, #142019, var(--glass) 70%);
+  background: radial-gradient(120% 90% at 30% 20%, var(--glass-hi), var(--glass) 70%);
   box-shadow:
-    inset 0 0 0 2px #050706,
+    inset 0 0 0 2px color-mix(in srgb, var(--glass) 50%, #000),
     inset 0 3px 10px rgba(0, 0, 0, 0.8),
     0 1px 0 rgba(255, 255, 255, 0.08);
   overflow: hidden;
@@ -145,10 +145,10 @@
 
 :where(.arb) .pip.a { background: var(--signal); }
 
-:where(.arb) .pip.b { background: #8e9a88; }
+:where(.arb) .pip.b { background: color-mix(in srgb, var(--phosphor) 38%, var(--phosphor-dim)); }
 
 /* Start and Select are word keys: three letters on a pill (SRT, SEL) */
-:where(.arb) .pip.st { background: #4c5a49; color: var(--phosphor); border-radius: 4px; width: auto; padding: 0 4px; font-size: 8.5px; font-weight: 700; letter-spacing: 0.06em; }
+:where(.arb) .pip.st { background: var(--phosphor-faint); color: var(--phosphor); border-radius: 4px; width: auto; padding: 0 4px; font-size: 8.5px; font-weight: 700; letter-spacing: 0.06em; }
 
 :where(.arb) .portrait .pip { width: 16px; height: 16px; font-size: 9px; }
 

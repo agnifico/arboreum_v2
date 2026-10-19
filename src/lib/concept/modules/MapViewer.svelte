@@ -164,7 +164,7 @@
     gap: 14px;
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px solid rgba(213, 228, 198, 0.1);
+    border-top: 1px solid color-mix(in srgb, var(--phosphor) 10%, transparent);
     font-size: 10.5px;
     font-weight: 700;
     letter-spacing: 0.08em;

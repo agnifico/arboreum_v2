@@ -247,7 +247,7 @@
   }
   .shelf {
     padding: 10px;
-    border-top: 1px solid rgba(213, 228, 198, 0.1);
+    border-top: 1px solid color-mix(in srgb, var(--phosphor) 10%, transparent);
   }
   .grid-wrap {
     height: 100%;
@@ -264,7 +264,7 @@
     justify-content: center; /* the buddy stays together on a tall screen */
     gap: 6px;
     padding: 10px 10px 12px;
-    background: radial-gradient(70% 55% at 50% 78%, rgba(213, 228, 198, 0.08), transparent 70%);
+    background: radial-gradient(70% 55% at 50% 78%, color-mix(in srgb, var(--phosphor) 8%, transparent), transparent 70%);
     color: inherit;
   }
   /* Speech bubble, with a tail pointing down at the tree */
@@ -277,9 +277,9 @@
     font-size: 13px;
     line-height: 1.3;
     color: var(--phosphor);
-    border: 1px solid rgba(213, 228, 198, 0.35);
+    border: 1px solid color-mix(in srgb, var(--phosphor) 35%, transparent);
     border-radius: 8px;
-    background: rgba(5, 8, 6, 0.6);
+    background: color-mix(in srgb, var(--glass) 60%, transparent);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -292,9 +292,9 @@
     width: 8px;
     height: 8px;
     margin-left: -4px;
-    background: #0a0f0c;
-    border-right: 1px solid rgba(213, 228, 198, 0.35);
-    border-bottom: 1px solid rgba(213, 228, 198, 0.35);
+    background: var(--glass);
+    border-right: 1px solid color-mix(in srgb, var(--phosphor) 35%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--phosphor) 35%, transparent);
     transform: rotate(45deg);
   }
   .sprite {
@@ -320,7 +320,7 @@
     height: 6px;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.55);
-    box-shadow: 0 0 0 1px rgba(213, 228, 198, 0.06);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--phosphor) 6%, transparent);
   }
   .asleep .sprite {
     animation: none;
@@ -408,7 +408,7 @@
     gap: 14px;
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px solid rgba(213, 228, 198, 0.1);
+    border-top: 1px solid color-mix(in srgb, var(--phosphor) 10%, transparent);
     font-size: 10.5px;
     font-weight: 700;
     letter-spacing: 0.08em;

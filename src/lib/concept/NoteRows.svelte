@@ -107,7 +107,7 @@
     gap: 8px;
     padding: 7px 12px;
     font-size: 12.5px;
-    color: #a9bb9d;
+    color: var(--phosphor-soft);
     border-left: 3px solid transparent;
   }
   .list-rows li.sel {
@@ -116,7 +116,7 @@
     color: #fff;
   }
   .li-num {
-    color: #3d4b3b;
+    color: color-mix(in srgb, var(--phosphor-faint) 70%, var(--glass));
     font-size: 11px;
   }
   .sel .li-num {

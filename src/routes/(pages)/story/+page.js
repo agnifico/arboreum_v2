@@ -1,2 +1,6 @@
-// The story lays out its own panels in a carousel: no sheet (see the layout).
-export const load = () => ({ wide: true });
+import { redirect } from "@sveltejs/kit";
+
+// The story is part of the about page now (one carousel): old links land there.
+export function load() {
+  redirect(308, "/about");
+}

@@ -15,7 +15,7 @@
   import Speaker from "$lib/concept/modules/Speaker.svelte";
   import Configurator from "$lib/concept/Configurator.svelte";
   import { Device, provideDevice } from "$lib/concept/device.svelte.js";
-  import { lookStyle } from "$lib/concept/themes.js";
+  import { lookStyle, THEMES } from "$lib/concept/themes.js";
   import { defaults, loadSettings, saveSettings } from "$lib/concept/settings.js";
 
   const device = provideDevice(new Device());
@@ -150,6 +150,13 @@
     showChassis,
   });
   $effect(() => saveSettings(current()));
+  // The browser bar takes the theme's mat; the pages around the device keep
+  // the default one (app.html)
+  $effect(() => {
+    const bar = document.querySelector('meta[name="theme-color"]');
+    bar.content = (THEMES.find((t) => t.key === theme) ?? THEMES[0]).mat[0];
+    return () => (bar.content = THEMES[0].mat[0]);
+  });
   function resetSettings() {
     const d = defaults();
     ({ orient, bays, showList, showCtl, showSpeaker, theme, showGlare, showChassis } = d);
@@ -294,7 +301,7 @@
 <svelte:document onvisibilitychange={() => document.visibilityState === "hidden" && device.saveOnLeave()} />
 
 <svelte:head>
-  <title>JXF26-ARB-16A · look test</title>
+  <title>Arboreum</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap"
@@ -379,14 +386,9 @@
     --graphite: #2d302f;
     --graphite-hi: #3b3f3d;
     --graphite-side: #171918;
-    --signal: #ff6a1a;
-    --signal-side: #b8460b;
     --alert: #e5323b;
-    --glass: #0b100d;
-    --phosphor: #d5e4c6;
-    --phosphor-dim: #61735c;
-    --mat: #ebe8e0;
-    --mat-line: #d6d1c4;
+    /* The accent, the screens' glass and phosphor, the mat and every role's
+       body come from the theme (themes.js, lookStyle, set inline) */
 
     --label: "Chakra Petch", system-ui, sans-serif;
     --mono: "JetBrains Mono", ui-monospace, monospace;

@@ -300,7 +300,7 @@
     right: 18px;
     line-height: 26px;
     font-size: 15px;
-    color: #3d4b3b;
+    color: color-mix(in srgb, var(--phosphor-faint) 70%, var(--glass));
   }
   /* Line numbers off: the gutter shrinks to a margin, the current line stays lit */
   .no-lines .num {
@@ -313,7 +313,7 @@
     position: absolute;
     left: 0;
     width: 200vw;
-    background: rgba(213, 228, 198, 0.04);
+    background: color-mix(in srgb, var(--phosphor) 4%, transparent);
   }
   /* The held image's line, and the track of lines it snaps to */
   .imgline {
@@ -329,14 +329,14 @@
     position: absolute;
     right: 6px;
     width: 1px;
-    background: rgba(213, 228, 198, 0.12);
+    background: color-mix(in srgb, var(--phosphor) 12%, transparent);
   }
   .tick {
     position: absolute;
     right: 3px;
     width: 7px;
     height: 1px;
-    background: rgba(213, 228, 198, 0.3);
+    background: color-mix(in srgb, var(--phosphor) 30%, transparent);
   }
   .tick.on {
     right: 1px;
@@ -394,14 +394,14 @@
   .mono :global(blockquote p::before),
   .mono :global(ul:not([data-type]) > li > p:first-child::before),
   .mono :global(ol > li > p:first-child::before) {
-    color: #4f6150;
+    color: var(--phosphor-faint);
     font-weight: 400;
     font-style: normal;
   }
   .mono :global(strong) { color: #fff; font-weight: 700; }
   .mono.markup :global(strong::before),
   .mono.markup :global(strong::after) { content: "**"; }
-  .mono :global(em) { font-style: italic; color: #e3ecd9; }
+  .mono :global(em) { font-style: italic; color: color-mix(in srgb, var(--phosphor) 60%, #fff); }
   .mono.markup :global(em::before),
   .mono.markup :global(em::after) { content: "_"; }
   .mono.markup :global(s::before),
@@ -413,14 +413,14 @@
   .mono :global(a) { color: #8fd3ff; text-decoration: underline; text-underline-offset: 3px; }
   .mono :global(sup),
   .mono :global(sub) { line-height: 0; font-size: 0.75em; }
-  .mono :global(blockquote) { color: #a9bb9d; font-style: italic; }
+  .mono :global(blockquote) { color: var(--phosphor-soft); font-style: italic; }
   .mono.markup :global(blockquote p::before) { content: "> "; }
   .mono :global(pre) { color: #9fd8c4; white-space: pre-wrap; }
   .mono :global(pre code::before),
   .mono :global(pre code::after) { content: none; }
   /* Divider: a line of dashes, one grid row tall */
   .mono :global(hr) { border: none; height: 26px; margin: 0; position: relative; }
-  .mono.markup :global(hr::before) { content: "---"; color: #4f6150; }
+  .mono.markup :global(hr::before) { content: "---"; color: var(--phosphor-faint); }
 
   /* Styled mode (default): no markers; headings a step bigger on their own
      taller line, so it's still monospace line by line */
@@ -429,8 +429,8 @@
   .mono:not(.markup) :global(:is(h3, h4, h5, h6)) { font-size: 1.12em; line-height: 28px; }
   .mono:not(.markup) :global(code:not(pre code)) { background: rgba(159, 216, 196, 0.1); border-radius: 3px; padding: 0 0.3ch; }
   .mono:not(.markup) :global(pre) { background: rgba(159, 216, 196, 0.06); border-radius: 4px; padding: 0 1ch; }
-  .mono:not(.markup) :global(blockquote) { border-left: 2px solid #4f6150; padding-left: 1.5ch; }
-  .mono:not(.markup) :global(hr) { background: linear-gradient(transparent 12px, rgba(213, 228, 198, 0.18) 12px 13px, transparent 13px); }
+  .mono:not(.markup) :global(blockquote) { border-left: 2px solid var(--phosphor-faint); padding-left: 1.5ch; }
+  .mono:not(.markup) :global(hr) { background: linear-gradient(transparent 12px, color-mix(in srgb, var(--phosphor) 18%, transparent) 12px 13px, transparent 13px); }
 
   /* Lists: markers drawn as text, two-space indent per level */
   .mono :global(ul),
@@ -445,11 +445,11 @@
 
   /* Tasks: "[ ]" / "[x]" in place of the checkbox (still clickable) */
   .mono :global(ul[data-type="taskList"] > li) { display: flex; }
-  .mono :global(ul[data-type="taskList"] > li > label) { position: relative; flex-shrink: 0; color: #4f6150; user-select: none; }
+  .mono :global(ul[data-type="taskList"] > li > label) { position: relative; flex-shrink: 0; color: var(--phosphor-faint); user-select: none; }
   .mono :global(ul[data-type="taskList"] > li > label > span::before) { content: "- [ ] "; white-space: pre; }
   .mono :global(ul[data-type="taskList"] > li[data-checked="true"] > label > span::before) { content: "- [x] "; }
   .mono :global(ul[data-type="taskList"] > li > label > input) { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
-  .mono :global(ul[data-type="taskList"] > li[data-checked="true"] > div) { color: #5f705c; text-decoration: line-through; }
+  .mono :global(ul[data-type="taskList"] > li[data-checked="true"] > div) { color: var(--phosphor-dim); text-decoration: line-through; }
   .mono :global(ul[data-type="taskList"] > li > div) { flex: 1; min-width: 0; }
 
   /* Not offered in the concept: alignment shows left, inline images hide.

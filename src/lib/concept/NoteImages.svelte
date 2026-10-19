@@ -174,8 +174,8 @@
     flex: none;
     height: 100%;
     border-radius: 3px;
-    background: rgba(213, 228, 198, 0.06);
-    box-shadow: 0 0 0 1px rgba(213, 228, 198, 0.12);
+    background: color-mix(in srgb, var(--phosphor) 6%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--phosphor) 12%, transparent);
   }
   /* The image clips, not the cell: its keys may hang over the text */
   .hit {
@@ -240,8 +240,8 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--phosphor);
-    background: rgba(11, 16, 13, 0.78);
-    box-shadow: 0 0 0 1px rgba(213, 228, 198, 0.2);
+    background: color-mix(in srgb, var(--glass) 78%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--phosphor) 20%, transparent);
     cursor: pointer;
   }
   .tool.del {

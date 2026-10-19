@@ -1,7 +1,7 @@
 <script>
-  // The pages around the device (about, the manual, the story): printed
-  // sheets on the device's mat, under a strip shaped like its nameplate. The
-  // nameplate's printing links here; the key at the left goes back. A page
+  // The pages around the device (about, with the story, and the manual):
+  // printed sheets on the device's mat, under a strip shaped like its
+  // nameplate. The nameplate's keys lead here; the key at the left goes back. A page
   // that lays out its own panels (the story) sets `wide` in its load and
   // gets the full width instead of the sheet.
   import { page } from "$app/state";
@@ -9,7 +9,6 @@
   const PAGES = [
     ["/about", "ABOUT"],
     ["/help", "HELP"],
-    ["/story", "STORY"],
   ];
 </script>
 
@@ -58,8 +57,13 @@
     --ink-soft: #5f625d;
     --rule: #d9d3c3;
     --moss: #6d8756;
-    --signal: #ff6a1a;
-    --signal-text: #d4520c; /* the accent as text on paper: a shade darker to read */
+    /* The pages' accent and its shades, for every page, the story's panels and
+       the carousel */
+    --signal: #2a9d8f;
+    --signal-hi: #6abab1;
+    --signal-side: #1d6b61;
+    --signal-ink: #fff3ea; /* a letter on an accent face */
+    --signal-text: #20766b; /* the accent as text on paper: a shade darker to read */
     --mat: #ebe8e0;
     --mat-line: #d6d1c4;
     --label: "Chakra Petch", system-ui, sans-serif;
@@ -153,9 +157,9 @@
   }
   nav a:hover { color: #fff; }
   nav a.on {
-    color: #2b1406;
-    background: linear-gradient(180deg, #ffa36b, var(--signal));
-    box-shadow: 0 2px 0 #b8460b;
+    color: var(--signal-ink);
+    background: linear-gradient(180deg, var(--signal-hi), var(--signal));
+    box-shadow: 0 2px 0 var(--signal-side);
   }
   .name {
     margin-left: auto;
@@ -316,9 +320,9 @@
     box-shadow: 0 2px 0 #141615;
   }
   .sheet :global(kbd.a) {
-    color: #fff3ea;
-    background: linear-gradient(180deg, #ff8a4a, var(--signal));
-    box-shadow: 0 2px 0 #b8460b;
+    color: var(--signal-ink);
+    background: linear-gradient(180deg, var(--signal-hi), var(--signal));
+    box-shadow: 0 2px 0 var(--signal-side);
   }
   .sheet :global(kbd.key) {
     color: var(--ink);

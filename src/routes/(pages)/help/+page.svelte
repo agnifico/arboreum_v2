@@ -61,7 +61,7 @@
 <ul>
   <li><strong>Type it.</strong> Start a line with <code>- </code> for a bullet, <code>1. </code> for a numbered list or <code>[ ] </code> for a task. <code>Ctrl/⌘ B</code>, <code>I</code> and <code>U</code> work as usual. Tab and Shift+Tab nest list items.</li>
   <li><strong>The format strip</strong> along the bottom of the screen: undo and redo, the marks, headings, lists, indent, and IMG. <kbd class="key">◀</kbd> <kbd class="key">▶</kbd> switch it to DETAILS (words, dates, tree, plot).</li>
-  <li><strong>The Format deck.</strong> Flip the orange switch on the control pad's right edge (or choose it in Configure) and real keys slide in. A key stays down while its format is under the cursor.</li>
+  <li><strong>The Format deck.</strong> Flip the accent-coloured switch on the control pad's right edge (or choose it in Configure) and real keys slide in. A key stays down while its format is under the cursor.</li>
 </ul>
 <p>Configure → <strong>SHOW MARKUP</strong> shows the markers (<code>**</code>, <code>#</code>, <code>- </code>) as text instead.</p>
 
@@ -113,5 +113,5 @@
 <h3>Can I click the A and B labels on the screen?</h3>
 <p>
   No, on purpose. They're labels that tell you what the keys do. Press the key on the console, use the keyboard, or click the
-  thing on the screen itself. <a href="/story">The story</a> explains why.
+  thing on the screen itself. <a href="/about">The story</a> explains why.
 </p>

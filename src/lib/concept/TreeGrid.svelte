@@ -61,7 +61,7 @@
     min-height: 0;
     padding: 4px;
     border-radius: 6px;
-    background: rgba(213, 228, 198, 0.05);
+    background: color-mix(in srgb, var(--phosphor) 5%, transparent);
     border: 1px solid transparent;
   }
   .trees:not(.fill) .tree {
@@ -77,7 +77,7 @@
     opacity: 0.45;
   }
   .tree.chosen {
-    background: rgba(213, 228, 198, 0.14);
+    background: color-mix(in srgb, var(--phosphor) 14%, transparent);
   }
   .tree.cur {
     border-color: var(--signal);
